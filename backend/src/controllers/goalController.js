@@ -1,32 +1,52 @@
-// Controller for goal-related requests
-const getGoals = (req, res) => {
-  const goals = [
-    {
-      id: 1,
-      title: 'Finish the CredStreak MVP',
-      stake: 50,
-      deadline: '2026-08-31',
-      status: 'active'
-    },
-    {
-      id: 2,
-      title: 'Write 5 blog posts about the product',
-      stake: 25,
-      deadline: '2026-09-15',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      title: 'Launch a demo for the hackathon',
-      stake: 75,
-      deadline: '2026-10-01',
-      status: 'active'
-    }
-  ];
+const Goal = require('../models/Goal');
 
-  res.json(goals);
+// Controller for fetching all goals
+const getGoals = async (req, res) => {
+  try {
+    const goals = await Goal.find().sort({ createdAt: -1 });
+    res.json(goals);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch goals.' });
+  }
+};
+
+// Controller for creating a new goal
+const createGoal = async (req, res) => {
+  const { title, description, stakeAmount, deadline, status } = req.body;
+
+  // Validate required fields manually
+  if (!title || typeof title !== 'string' || title.trim() === '') {
+    return res.status(400).json({ error: 'Title is required.' });
+  }
+
+  if (!description || typeof description !== 'string' || description.trim() === '') {
+    return res.status(400).json({ error: 'Description is required.' });
+  }
+
+  if (typeof stakeAmount !== 'number' || !Number.isFinite(stakeAmount) || stakeAmount <= 0) {
+    return res.status(400).json({ error: 'stakeAmount must be a positive number.' });
+  }
+
+  if (!deadline || typeof deadline !== 'string' || deadline.trim() === '') {
+    return res.status(400).json({ error: 'Deadline is required.' });
+  }
+
+  try {
+    const newGoal = await Goal.create({
+      title: title.trim(),
+      description: description.trim(),
+      stakeAmount,
+      deadline: deadline.trim(),
+      status: status && typeof status === 'string' && status.trim() !== '' ? status.trim() : 'active'
+    });
+
+    return res.status(201).json(newGoal);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to create goal.' });
+  }
 };
 
 module.exports = {
-  getGoals
+  getGoals,
+  createGoal
 };
