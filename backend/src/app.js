@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const homeRoutes = require('./routes/homeRoutes');
 
 // Create the Express application
 const app = express();
@@ -10,12 +11,8 @@ app.use(cors());
 // Enable JSON request body parsing
 app.use(express.json());
 
-// Root route for a simple health check
-app.get('/', (req, res) => {
-  res.json({
-    message: 'CredStreak Backend Running'
-  });
-});
+// Use the home route module
+app.use('/', homeRoutes);
 
 // Export the app so server.js can start it
 module.exports = app;
