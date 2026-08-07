@@ -31,15 +31,12 @@ const proofSchema = new mongoose.Schema(
       default: ''
     },
     aiAnalysis: {
-      type: {
-        confidence: Number,
-        completed: Boolean,
-        strengths: [String],
-        missingEvidence: [String],
-        summary: String,
-        recommendation: String
-      },
-      default: null
+      confidence: { type: Number, default: 0 },
+      completed: { type: Boolean, default: false },
+      strengths: { type: [String], default: [] },
+      missingEvidence: { type: [String], default: [] },
+      summary: { type: String, default: '' },
+      recommendation: { type: String, default: '' }
     }
   },
   {

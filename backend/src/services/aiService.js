@@ -1,33 +1,32 @@
-// AI Service for proof analysis using Google Gemini.
+// AI Service for proof analysis using Google Gemini via @google/genai SDK.
 // This module exports a single function `analyzeProof` that receives proof data,
 // invokes the Gemini API, and returns a structured analysis object.
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
 
-// Initialize the Gemini client lazily to avoid startup errors when the API key is missing.
-let genAI = null;
-function getGenAI() {
-  if (!genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('GEMINI_API_KEY is not set; AI analysis will fallback to placeholder response.');
-      return null;
-    }
-    genAI = new GoogleGenerativeAI(apiKey);
+let aiClient = null;
+function getAIClient() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('GEMINI_API_KEY is not set; AI analysis will fallback to default response.');
+    return null;
   }
-  return genAI;
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
 }
 
-/**
- * Build a prompt that instructs Gemini to evaluate the proof and return strict JSON.
- * @param {Object} proofData The proof payload received from the controller.
- * @returns {string} Prompt text.
- */
+/** Build prompt for Gemini */
 function buildPrompt(proofData) {
-  const { goalId, githubUrl, websiteUrl, description, status, filePath } = proofData;
+  const { goalId, githubUrl, websiteUrl, description, status } = proofData;
   return `You are an AI evaluator for the CredStreak accountability platform.
-Analyze the following proof information and decide whether it demonstrates successful completion of the associated goal.
-Provide ONLY a JSON object with the exact following keys (no extra text):
+Analyze the provided proof (including the text details and any attached image or document evidence) and decide whether it genuinely demonstrates successful completion of the associated goal.
+
+Provide ONLY a JSON object with the exact following keys (no markdown code blocks, no extra text):
 {
   "confidence": number (0-100),
   "completed": true|false,
@@ -43,33 +42,65 @@ GitHub URL: ${githubUrl || 'N/A'}
 Website URL: ${websiteUrl || 'N/A'}
 Description: ${description}
 Status: ${status}
-Uploaded File Path: ${filePath}
 `;
 }
 
-/**
- * Safely parse Gemini's response. If parsing fails, return a fallback object.
- */
+/** Safely parse Gemini JSON response */
 function safeParse(jsonString) {
   try {
-    // Remove any surrounding whitespace or markdown code fences.
-    const cleaned = jsonString.trim().replace(/^```json\n/, '').replace(/^```\n/, '').replace(/```$/g, '').trim();
+    const cleaned = jsonString
+      .trim()
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/, '')
+      .replace(/```$/g, '')
+      .trim();
     return JSON.parse(cleaned);
   } catch (e) {
-    console.error('Failed to parse Gemini response as JSON:', e.message);
+    console.error('Failed to parse Gemini response as JSON:', e.message, 'Raw response:', jsonString);
     return null;
   }
 }
 
-/**
- * Analyse a proof using Gemini. Returns an object with the required fields.
- * @param {Object} proofData The proof information object.
- * @returns {Promise<Object>} Analysis result.
- */
+/** Prepare file payload for Gemini multimodal input */
+function getFilePart(filePath) {
+  if (!filePath) return null;
+  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(filePath);
+  if (!fs.existsSync(absolutePath)) return null;
+
+  const ext = path.extname(absolutePath).toLowerCase();
+  let mimeType = 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+  else if (ext === '.webp') mimeType = 'image/webp';
+  else if (ext === '.gif') mimeType = 'image/gif';
+  else if (ext === '.pdf') mimeType = 'application/pdf';
+
+  const base64Data = fs.readFileSync(absolutePath).toString('base64');
+  return {
+    inlineData: {
+      data: base64Data,
+      mimeType: mimeType
+    }
+  };
+}
+
+/** Analyze proof using Gemini */
 async function analyzeProof(proofData) {
-  const genAI = getGenAI();
-  if (!genAI) {
-    // Graceful fallback when the API key is missing or client could not be created.
+  let ai;
+  try {
+    ai = getAIClient();
+  } catch (initErr) {
+    console.error('Failed to initialize Gemini client:', initErr.message);
+    return {
+      confidence: 0,
+      completed: false,
+      strengths: [],
+      missingEvidence: [],
+      summary: `Gemini client initialization failed: ${initErr.message}`,
+      recommendation: 'Check GEMINI_API_KEY configuration.'
+    };
+  }
+
+  if (!ai) {
     return {
       confidence: 0,
       completed: false,
@@ -81,38 +112,71 @@ async function analyzeProof(proofData) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const prompt = buildPrompt(proofData);
-    const result = await model.generateContent(prompt);
-    const responseText = await result.response.text();
+    const promptText = buildPrompt(proofData);
+    const contents = [promptText];
+
+    const filePart = getFilePart(proofData.filePath);
+    if (filePart) {
+      contents.push(filePart);
+    }
+
+    let responseText = '';
+    let lastError = null;
+
+    // Try models in order of availability (using active Gemini model aliases)
+    const modelsToTry = ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-pro-latest', 'gemini-2.0-flash-lite'];
+
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: contents
+        });
+        if (response && response.text) {
+          responseText = response.text;
+          break;
+        }
+      } catch (err) {
+        console.warn(`Model ${modelName} failed:`, err.message);
+        lastError = err;
+      }
+    }
+
+    if (!responseText && lastError) {
+      throw lastError;
+    }
+
     const parsed = safeParse(responseText);
     if (parsed && typeof parsed === 'object') {
-      // Ensure all expected keys exist; otherwise fallback to placeholder values.
       return {
-        confidence: parsed.confidence ?? 0,
-        completed: parsed.completed ?? false,
-        strengths: parsed.strengths ?? [],
-        missingEvidence: parsed.missingEvidence ?? [],
-        summary: parsed.summary ?? '',
-        recommendation: parsed.recommendation ?? ''
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
+        completed: Boolean(parsed.completed),
+        strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
+        missingEvidence: Array.isArray(parsed.missingEvidence) ? parsed.missingEvidence : [],
+        summary: parsed.summary || 'Analysis complete.',
+        recommendation: parsed.recommendation || ''
       };
     }
   } catch (err) {
-    console.error('Error during Gemini analysis:', err.message);
-    // Fall back to a generic placeholder response.
+    console.error('Error during Gemini API call:', err);
+    return {
+      confidence: 0,
+      completed: false,
+      strengths: [],
+      missingEvidence: [],
+      summary: `AI analysis error: ${err.message}`,
+      recommendation: 'Verify GEMINI_API_KEY in backend/.env or check internet connection.'
+    };
   }
 
-  // Generic fallback if anything went wrong.
   return {
     confidence: 0,
     completed: false,
     strengths: [],
     missingEvidence: [],
-    summary: 'AI analysis failed; returned default values.',
+    summary: 'AI analysis failed to parse valid response.',
     recommendation: 'Manual review required.'
   };
 }
 
-module.exports = {
-  analyzeProof
-};
+module.exports = { analyzeProof };
