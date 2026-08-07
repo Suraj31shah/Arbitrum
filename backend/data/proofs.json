@@ -1,0 +1,14 @@
+[
+  {
+    "goalId": "abc123",
+    "githubUrl": "",
+    "websiteUrl": "",
+    "description": "Test upload",
+    "status": "pending",
+    "filePath": "C:/Users/drash/Desktop/Arbitrum_work_team/Arbitrum/backend/uploads/1786037957518-455878417-test.png",
+    "_id": "1786037967858-184732318",
+    "createdAt": "2026-08-06T17:39:27.858Z",
+    "updatedAt": "2026-08-06T17:39:27.860Z",
+    "source": "local-fallback"
+  }
+]

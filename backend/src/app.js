@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const homeRoutes = require('./routes/homeRoutes');
 const goalRoutes = require('./routes/goalRoutes');
+const proofRoutes = require('./routes/proofRoutes');
 
 // Create the Express application
 const app = express();
@@ -17,6 +18,9 @@ app.use('/', homeRoutes);
 
 // Use the goals route module
 app.use('/', goalRoutes);
+
+// Use the proofs route module
+app.use('/', proofRoutes);
 
 // Export the app so server.js can start it
 module.exports = app;
