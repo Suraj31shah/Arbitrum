@@ -1,10 +1,14 @@
 const express = require('express');
 const upload = require('../config/upload');
-const { createProof } = require('../controllers/proofController');
+const { createProof, getProofsByChallenge, getProofById } = require('../controllers/proofController');
 
 const router = express.Router();
 
-// Route to create a proof entry for a goal
+// Fetch proofs by challenge or fetch single proof
+router.get('/api/proofs', getProofsByChallenge);
+router.get('/api/proofs/:id', getProofById);
+
+// Create proof with file upload
 router.post('/api/proofs', (req, res, next) => {
   upload.single('file')(req, res, (error) => {
     if (error) {

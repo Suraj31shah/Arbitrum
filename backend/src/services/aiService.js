@@ -22,9 +22,9 @@ function getAIClient() {
 
 /** Build prompt for Gemini */
 function buildPrompt(proofData) {
-  const { goalId, githubUrl, websiteUrl, description, status } = proofData;
+  const { challengeId, githubUrl, websiteUrl, description, status } = proofData;
   return `You are an AI evaluator for the CredStreak accountability platform.
-Analyze the provided proof (including the text details and any attached image or document evidence) and decide whether it genuinely demonstrates successful completion of the associated goal.
+Analyze the provided proof (including the text details and any attached image or document evidence) and decide whether it genuinely demonstrates successful completion of the associated challenge.
 
 Provide ONLY a JSON object with the exact following keys (no markdown code blocks, no extra text):
 {
@@ -37,7 +37,7 @@ Provide ONLY a JSON object with the exact following keys (no markdown code block
 }
 
 Proof details:
-Goal ID: ${goalId}
+Challenge ID: ${challengeId}
 GitHub URL: ${githubUrl || 'N/A'}
 Website URL: ${websiteUrl || 'N/A'}
 Description: ${description}

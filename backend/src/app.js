@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const homeRoutes = require('./routes/homeRoutes');
-const goalRoutes = require('./routes/goalRoutes');
+const challengeRoutes = require('./routes/challengeRoutes');
 const proofRoutes = require('./routes/proofRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 // Create the Express application
 const app = express();
@@ -13,14 +14,16 @@ app.use(cors());
 // Enable JSON request body parsing
 app.use(express.json());
 
-// Use the home route module
+// Mount route modules
 app.use('/', homeRoutes);
-
-// Use the goals route module
-app.use('/', goalRoutes);
-
-// Use the proofs route module
+app.use('/', challengeRoutes);
 app.use('/', proofRoutes);
+app.use('/', statsRoutes);
 
-// Export the app so server.js can start it
+// Centralized error handling
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  res.status(500).json({ error: 'Internal server error.' });
+});
+
 module.exports = app;

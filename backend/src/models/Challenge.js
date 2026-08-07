@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const goalSchema = new mongoose.Schema(
+const challengeSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -18,13 +18,17 @@ const goalSchema = new mongoose.Schema(
       min: 0
     },
     deadline: {
-      type: String,
-      required: true,
-      trim: true
+      type: Date,
+      required: true
     },
     status: {
       type: String,
+      enum: ['active', 'proof_submitted', 'verifying', 'ai_verified', 'completed', 'failed', 'expired'],
       default: 'active'
+    },
+    completedAt: {
+      type: Date,
+      default: null
     }
   },
   {
@@ -32,6 +36,6 @@ const goalSchema = new mongoose.Schema(
   }
 );
 
-const Goal = mongoose.model('Goal', goalSchema);
+const Challenge = mongoose.model('Challenge', challengeSchema);
 
-module.exports = Goal;
+module.exports = Challenge;

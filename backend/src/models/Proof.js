@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const proofSchema = new mongoose.Schema(
   {
-    goalId: {
-      type: String,
-      required: true,
-      trim: true
+    challengeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Challenge',
+      required: true
     },
     githubUrl: {
       type: String,

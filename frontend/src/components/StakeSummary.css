@@ -1,0 +1,46 @@
+.stake-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+@media (min-width: 640px) {
+  .stake-summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.summary-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.summary-card.accent-card {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(20, 20, 20, 1) 100%);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.summary-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--accent);
+}
