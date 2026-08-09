@@ -26,6 +26,18 @@ const challengeSchema = new mongoose.Schema(
       enum: ['active', 'proof_submitted', 'verifying', 'ai_verified', 'completed', 'failed', 'expired'],
       default: 'active'
     },
+    integrationId: {
+      type: String,
+      default: 'none'
+    },
+    integrationHandle: {
+      type: String,
+      default: ''
+    },
+    metricValue: {
+      type: Number,
+      default: null
+    },
     completedAt: {
       type: Date,
       default: null

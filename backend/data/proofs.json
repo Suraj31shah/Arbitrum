@@ -10,5 +10,97 @@
     "createdAt": "2026-08-06T17:39:27.858Z",
     "updatedAt": "2026-08-06T17:39:27.860Z",
     "source": "local-fallback"
+  },
+  {
+    "challengeId": "local-challenge-1786172548202",
+    "githubUrl": "",
+    "websiteUrl": "",
+    "description": "i ran",
+    "status": "pending",
+    "filePath": "D:/Arbitrum/backend/uploads/1786172566258-726111492-6.1.png",
+    "aiAnalysis": {
+      "confidence": 15,
+      "completed": false,
+      "strengths": [
+        "Image shows formatted output from a program calculating fuzzy logic membership values."
+      ],
+      "missingEvidence": [
+        "Clear challenge details or criteria defining what was supposed to be accomplished.",
+        "GPS, activity log, or fitness tracker data if the challenge was physical running.",
+        "Source code or repository link if the challenge was running a specific script."
+      ],
+      "summary": "The submission description 'i ran' is ambiguous and the attached image shows computer terminal output for temperature membership functions, creating a mismatch with typical running proof or insufficient context for a coding task.",
+      "recommendation": "Reject or request clarification and matching proof for the specific challenge requirements."
+    },
+    "_id": "1786172577238-394948860",
+    "createdAt": "2026-08-08T07:02:57.238Z",
+    "updatedAt": "2026-08-08T07:02:57.238Z",
+    "source": "local-fallback"
+  },
+  {
+    "challengeId": "local-challenge-1786172548202",
+    "githubUrl": "",
+    "websiteUrl": "",
+    "description": "i ran",
+    "status": "pending",
+    "filePath": "D:/Arbitrum/backend/uploads/1786172651698-445629647-6.1.png",
+    "aiAnalysis": {
+      "confidence": 15,
+      "completed": false,
+      "strengths": [
+        "Submitted a screenshot showing terminal output for a fuzzy logic membership function execution."
+      ],
+      "missingEvidence": [
+        "Detailed description of the specific challenge goals and requirements.",
+        "Source code or repository link (e.g., GitHub URL) verifying the implementation.",
+        "Activity/GPS tracker data if the challenge was physical running."
+      ],
+      "summary": "The submitted proof includes a vague description ('i ran') and a screenshot showing fuzzy logic membership values for temperature. It is ambiguous whether the challenge was a coding exercise or physical running, and necessary evidence/context to verify success is missing.",
+      "recommendation": "Reject the submission and request clarification on the challenge goal along with complete proof (such as source code/repository or fitness tracking logs)."
+    },
+    "_id": "1786172662741-906916693",
+    "createdAt": "2026-08-08T07:04:22.741Z",
+    "updatedAt": "2026-08-08T07:04:22.741Z",
+    "source": "local-fallback"
+  },
+  {
+    "challengeId": "local-challenge-1786172730975",
+    "githubUrl": "",
+    "websiteUrl": "",
+    "description": "i ran",
+    "status": "pending",
+    "filePath": "D:/Arbitrum/backend/uploads/1786172742360-98134975-6.1.png",
+    "aiAnalysis": {
+      "confidence": 90,
+      "completed": false,
+      "strengths": [
+        "Submitted image shows a clean output of fuzzy logic membership function calculations."
+      ],
+      "missingEvidence": [
+        "Clear description of the actual challenge being completed",
+        "Source code or repository link for verification",
+        "Appropriate activity tracking data if the challenge was physical running"
+      ],
+      "summary": "The submitted proof features an ambiguous description ('i ran') alongside a screenshot showing code terminal output related to fuzzy logic membership values for temperatures. The evidence is contradictory and lacks necessary context to verify completion.",
+      "recommendation": "Reject the submission and request relevant proof that directly aligns with the specific challenge goals."
+    },
+    "_id": "1786172748835-684956550",
+    "createdAt": "2026-08-08T07:05:48.835Z",
+    "updatedAt": "2026-08-08T07:05:48.835Z",
+    "source": "local-fallback"
+  },
+  {
+    "challengeId": "local-challenge-1786172730975",
+    "description": "i ran",
+    "filePath": "D:/Arbitrum/backend/uploads/1786172864887-739147733-6.1.png",
+    "aiAnalysis": {
+      "confidence": 0,
+      "completed": false,
+      "summary": "Cast to ObjectId failed for value \"local-challenge-1786172730975\" (type string) at path \"_id\" for model \"Challenge\""
+    },
+    "_id": "1786172874135-250566388",
+    "createdAt": "2026-08-08T07:07:54.135Z",
+    "updatedAt": "2026-08-08T07:07:54.135Z",
+    "source": "local-fallback"
   }
 ]

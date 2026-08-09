@@ -22,9 +22,11 @@ function getAIClient() {
 
 /** Build prompt for Gemini */
 function buildPrompt(proofData) {
-  const { challengeId, githubUrl, websiteUrl, description, status } = proofData;
+  const { challengeId, githubUrl, websiteUrl, description, status, integrationData } = proofData;
   return `You are an AI evaluator for the CredStreak accountability platform.
 Analyze the provided proof (including the text details and any attached image or document evidence) and decide whether it genuinely demonstrates successful completion of the associated challenge.
+
+If "Integration Telemetry" is provided, you MUST explicitly mention those exact API statistics in your "summary" and "strengths" to prove to the user that you verified their 3rd-party app data.
 
 Provide ONLY a JSON object with the exact following keys (no markdown code blocks, no extra text):
 {
@@ -41,6 +43,9 @@ Challenge ID: ${challengeId}
 GitHub URL: ${githubUrl || 'N/A'}
 Website URL: ${websiteUrl || 'N/A'}
 Description: ${description}
+Integration Telemetry (Auto-fetched data from 3rd Party APIs): 
+${integrationData || 'No telemetry provided for this challenge.'}
+
 Status: ${status}
 `;
 }

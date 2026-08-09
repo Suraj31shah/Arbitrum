@@ -41,5 +41,6 @@ const saveProofLocally = (proofData) => {
 };
 
 module.exports = {
+  readProofs,
   saveProofLocally
 };

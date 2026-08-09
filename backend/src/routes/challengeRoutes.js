@@ -13,4 +13,8 @@ router.post('/api/challenges', createChallenge);
 router.get('/api/challenges/:id', getChallengeById);
 router.patch('/api/challenges/:id', updateChallengeStatus);
 
+// Aliases for compatibility
+router.get('/api/goals', getChallenges);
+router.post('/api/goals', createChallenge);
+
 module.exports = router;

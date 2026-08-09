@@ -1,7 +1,14 @@
+const mongoose = require('mongoose');
 const Challenge = require('../models/Challenge');
+const { readChallenges, saveChallengeLocally } = require('../utils/localChallengeStore');
 
 const getChallenges = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const localChallenges = readChallenges();
+      return res.json(localChallenges);
+    }
+
     let challenges = await Challenge.find().sort({ createdAt: -1 });
     const now = new Date();
     
@@ -16,12 +23,21 @@ const getChallenges = async (req, res) => {
 
     res.json(challenges);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch challenges.' });
+    console.error('Failed to fetch challenges from MongoDB, serving local store:', error.message);
+    const localChallenges = readChallenges();
+    res.json(localChallenges);
   }
 };
 
 const getChallengeById = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const localChallenges = readChallenges();
+      const match = localChallenges.find(c => c._id === req.params.id || c.id === req.params.id);
+      if (!match) return res.status(404).json({ error: 'Challenge not found.' });
+      return res.json(match);
+    }
+
     const challenge = await Challenge.findById(req.params.id);
     if (!challenge) {
       return res.status(404).json({ error: 'Challenge not found.' });
@@ -35,12 +51,16 @@ const getChallengeById = async (req, res) => {
 
     res.json(challenge);
   } catch (error) {
+    console.error('Failed to fetch challenge by id:', error.message);
+    const localChallenges = readChallenges();
+    const match = localChallenges.find(c => c._id === req.params.id || c.id === req.params.id);
+    if (match) return res.json(match);
     res.status(500).json({ error: 'Failed to fetch challenge.' });
   }
 };
 
 const createChallenge = async (req, res) => {
-  const { title, description, stakeAmount, deadline, status } = req.body;
+  const { title, description, stakeAmount, deadline, status, integrationId, integrationHandle, metricValue } = req.body;
 
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required.' });
@@ -58,18 +78,30 @@ const createChallenge = async (req, res) => {
     return res.status(400).json({ error: 'Deadline is required.' });
   }
 
-  try {
-    const newChallenge = await Challenge.create({
-      title: title.trim(),
-      description: description.trim(),
-      stakeAmount,
-      deadline: new Date(deadline),
-      status: status && typeof status === 'string' && status.trim() !== '' ? status.trim() : 'active'
-    });
+  const challengeData = {
+    title: title.trim(),
+    description: description.trim(),
+    stakeAmount,
+    deadline: new Date(deadline),
+    status: status && typeof status === 'string' && status.trim() !== '' ? status.trim() : 'active',
+    integrationId: integrationId || 'none',
+    integrationHandle: integrationHandle || '',
+    metricValue: metricValue || null
+  };
 
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('MongoDB disconnected. Saving challenge locally.');
+      const local = saveChallengeLocally(challengeData);
+      return res.status(201).json(local);
+    }
+
+    const newChallenge = await Challenge.create(challengeData);
     return res.status(201).json(newChallenge);
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to create challenge.' });
+    console.error('Failed to create challenge in DB, saving locally:', error.message);
+    const local = saveChallengeLocally(challengeData);
+    return res.status(201).json(local);
   }
 };
 
@@ -82,6 +114,10 @@ const updateChallengeStatus = async (req, res) => {
   }
 
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.json({ id: req.params.id, status, updatedAt: new Date().toISOString() });
+    }
+
     const update = { status };
     if (status === 'completed') {
       update.completedAt = new Date();

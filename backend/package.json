@@ -13,11 +13,18 @@
   "description": "",
   "dependencies": {
     "@google/genai": "^2.16.0",
+    "@notionhq/client": "^5.24.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "mongoose": "^9.8.0",
-    "multer": "^2.0.0"
+    "multer": "^2.0.0",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-notion": "^1.0.2",
+    "passport-todoist": "^0.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
