@@ -20,8 +20,12 @@ const ChallengeCard = ({ challenge }) => {
       
       <div className="card-footer">
         <div className="metric">
-          <span className="metric-label">Stake</span>
-          <span className="metric-value">{challenge.stakeAmount} ETH</span>
+          <span className="metric-label">Prize Pool</span>
+          <span className="metric-value">{challenge.prizePool || challenge.stakeAmount} ETH</span>
+        </div>
+        <div className="metric">
+          <span className="metric-label">Participants</span>
+          <span className="metric-value">{challenge.participants?.length || 1}</span>
         </div>
         <div className="metric">
           <span className="metric-label">Deadline</span>

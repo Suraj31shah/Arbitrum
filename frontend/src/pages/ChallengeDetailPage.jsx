@@ -12,6 +12,9 @@ const ChallengeDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const context = useOutletContext();
+  const globalWalletAddress = context?.walletAddress?.toLowerCase();
+
   useEffect(() => {
     const fetchChallengeData = async () => {
       try {
@@ -33,11 +36,62 @@ const ChallengeDetailPage = () => {
     fetchChallengeData();
   }, [id]);
 
+  const handleJoinChallenge = async () => {
+    if (!globalWalletAddress) {
+      alert("Please connect your wallet to join!");
+      return;
+    }
+    setLoading(true);
+    try {
+      // 1. Send Transaction
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x66eee' }],
+        });
+      } catch (e) {
+        console.warn('Network switch failed, proceeding anyway', e);
+      }
+      
+      const valueHex = ethers.toBeHex(ethers.parseEther(challenge.stakeAmount.toString()));
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: globalWalletAddress,
+          to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          value: valueHex,
+          gas: "0x2DC6C0"
+        }]
+      });
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.waitForTransaction(txHash);
+
+      // 2. Join in Backend
+      const response = await fetch(`http://localhost:5000/api/challenges/${id}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) throw new Error("Failed to join on server");
+      
+      const updatedChallenge = await response.json();
+      setChallenge(updatedChallenge);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to join challenge: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <div className="container text-center mt-8">Loading challenge...</div>;
   if (error) return <div className="container mt-8 text-center" style={{ color: 'var(--error)' }}>{error}</div>;
   if (!challenge) return <div className="container mt-8 text-center">Challenge not found</div>;
 
   const latestProof = proofs.length > 0 ? proofs[0] : null;
+  const isParticipant = challenge.participants?.some(p => p.walletAddress.toLowerCase() === globalWalletAddress);
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -59,35 +113,59 @@ const ChallengeDetailPage = () => {
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
+          gridTemplateColumns: '1fr 1fr 1fr', 
           gap: 'var(--space-4)',
           borderTop: '1px solid var(--border)',
           paddingTop: 'var(--space-6)'
         }}>
           <div>
-            <div className="form-label">Stake Amount</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+            <div className="form-label">Entry Stake</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {challenge.stakeAmount} ETH
             </div>
           </div>
-          
+          <div>
+            <div className="form-label">Total Prize Pool</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+              {challenge.prizePool || challenge.stakeAmount} ETH
+            </div>
+          </div>
           <div>
             <div className="form-label">Time Remaining</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
               <CountdownTimer deadline={challenge.deadline} />
             </div>
-            <div className="text-muted" style={{ fontSize: '0.875rem', marginTop: '4px' }}>
-              Due: {new Date(challenge.deadline).toLocaleString()}
-            </div>
           </div>
         </div>
+        
+        {challenge.participants && challenge.participants.length > 0 && (
+          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+            <h3 className="mb-4 text-muted" style={{ fontSize: '1rem' }}>Participants ({challenge.participants.length})</h3>
+            <div className="flex gap-4 flex-wrap">
+              {challenge.participants.map(p => (
+                <div key={p.user._id || p.walletAddress} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.status === 'completed' ? 'var(--success)' : p.status === 'failed' ? 'var(--error)' : 'var(--accent)' }}></div>
+                  <span style={{ fontFamily: 'monospace' }}>
+                    {p.user?.username || (p.walletAddress.substring(0,6) + '...')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {challenge.status === 'active' && (
         <div className="text-center">
-          <Link to={`/challenges/${challenge._id}/proof`} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}>
-            Submit Proof of Completion
-          </Link>
+          {isParticipant ? (
+            <Link to={`/challenges/${challenge._id}/proof`} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}>
+              Submit Proof of Completion
+            </Link>
+          ) : (
+            <button onClick={handleJoinChallenge} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem', backgroundColor: 'var(--accent)', color: 'var(--bg-primary)' }}>
+              Join Challenge & Stake {challenge.stakeAmount} ETH
+            </button>
+          )}
         </div>
       )}
 
