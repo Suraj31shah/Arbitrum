@@ -1,9 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import './MainLayout.css';
 
 const MainLayout = () => {
   const location = useLocation();
+  const [walletAddress, setWalletAddress] = useState(null);
+
+  useEffect(() => {
+    // Check if already logged in
+    fetch('http://localhost:5000/api/auth/current-user', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user && data.user.walletAddress) {
+          setWalletAddress(data.user.walletAddress);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const handleConnectWallet = async () => {
+    if (!window.ethereum) {
+      alert("Please install MetaMask to login");
+      return;
+    }
+    
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const address = accounts[0];
+      
+      const response = await fetch('http://localhost:5000/api/auth/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ walletAddress: address })
+      });
+      
+      if (response.ok) {
+        setWalletAddress(address);
+      } else {
+        alert("Failed to login with wallet");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:5000/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      });
+      setWalletAddress(null);
+      // Optional: redirect to home or just let the state update reflect the logout
+      window.location.href = '/'; 
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
 
   return (
     <div className="layout-container">
@@ -23,7 +77,21 @@ const MainLayout = () => {
             </Link>
           </nav>
           
-          <div className="header-actions">
+          <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {walletAddress ? (
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'monospace', color: 'var(--accent)', background: 'var(--bg-secondary)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-md)' }}>
+                  {walletAddress.substring(0,6)}...{walletAddress.substring(walletAddress.length - 4)}
+                </span>
+                <button onClick={handleLogout} className="btn" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-primary)' }}>
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleConnectWallet} className="btn btn-secondary">
+                Connect Wallet to Login
+              </button>
+            )}
             <Link to="/challenges/new" className="btn btn-primary">
               New Challenge
             </Link>
@@ -33,7 +101,7 @@ const MainLayout = () => {
 
       <main className="layout-main">
         <div className="container">
-          <Outlet />
+          <Outlet context={{ walletAddress }} />
         </div>
       </main>
       

@@ -79,6 +79,36 @@ router.get('/google/callback', (req, res, next) => {
   })(req, res, next);
 });
 
+const User = require('../models/User');
+
+router.post('/wallet', async (req, res, next) => {
+  try {
+    const { walletAddress } = req.body;
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
+    }
+
+    const lowerAddress = walletAddress.toLowerCase();
+    let user = await User.findOne({ walletAddress: lowerAddress });
+    
+    if (!user) {
+      user = new User({ 
+        walletAddress: lowerAddress,
+        username: lowerAddress.substring(0, 6) + '...' + lowerAddress.substring(lowerAddress.length - 4)
+      });
+      await user.save();
+    }
+
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.json({ message: 'Logged in successfully', user });
+    });
+  } catch (err) {
+    console.error('Wallet login error:', err);
+    return res.status(500).json({ error: 'Internal server error during wallet login' });
+  }
+});
+
 router.get('/current-user', (req, res) => {
   if (req.isAuthenticated()) {
     res.json({ user: req.user });

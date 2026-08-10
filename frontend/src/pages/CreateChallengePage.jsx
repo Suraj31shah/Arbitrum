@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 const INTEGRATIONS = [
   { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
@@ -19,6 +19,8 @@ const INTEGRATIONS = [
 
 const CreateChallengePage = () => {
   const navigate = useNavigate();
+  const context = useOutletContext();
+  const globalWalletAddress = context?.walletAddress;
   const [currentUser, setCurrentUser] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -118,8 +120,8 @@ const CreateChallengePage = () => {
       return;
     }
 
-    if (formData.stakeAmount <= 0) {
-      alert('Stake amount must be greater than 0');
+    if (formData.stakeAmount < 0) {
+      alert('Stake amount cannot be negative');
       return;
     }
 
@@ -161,157 +163,169 @@ const CreateChallengePage = () => {
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
       <div className="flex justify-between items-end mb-2">
         <h1>New Commitment</h1>
-        {currentUser && <div style={{fontSize: '0.875rem', color: 'var(--accent)'}}>Logged in as {currentUser.username}</div>}
+        {(currentUser || globalWalletAddress) && <div style={{fontSize: '0.875rem', color: 'var(--accent)'}}>Logged in as {currentUser?.username || `${globalWalletAddress.substring(0,6)}...`}</div>}
       </div>
       <p className="text-muted mb-8">Define what you want to achieve and set the stakes.</p>
 
-      <form onSubmit={handleSubmit} className="card">
-        <div className="form-group">
-          <label className="form-label" htmlFor="title">Challenge Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            className="form-input"
-            value={formData.title}
-            onChange={handleChange}
-            placeholder="e.g., Run 5km every day for a week"
-            required
-            maxLength={100}
-          />
+      {(!currentUser || !currentUser.walletAddress) && !globalWalletAddress ? (
+        <div className="card text-center" style={{ padding: '4rem 2rem' }}>
+          <h2 className="mb-4">Wallet Required</h2>
+          <p className="text-muted mb-6" style={{ fontSize: '1.1rem' }}>
+            You must connect your Web3 wallet to create a new challenge and stake ETH.
+          </p>
+          <p className="text-muted">
+            Please click <strong>Connect Wallet to Login</strong> in the top right corner of the navigation bar to continue.
+          </p>
         </div>
-
-        <div className="form-group">
-          <label className="form-label" htmlFor="description">Details</label>
-          <textarea
-            id="description"
-            name="description"
-            className="form-textarea"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Describe the exact requirements for this to be considered complete..."
-            required
-          />
-        </div>
-
-        <div className="flex gap-4 mb-6">
-          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-            <label className="form-label" htmlFor="deadline">Deadline</label>
+      ) : (
+        <form onSubmit={handleSubmit} className="card">
+          <div className="form-group">
+            <label className="form-label" htmlFor="title">Challenge Title</label>
             <input
-              type="datetime-local"
-              id="deadline"
-              name="deadline"
+              type="text"
+              id="title"
+              name="title"
               className="form-input"
-              value={formData.deadline}
+              value={formData.title}
               onChange={handleChange}
+              placeholder="e.g., Run 5km every day for a week"
+              required
+              maxLength={100}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="description">Details</label>
+            <textarea
+              id="description"
+              name="description"
+              className="form-textarea"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Describe the exact requirements for this to be considered complete..."
               required
             />
           </div>
 
-          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-            <label className="form-label" htmlFor="stakeAmount">Stake Amount (ETH)</label>
-            <input
-              type="number"
-              id="stakeAmount"
-              name="stakeAmount"
-              className="form-input"
-              value={formData.stakeAmount}
-              onChange={handleChange}
-              step="0.001"
-              min="0.001"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Integration Section */}
-        <div className="form-group p-4" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
-          <label className="form-label">Auto-Verify with 3rd Party App (Optional)</label>
-          
-          <div className="mb-4">
-            <select 
-              className="form-input"
-              value={selectedIntegrationId}
-              onChange={(e) => setSelectedIntegrationId(e.target.value)}
-            >
-              {INTEGRATIONS.map(integration => (
-                <option key={integration.id} value={integration.id}>
-                  {integration.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId) && (
-             <div className="text-center mb-4">
-               <button type="button" className="btn btn-secondary" onClick={handleConnectGithub}>
-                 Connect GitHub Account
-               </button>
-             </div>
-          )}
-
-          {selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId) && (
-             <div className="text-center mb-4">
-               <button type="button" className="btn btn-secondary" onClick={handleConnectTodoist}>
-                 Connect Todoist Account
-               </button>
-             </div>
-          )}
-
-          {selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId) && (
-             <div className="text-center mb-4">
-               <button type="button" className="btn btn-secondary" onClick={handleConnectNotion}>
-                 Connect Notion Account
-               </button>
-             </div>
-          )}
-
-          {selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId) && (
-             <div className="text-center mb-4">
-               <button type="button" className="btn btn-secondary" onClick={handleConnectGoogle}>
-                 Connect Google Health / Fit Account
-               </button>
-             </div>
-          )}
-
-          {selectedIntegrationId !== 'none' && 
-           !(selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId)) &&
-           !(selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId)) &&
-           !(selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId)) &&
-           !(selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId)) && (
-            <div className="flex gap-4 flex-col">
-              {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
-                <div>
-                  <input 
-                    type="text" 
-                    className="form-input"
-                    value={integrationHandle}
-                    onChange={(e) => setIntegrationHandle(e.target.value)}
-                    placeholder={`Enter your ${selectedIntegration.label} username or API key`}
-                    required={selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google'}
-                  />
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <input 
-                  type="number" 
-                  className="form-input"
-                  style={{ flex: 1 }}
-                  value={metricValue}
-                  onChange={(e) => setMetricValue(e.target.value)}
-                  placeholder={`Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
-                  required
-                />
-                <span className="text-muted" style={{ minWidth: '100px' }}>{selectedIntegration?.metricLabel}</span>
-              </div>
+          <div className="flex gap-4 mb-6">
+            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+              <label className="form-label" htmlFor="deadline">Deadline</label>
+              <input
+                type="datetime-local"
+                id="deadline"
+                name="deadline"
+                className="form-input"
+                value={formData.deadline}
+                onChange={handleChange}
+                required
+              />
             </div>
-          )}
-        </div>
 
-        <button type="submit" className="btn btn-primary btn-full mt-4">
-          Continue to Confirmation
-        </button>
-      </form>
+            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+              <label className="form-label" htmlFor="stakeAmount">Stake Amount (ETH)</label>
+              <input
+                type="number"
+                id="stakeAmount"
+                name="stakeAmount"
+                className="form-input"
+                value={formData.stakeAmount}
+                onChange={handleChange}
+                step="any"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Integration Section */}
+          <div className="form-group p-4" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+            <label className="form-label">Auto-Verify with 3rd Party App (Optional)</label>
+            
+            <div className="mb-4">
+              <select 
+                className="form-input"
+                value={selectedIntegrationId}
+                onChange={(e) => setSelectedIntegrationId(e.target.value)}
+              >
+                {INTEGRATIONS.map(integration => (
+                  <option key={integration.id} value={integration.id}>
+                    {integration.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId) && (
+               <div className="text-center mb-4">
+                 <button type="button" className="btn btn-secondary" onClick={handleConnectGithub}>
+                   Connect GitHub Account
+                 </button>
+               </div>
+            )}
+
+            {selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId) && (
+               <div className="text-center mb-4">
+                 <button type="button" className="btn btn-secondary" onClick={handleConnectTodoist}>
+                   Connect Todoist Account
+                 </button>
+               </div>
+            )}
+
+            {selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId) && (
+               <div className="text-center mb-4">
+                 <button type="button" className="btn btn-secondary" onClick={handleConnectNotion}>
+                   Connect Notion Account
+                 </button>
+               </div>
+            )}
+
+            {selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId) && (
+               <div className="text-center mb-4">
+                 <button type="button" className="btn btn-secondary" onClick={handleConnectGoogle}>
+                   Connect Google Health / Fit Account
+                 </button>
+               </div>
+            )}
+
+            {selectedIntegrationId !== 'none' && 
+             !(selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId)) &&
+             !(selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId)) &&
+             !(selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId)) &&
+             !(selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId)) && (
+              <div className="flex gap-4 flex-col">
+                {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
+                  <div>
+                    <input 
+                      type="text" 
+                      className="form-input"
+                      value={integrationHandle}
+                      onChange={(e) => setIntegrationHandle(e.target.value)}
+                      placeholder={`Enter your ${selectedIntegration.label} username or API key`}
+                      required={selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google'}
+                    />
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="number" 
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    value={metricValue}
+                    onChange={(e) => setMetricValue(e.target.value)}
+                    placeholder={`Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
+                    required
+                  />
+                  <span className="text-muted" style={{ minWidth: '100px' }}>{selectedIntegration?.metricLabel}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-full mt-4">
+            Continue to Confirmation
+          </button>
+        </form>
+      )}
     </div>
   );
 };

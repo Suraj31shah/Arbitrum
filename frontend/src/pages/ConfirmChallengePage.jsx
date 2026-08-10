@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, Navigate, useOutletContext } from 'react-router-dom';
 import { api } from '../services/api';
+import { ethers } from 'ethers';
 
 const ConfirmChallengePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const context = useOutletContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Use the global wallet address from the layout
+  const walletAddress = context?.walletAddress || '';
 
   const challengeData = location.state?.challengeData;
 
@@ -14,15 +19,60 @@ const ConfirmChallengePage = () => {
     return <Navigate to="/challenges/new" replace />;
   }
 
+  // We no longer need to fetch current-user here because the navbar handles it 
+  // and passes it down via context!
+
   const handleConfirm = async () => {
+    if (!walletAddress) {
+      setError('Please connect your MetaMask wallet first.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
+      if (Number(challengeData.stakeAmount) > 0) {
+        // Force MetaMask to switch to Arbitrum Sepolia (Chain ID: 421614 -> 0x66eee)
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x66eee' }],
+          });
+        } catch (switchError) {
+          // If the network is not added to MetaMask, we could ask to add it, 
+          // but assuming they have it since they showed a screenshot of it
+          throw new Error('Please switch to Arbitrum Sepolia in MetaMask first.');
+        }
+
+        // 1. Process MetaMask Transaction manually to bypass Ethers.js estimateGas bugs on L2s
+        const valueHex = ethers.toBeHex(ethers.parseEther(challengeData.stakeAmount.toString()));
+        
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [{
+            from: walletAddress,
+            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            value: valueHex,
+            gas: "0x2DC6C0" // 3,000,000 gas limit explicitly hardcoded to bypass MetaMask estimation failures
+          }]
+        });
+        
+        // Wait for the transaction to be mined
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.waitForTransaction(txHash);
+      }
+
+      // 2. Save challenge to backend once transaction is confirmed
       const response = await api.createChallenge(challengeData);
-      // Assuming no actual crypto wallet tx for this version
       navigate(`/challenges/${response._id}`);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      // Differentiate between user rejecting tx vs backend error
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setError('Transaction was rejected in MetaMask.');
+      } else {
+        setError(`Transaction failed: ${err.message || 'Unknown error'}`);
+      }
       setLoading(false);
     }
   };
@@ -45,6 +95,17 @@ const ConfirmChallengePage = () => {
             <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--accent)', lineHeight: 1 }}>
               {challengeData.stakeAmount} ETH
             </div>
+          </div>
+          <div>
+            {!walletAddress ? (
+              <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                Please click 'Connect Wallet to Login' in the top right to continue.
+              </div>
+            ) : (
+              <div style={{ background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', fontFamily: 'monospace' }}>
+                {walletAddress.substring(0, 6)}...{walletAddress.substring(walletAddress.length - 4)}
+              </div>
+            )}
           </div>
         </div>
 
@@ -77,9 +138,9 @@ const ConfirmChallengePage = () => {
           onClick={handleConfirm} 
           className="btn btn-primary" 
           style={{ flex: 2 }}
-          disabled={loading}
+          disabled={loading || !walletAddress}
         >
-          {loading ? 'Confirming...' : 'Confirm & Stake ETH'}
+          {loading ? 'Processing...' : 'Confirm & Stake ETH'}
         </button>
       </div>
     </div>
