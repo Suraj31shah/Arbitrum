@@ -3,6 +3,8 @@ const passport = require('passport');
 
 const router = express.Router();
 
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
 router.get('/github/callback', (req, res, next) => {
@@ -12,11 +14,11 @@ router.get('/github/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'GitHub Auth Failed' });
     }
     if (!user) {
-      return res.redirect('http://localhost:5173/challenges/new?error=auth_failed');
+      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect('http://localhost:5173/challenges/new');
+      return res.redirect(`${frontendUrl}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -30,11 +32,11 @@ router.get('/todoist/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Todoist Auth Failed' });
     }
     if (!user) {
-      return res.redirect('http://localhost:5173/challenges/new?error=auth_failed');
+      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect('http://localhost:5173/challenges/new');
+      return res.redirect(`${frontendUrl}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -48,11 +50,11 @@ router.get('/notion/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Notion Auth Failed' });
     }
     if (!user) {
-      return res.redirect('http://localhost:5173/challenges/new?error=auth_failed');
+      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect('http://localhost:5173/challenges/new');
+      return res.redirect(`${frontendUrl}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -70,11 +72,11 @@ router.get('/google/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Google Auth Failed' });
     }
     if (!user) {
-      return res.redirect('http://localhost:5173/challenges/new?error=auth_failed');
+      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect('http://localhost:5173/challenges/new');
+      return res.redirect(`${frontendUrl}/challenges/new`);
     });
   })(req, res, next);
 });
