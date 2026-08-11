@@ -171,11 +171,19 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
     if (commitsArray && commitsArray.length > 0) {
       return acc + commitsArray.length;
     }
-    // If GitHub omits the commits array (often happens with Web UI edits), count it as 1 commit
+    // If GitHub omits the commits array, count it as 1 commit
     return acc + 1;
   }, 0);
 
-  return `GitHub Telemetry for ${username}: Found ${totalCommits} commits recently across ${pushEvents.length} push events.`;
+  // Filter for Pull Requests opened
+  const prEvents = events.filter(e => e.type === 'PullRequestEvent' && e.payload && e.payload.action === 'opened');
+  const totalPRs = prEvents.length;
+
+  // Filter for Issues opened
+  const issueEvents = events.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'opened');
+  const totalIssues = issueEvents.length;
+
+  return `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests opened, and ${totalIssues} issues opened recently.`;
 }
 
 async function fetchLeetCodeData(username) {

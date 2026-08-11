@@ -39,6 +39,11 @@ const CreateChallengePage = () => {
     'Calories': '',
     'Active Minutes': ''
   });
+  const [githubMetrics, setGithubMetrics] = useState({
+    'Commits': '',
+    'Pull Requests': '',
+    'Issues': ''
+  });
 
   useEffect(() => {
     // Restore form data from before OAuth redirect
@@ -144,6 +149,14 @@ const CreateChallengePage = () => {
       }
     }
 
+    if (selectedIntegrationId === 'github') {
+      const hasAnyMetric = Object.values(githubMetrics).some(val => val !== '');
+      if (!hasAnyMetric) {
+        alert("Please select at least one GitHub metric and enter a target amount.");
+        return;
+      }
+    }
+
     let finalHandle = integrationHandle;
     if (selectedIntegrationId === 'github' && currentUser && currentUser.githubId) {
       finalHandle = currentUser.username;
@@ -163,6 +176,12 @@ const CreateChallengePage = () => {
         .map(([key, val]) => `${val} ${key}`)
         .join(' and ');
       enhancedDescription = `Google Health Integration: Goal is to complete ${activeGoogleMetrics}.\n\n` + formData.description;
+    } else if (selectedIntegrationId === 'github') {
+      const activeGithubMetrics = Object.entries(githubMetrics)
+        .filter(([_, val]) => val !== '')
+        .map(([key, val]) => `${val} ${key}`)
+        .join(' and ');
+      enhancedDescription = `GitHub Integration: Goal is to complete ${activeGithubMetrics}.\n\n` + formData.description;
     } else if (selectedIntegrationId !== 'none') {
       enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${selectedIntegration.metricLabel}.\n\n` + formData.description;
     }
@@ -350,6 +369,43 @@ const CreateChallengePage = () => {
                     </div>
                   </div>
                 )}
+                {selectedIntegrationId === 'github' && (
+                  <div className="form-group mb-0">
+                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metrics to Track</label>
+                    <div className="flex flex-col gap-3 mt-2">
+                      {['Commits', 'Pull Requests', 'Issues'].map(metric => (
+                        <div key={metric} className="flex items-center gap-3">
+                          <label className="flex items-center gap-2" style={{ minWidth: '130px', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={githubMetrics[metric] !== ''}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setGithubMetrics(prev => ({ ...prev, [metric]: '0' }));
+                                } else {
+                                  setGithubMetrics(prev => ({ ...prev, [metric]: '' }));
+                                }
+                              }}
+                            />
+                            {metric}
+                          </label>
+                          {githubMetrics[metric] !== '' && (
+                            <input 
+                              type="number" 
+                              className="form-input py-1"
+                              style={{ flex: 1 }}
+                              value={githubMetrics[metric] === '0' ? '' : githubMetrics[metric]}
+                              onChange={(e) => setGithubMetrics(prev => ({ ...prev, [metric]: e.target.value }))}
+                              placeholder={`Target ${metric}`}
+                              min="1"
+                              required
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
                   <div>
                     <input 
@@ -362,7 +418,7 @@ const CreateChallengePage = () => {
                     />
                   </div>
                 )}
-                {selectedIntegrationId !== 'google' && (
+                {selectedIntegrationId !== 'google' && selectedIntegrationId !== 'github' && (
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" 
