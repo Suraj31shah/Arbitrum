@@ -25,13 +25,17 @@ app.use(cors({ origin: frontendUrl, credentials: true }));
 // Enable JSON request body parsing
 app.use(express.json());
 
+// Trust the Render proxy so secure cookies work properly
+app.set('trust proxy', 1);
+
 // Session setup
 app.use(session({
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // true if using https
+    secure: process.env.NODE_ENV === 'production' ? true : false,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
