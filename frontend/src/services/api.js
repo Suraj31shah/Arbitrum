@@ -25,7 +25,7 @@ export const api = {
 
   // Challenges
   getChallenges: () => fetch(`${API_BASE}/challenges`, { credentials: 'include' }).then(handleResponse),
-  getChallengeById: (id) => fetch(`${API_BASE}/challenges/${id}`, { credentials: 'include' }).then(handleResponse),
+  getChallengeById: (id) => fetch(`${API_BASE}/challenges/${id}?t=${Date.now()}`, { credentials: 'include' }).then(handleResponse),
   createChallenge: (data) => fetch(`${API_BASE}/challenges`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -41,7 +41,7 @@ export const api = {
 
   // Proofs
   getProofsByChallenge: (challengeId) => fetch(`${API_BASE}/proofs?challengeId=${challengeId}`, { credentials: 'include' }).then(handleResponse),
-  getProofById: (id) => fetch(`${API_BASE}/proofs/${id}`, { credentials: 'include' }).then(handleResponse),
+  getProofById: (id) => fetch(`${API_BASE}/proofs/${id}?t=${Date.now()}`, { credentials: 'include' }).then(handleResponse),
   createProof: (formData) => fetch(`${API_BASE}/proofs`, {
     method: 'POST',
     credentials: 'include',
