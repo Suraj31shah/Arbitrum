@@ -132,15 +132,15 @@ async function fetchTodoistData(todoistId, dateStart, dateEnd) {
     throw new Error('Todoist user not found or access token missing.');
   }
 
-  // Use the Todoist REST API v2 to fetch active tasks
-  const response = await fetch(`https://api.todoist.com/rest/v2/tasks`, {
+  // Use the Todoist Unified API v1 to fetch active tasks
+  const response = await fetch(`https://api.todoist.com/api/v1/tasks`, {
     headers: {
       'Authorization': `Bearer ${user.todoistAccessToken}`
     }
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch Todoist tasks: ${response.statusText}`);
+    throw new Error(`Failed to fetch Todoist tasks: ${response.status} ${response.statusText}`);
   }
 
   const tasks = await response.json();
