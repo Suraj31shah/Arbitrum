@@ -56,10 +56,17 @@ const ConfirmChallengePage = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         
+        // Fetch current fee data and artificially inflate it to prevent Arbitrum baseFee spikes 
+        // while the user is taking time to click "Confirm" in MetaMask.
+        const feeData = await provider.getFeeData();
+        
         const tx = await signer.sendTransaction({
           to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
           data: data,
-          value: parsedStake
+          value: parsedStake,
+          // If maxFeePerGas exists, pad it by 50% to ensure success
+          maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 150n) / 100n : undefined,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || undefined
         });
         
         // Wait for the transaction to be mined
