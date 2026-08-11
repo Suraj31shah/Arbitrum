@@ -111,31 +111,101 @@ const SubmitProofPage = () => {
             <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>Accepted formats: JPG, PNG, WEBP, PDF (Max 10MB)</div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="githubUrl">GitHub URL (Optional)</label>
-            <input
-              type="url"
-              id="githubUrl"
-              name="githubUrl"
-              className="form-input"
-              value={formData.githubUrl}
-              onChange={handleChange}
-              placeholder="https://github.com/..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="websiteUrl">Live Link (Optional)</label>
-            <input
-              type="url"
-              id="websiteUrl"
-              name="websiteUrl"
-              className="form-input"
-              value={formData.websiteUrl}
-              onChange={handleChange}
-              placeholder="https://..."
-            />
-          </div>
+          {(() => {
+            switch (challenge.integrationId) {
+              case 'github':
+              case 'wakatime':
+              case 'leetcode':
+                return (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="githubUrl">GitHub URL (Optional)</label>
+                      <input
+                        type="url"
+                        id="githubUrl"
+                        name="githubUrl"
+                        className="form-input"
+                        value={formData.githubUrl}
+                        onChange={handleChange}
+                        placeholder="https://github.com/..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="websiteUrl">Live Link (Optional)</label>
+                      <input
+                        type="url"
+                        id="websiteUrl"
+                        name="websiteUrl"
+                        className="form-input"
+                        value={formData.websiteUrl}
+                        onChange={handleChange}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </>
+                );
+              case 'google':
+                return (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="websiteUrl">Fitness Activity Link (Optional)</label>
+                    <input
+                      type="url"
+                      id="websiteUrl"
+                      name="websiteUrl"
+                      className="form-input"
+                      value={formData.websiteUrl}
+                      onChange={handleChange}
+                      placeholder="Strava, Google Fit web link, etc."
+                    />
+                  </div>
+                );
+              case 'notion':
+                return (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="websiteUrl">Notion Page Link (Optional)</label>
+                    <input
+                      type="url"
+                      id="websiteUrl"
+                      name="websiteUrl"
+                      className="form-input"
+                      value={formData.websiteUrl}
+                      onChange={handleChange}
+                      placeholder="https://www.notion.so/..."
+                    />
+                  </div>
+                );
+              case 'todoist':
+                return (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="websiteUrl">Todoist Project Link (Optional)</label>
+                    <input
+                      type="url"
+                      id="websiteUrl"
+                      name="websiteUrl"
+                      className="form-input"
+                      value={formData.websiteUrl}
+                      onChange={handleChange}
+                      placeholder="https://todoist.com/..."
+                    />
+                  </div>
+                );
+              default:
+                return (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="websiteUrl">Relevant Web Link (Optional)</label>
+                    <input
+                      type="url"
+                      id="websiteUrl"
+                      name="websiteUrl"
+                      className="form-input"
+                      value={formData.websiteUrl}
+                      onChange={handleChange}
+                      placeholder="https://..."
+                    />
+                  </div>
+                );
+            }
+          })()}
 
           <button type="submit" className="btn btn-primary btn-full mt-4">
             Submit for Verification
