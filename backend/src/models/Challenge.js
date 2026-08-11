@@ -35,7 +35,7 @@ const challengeSchema = new mongoose.Schema(
     // Global status of the challenge
     status: {
       type: String,
-      enum: ['active', 'expired', 'completed', 'failed'],
+      enum: ['active', 'expired', 'completed', 'failed', 'ai_verified'],
       default: 'active'
     },
     creator: {
