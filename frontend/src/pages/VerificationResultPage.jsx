@@ -57,6 +57,19 @@ const VerificationResultPage = () => {
     }
   };
 
+  const handleClaimSuccess = async () => {
+    setActionLoading(true);
+    try {
+      await api.updateChallengeStatus(id, 'completed');
+      setChallenge(prev => ({ ...prev, status: 'completed' }));
+      setActionResult('success');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDisputeAI = async () => {
     setActionLoading(true);
     try {
@@ -73,6 +86,22 @@ const VerificationResultPage = () => {
   if (loading) return <div className="container text-center mt-8">Loading result...</div>;
   if (error) return <div className="container mt-8 text-center" style={{ color: 'var(--error)' }}>{error}</div>;
   if (!proof || !proof.aiAnalysis) return <div className="container mt-8 text-center">Analysis data not found</div>;
+
+  if (actionResult === 'success') {
+    return (
+      <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+        <div className="card" style={{ padding: 'var(--space-8)', border: '1px solid var(--success)' }}>
+          <h2 style={{ color: 'var(--success)', marginBottom: 'var(--space-6)' }}>Congratulations!</h2>
+          <p style={{ fontSize: '1.125rem', marginBottom: 'var(--space-4)' }}>
+            Your proof was verified and your challenge is now officially complete.
+          </p>
+          <Link to={`/challenges/${id}`} className="btn btn-primary mt-4">
+            Return to Challenge
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Render the post-decision screens if an action was taken or if the challenge is already handled
   if (actionResult === 'accepted' || (challenge.status === 'active' && proof)) {
@@ -130,7 +159,24 @@ const VerificationResultPage = () => {
 
       <VerificationDisplay analysis={proof.aiAnalysis} />
 
-      {challenge.status === 'ai_verified' && (
+      {challenge.status === 'ai_verified' && proof.aiAnalysis.completed === true && (
+        <div className="card mt-8" style={{ border: '1px solid var(--success)', backgroundColor: 'var(--bg-secondary)' }}>
+          <h3 className="mb-4 text-center" style={{ color: 'var(--success)' }}>Verification Successful!</h3>
+          <p className="text-center mb-6">The AI has verified that you successfully completed your challenge.</p>
+          <div className="flex justify-center">
+            <button 
+              onClick={handleClaimSuccess} 
+              disabled={actionLoading}
+              className="btn btn-primary" 
+              style={{ padding: '1rem 2rem' }}
+            >
+              Complete Challenge
+            </button>
+          </div>
+        </div>
+      )}
+
+      {challenge.status === 'ai_verified' && proof.aiAnalysis.completed !== true && (
         <div className="card mt-8" style={{ border: '1px solid var(--border-focus)', backgroundColor: 'var(--bg-secondary)' }}>
           <h3 className="mb-4 text-center">What would you like to do?</h3>
           
