@@ -34,7 +34,11 @@ const CreateChallengePage = () => {
   const [selectedIntegrationId, setSelectedIntegrationId] = useState('none');
   const [integrationHandle, setIntegrationHandle] = useState('');
   const [metricValue, setMetricValue] = useState('');
-  const [googleMetricType, setGoogleMetricType] = useState('Steps');
+  const [googleMetrics, setGoogleMetrics] = useState({
+    'Steps': '',
+    'Calories': '',
+    'Active Minutes': ''
+  });
 
   useEffect(() => {
     // Restore form data from before OAuth redirect
@@ -127,9 +131,17 @@ const CreateChallengePage = () => {
       return;
     }
 
-    if (selectedIntegrationId !== 'none' && !metricValue) {
+    if (selectedIntegrationId !== 'none' && selectedIntegrationId !== 'google' && !metricValue) {
       alert(`Please enter the number of ${selectedIntegration.metricLabel} to complete.`);
       return;
+    }
+
+    if (selectedIntegrationId === 'google') {
+      const hasAnyMetric = Object.values(googleMetrics).some(val => val !== '');
+      if (!hasAnyMetric) {
+        alert("Please select at least one Google Health metric and enter a target amount.");
+        return;
+      }
     }
 
     let finalHandle = integrationHandle;
@@ -145,9 +157,14 @@ const CreateChallengePage = () => {
 
     // Enhance description with integration if selected
     let enhancedDescription = formData.description;
-    if (selectedIntegrationId !== 'none') {
-      const label = selectedIntegrationId === 'google' ? googleMetricType : selectedIntegration.metricLabel;
-      enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${label}.\n\n` + formData.description;
+    if (selectedIntegrationId === 'google') {
+      const activeGoogleMetrics = Object.entries(googleMetrics)
+        .filter(([_, val]) => val !== '')
+        .map(([key, val]) => `${val} ${key}`)
+        .join(' and ');
+      enhancedDescription = `Google Health Integration: Goal is to complete ${activeGoogleMetrics}.\n\n` + formData.description;
+    } else if (selectedIntegrationId !== 'none') {
+      enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${selectedIntegration.metricLabel}.\n\n` + formData.description;
     }
 
     const challengeData = {
@@ -298,18 +315,39 @@ const CreateChallengePage = () => {
               <div className="flex gap-4 flex-col">
                 {selectedIntegrationId === 'google' && (
                   <div className="form-group mb-0">
-                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metric Type</label>
-                    <select 
-                      className="form-input"
-                      value={googleMetricType}
-                      onChange={(e) => setGoogleMetricType(e.target.value)}
-                      id="google-metric-select"
-                      style={{ marginBottom: '8px' }}
-                    >
-                      <option value="Steps">Steps</option>
-                      <option value="Calories">Calories</option>
-                      <option value="Active Minutes">Active Minutes</option>
-                    </select>
+                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metrics to Track</label>
+                    <div className="flex flex-col gap-3 mt-2">
+                      {['Steps', 'Calories', 'Active Minutes'].map(metric => (
+                        <div key={metric} className="flex items-center gap-3">
+                          <label className="flex items-center gap-2" style={{ minWidth: '130px', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={googleMetrics[metric] !== ''}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setGoogleMetrics(prev => ({ ...prev, [metric]: '0' }));
+                                } else {
+                                  setGoogleMetrics(prev => ({ ...prev, [metric]: '' }));
+                                }
+                              }}
+                            />
+                            {metric}
+                          </label>
+                          {googleMetrics[metric] !== '' && (
+                            <input 
+                              type="number" 
+                              className="form-input py-1"
+                              style={{ flex: 1 }}
+                              value={googleMetrics[metric] === '0' ? '' : googleMetrics[metric]}
+                              onChange={(e) => setGoogleMetrics(prev => ({ ...prev, [metric]: e.target.value }))}
+                              placeholder={`Target ${metric}`}
+                              min="1"
+                              required
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
@@ -324,20 +362,22 @@ const CreateChallengePage = () => {
                     />
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="number" 
-                    className="form-input"
-                    style={{ flex: 1 }}
-                    value={metricValue}
-                    onChange={(e) => setMetricValue(e.target.value)}
-                    placeholder={selectedIntegrationId === 'google' ? `Target ${googleMetricType} (e.g. 5000)` : `Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
-                    required
-                  />
-                  <span className="text-muted" style={{ minWidth: '100px' }}>
-                    {selectedIntegrationId === 'google' ? googleMetricType : selectedIntegration?.metricLabel}
-                  </span>
-                </div>
+                {selectedIntegrationId !== 'google' && (
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      className="form-input"
+                      style={{ flex: 1 }}
+                      value={metricValue}
+                      onChange={(e) => setMetricValue(e.target.value)}
+                      placeholder={`Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
+                      required
+                    />
+                    <span className="text-muted" style={{ minWidth: '100px' }}>
+                      {selectedIntegration?.metricLabel}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
