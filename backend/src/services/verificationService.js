@@ -53,9 +53,11 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      aggregateBy: [{
-        dataTypeName: "com.google.step_count.delta"
-      }],
+      aggregateBy: [
+        { dataTypeName: "com.google.step_count.delta" },
+        { dataTypeName: "com.google.calories.expended" },
+        { dataTypeName: "com.google.active_minutes" }
+      ],
       bucketByTime: { durationMillis: 86400000 },
       startTimeMillis,
       endTimeMillis
@@ -68,20 +70,33 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
 
   const data = await response.json();
   let totalSteps = 0;
+  let totalCalories = 0;
+  let totalActiveMinutes = 0;
   
   if (data.bucket) {
     for (const bucket of data.bucket) {
-      if (bucket.dataset && bucket.dataset[0] && bucket.dataset[0].point) {
-        for (const point of bucket.dataset[0].point) {
-          if (point.value && point.value[0]) {
-            totalSteps += point.value[0].intVal || 0;
+      if (bucket.dataset) {
+        for (const dataset of bucket.dataset) {
+          if (dataset.point) {
+            for (const point of dataset.point) {
+              if (point.value && point.value[0]) {
+                const val = point.value[0].intVal || point.value[0].fpVal || 0;
+                if (dataset.dataSourceId && dataset.dataSourceId.includes("step_count")) {
+                  totalSteps += val;
+                } else if (dataset.dataSourceId && dataset.dataSourceId.includes("calories")) {
+                  totalCalories += val;
+                } else if (dataset.dataSourceId && dataset.dataSourceId.includes("active_minutes")) {
+                  totalActiveMinutes += val;
+                }
+              }
+            }
           }
         }
       }
     }
   }
 
-  return `Google Health Telemetry: User logged ${totalSteps} steps recently.`;
+  return `Google Health Telemetry: User logged ${totalSteps} steps, ${Math.round(totalCalories)} calories burned, and ${totalActiveMinutes} active minutes recently.`;
 }
 
 async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd) {
