@@ -34,6 +34,7 @@ const CreateChallengePage = () => {
   const [selectedIntegrationId, setSelectedIntegrationId] = useState('none');
   const [integrationHandle, setIntegrationHandle] = useState('');
   const [metricValue, setMetricValue] = useState('');
+  const [googleMetricType, setGoogleMetricType] = useState('Steps');
 
   useEffect(() => {
     // Restore form data from before OAuth redirect
@@ -145,7 +146,8 @@ const CreateChallengePage = () => {
     // Enhance description with integration if selected
     let enhancedDescription = formData.description;
     if (selectedIntegrationId !== 'none') {
-      enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${selectedIntegration.metricLabel}.\n\n` + formData.description;
+      const label = selectedIntegrationId === 'google' ? googleMetricType : selectedIntegration.metricLabel;
+      enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${label}.\n\n` + formData.description;
     }
 
     const challengeData = {
@@ -294,6 +296,22 @@ const CreateChallengePage = () => {
              !(selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId)) &&
              !(selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId)) && (
               <div className="flex gap-4 flex-col">
+                {selectedIntegrationId === 'google' && (
+                  <div className="form-group mb-0">
+                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metric Type</label>
+                    <select 
+                      className="form-input"
+                      value={googleMetricType}
+                      onChange={(e) => setGoogleMetricType(e.target.value)}
+                      id="google-metric-select"
+                      style={{ marginBottom: '8px' }}
+                    >
+                      <option value="Steps">Steps</option>
+                      <option value="Calories">Calories</option>
+                      <option value="Active Minutes">Active Minutes</option>
+                    </select>
+                  </div>
+                )}
                 {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
                   <div>
                     <input 
@@ -313,10 +331,12 @@ const CreateChallengePage = () => {
                     style={{ flex: 1 }}
                     value={metricValue}
                     onChange={(e) => setMetricValue(e.target.value)}
-                    placeholder={`Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
+                    placeholder={selectedIntegrationId === 'google' ? `Target ${googleMetricType} (e.g. 5000)` : `Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
                     required
                   />
-                  <span className="text-muted" style={{ minWidth: '100px' }}>{selectedIntegration?.metricLabel}</span>
+                  <span className="text-muted" style={{ minWidth: '100px' }}>
+                    {selectedIntegrationId === 'google' ? googleMetricType : selectedIntegration?.metricLabel}
+                  </span>
                 </div>
               </div>
             )}
