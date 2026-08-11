@@ -28,10 +28,6 @@ const SubmitProofPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      alert('A file upload (image or PDF) is required as primary proof.');
-      return;
-    }
 
     setLoading(true);
     setError(null);
@@ -41,7 +37,7 @@ const SubmitProofPage = () => {
     payload.append('description', formData.description);
     if (formData.githubUrl) payload.append('githubUrl', formData.githubUrl);
     if (formData.websiteUrl) payload.append('websiteUrl', formData.websiteUrl);
-    payload.append('file', file);
+    if (file) payload.append('file', file);
 
     try {
       const response = await api.createProof(payload);
@@ -97,7 +93,7 @@ const SubmitProofPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="file">Upload Evidence (Required)</label>
+            <label className="form-label" htmlFor="file">Upload Evidence (Optional)</label>
             <input
               type="file"
               id="file"
@@ -106,7 +102,6 @@ const SubmitProofPage = () => {
               style={{ padding: '8px' }}
               accept="image/*,application/pdf"
               onChange={(e) => setFile(e.target.files[0])}
-              required
             />
             <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>Accepted formats: JPG, PNG, WEBP, PDF (Max 10MB)</div>
           </div>

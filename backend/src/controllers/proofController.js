@@ -17,10 +17,6 @@ const createProof = async (req, res) => {
     return res.status(400).json({ error: 'Description is required.' });
   }
 
-  if (!req.file) {
-    return res.status(400).json({ error: 'A file upload is required.' });
-  }
-
   try {
     const proofData = {
       challengeId: challengeId.trim(),
@@ -28,7 +24,7 @@ const createProof = async (req, res) => {
       websiteUrl: websiteUrl && typeof websiteUrl === 'string' ? websiteUrl.trim() : '',
       description: description.trim(),
       status: 'pending',
-      filePath: req.file.path.replace(/\\/g, '/')
+      filePath: req.file ? req.file.path.replace(/\\/g, '/') : ''
     };
 
     // Run Gemini AI analysis
