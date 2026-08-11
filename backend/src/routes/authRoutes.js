@@ -41,6 +41,14 @@ router.get('/todoist/callback', (req, res, next) => {
   })(req, res, next);
 });
 
+router.get('/todoist/disconnect', async (req, res) => {
+  if (req.user) {
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user.id, { $unset: { todoistId: "", todoistAccessToken: "" } });
+  }
+  res.redirect(`${frontendUrl}/challenges/new`);
+});
+
 router.get('/notion', passport.authenticate('notion'));
 
 router.get('/notion/callback', (req, res, next) => {

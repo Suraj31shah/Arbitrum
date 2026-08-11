@@ -309,6 +309,15 @@ const CreateChallengePage = () => {
                  </button>
                </div>
             )}
+            
+            {selectedIntegrationId === 'todoist' && currentUser && currentUser.todoistId && (
+               <div className="text-center mb-4 flex justify-center items-center gap-4">
+                 <span className="text-success">✓ Todoist Connected</span>
+                 <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }} onClick={() => window.location.href = `${getApiUrl()}/api/auth/todoist/disconnect`}>
+                   Disconnect
+                 </button>
+               </div>
+            )}
 
             {selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId) && (
                <div className="text-center mb-4">
