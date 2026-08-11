@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { api, getApiUrl } from '../services/api';
 
 const INTEGRATIONS = [
   { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
@@ -53,7 +54,7 @@ const CreateChallengePage = () => {
     }
 
     // Check if user is logged in via OAuth
-    fetch('http://localhost:5000/api/auth/current-user', { credentials: 'include' })
+    fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.user) {
@@ -84,7 +85,7 @@ const CreateChallengePage = () => {
     localStorage.setItem('pendingFormData', JSON.stringify(formData));
     localStorage.setItem('pendingMetricValue', metricValue);
     localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = 'http://localhost:5000/api/auth/github';
+    window.location.href = `${getApiUrl()}/api/auth/github`;
   };
 
   const handleConnectTodoist = () => {
@@ -92,7 +93,7 @@ const CreateChallengePage = () => {
     localStorage.setItem('pendingFormData', JSON.stringify(formData));
     localStorage.setItem('pendingMetricValue', metricValue);
     localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = 'http://localhost:5000/api/auth/todoist';
+    window.location.href = `${getApiUrl()}/api/auth/todoist`;
   };
 
   const handleConnectNotion = () => {
@@ -100,7 +101,7 @@ const CreateChallengePage = () => {
     localStorage.setItem('pendingFormData', JSON.stringify(formData));
     localStorage.setItem('pendingMetricValue', metricValue);
     localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = 'http://localhost:5000/api/auth/notion';
+    window.location.href = `${getApiUrl()}/api/auth/notion`;
   };
 
   const handleConnectGoogle = () => {
@@ -108,7 +109,7 @@ const CreateChallengePage = () => {
     localStorage.setItem('pendingFormData', JSON.stringify(formData));
     localStorage.setItem('pendingMetricValue', metricValue);
     localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = 'http://localhost:5000/api/auth/google';
+    window.location.href = `${getApiUrl()}/api/auth/google`;
   };
 
   const handleSubmit = (e) => {

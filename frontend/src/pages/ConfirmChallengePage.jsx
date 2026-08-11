@@ -44,16 +44,25 @@ const ConfirmChallengePage = () => {
           throw new Error('Please switch to Arbitrum Sepolia in MetaMask first.');
         }
 
-        // 1. Process MetaMask Transaction manually to bypass Ethers.js estimateGas bugs on L2s
-        const valueHex = ethers.toBeHex(ethers.parseEther(challengeData.stakeAmount.toString()));
+        // Encode the smart contract function call: joinChallenge(string, uint256)
+        // For the creator, we will temporarily use the title as the unique ID for the smart contract
+        const iface = new ethers.Interface([
+          "function joinChallenge(string challengeId, uint256 requiredStake) external payable"
+        ]);
+        const parsedStake = ethers.parseEther(challengeData.stakeAmount.toString());
+        const data = iface.encodeFunctionData("joinChallenge", [challengeData.title, parsedStake]);
+
+        // 1. Process MetaMask Transaction manually
+        const valueHex = ethers.toBeHex(parsedStake);
         
         const txHash = await window.ethereum.request({
           method: 'eth_sendTransaction',
           params: [{
             from: walletAddress,
-            to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
+            data: data,
             value: valueHex,
-            gas: "0x2DC6C0" // 3,000,000 gas limit explicitly hardcoded to bypass MetaMask estimation failures
+            gas: "0x2DC6C0"
           }]
         });
         
@@ -62,9 +71,10 @@ const ConfirmChallengePage = () => {
         await provider.waitForTransaction(txHash);
       }
 
-      // 2. Save challenge to backend once transaction is confirmed
+      // 2. Save challenge to backend once transaction is confirmed (or if no stake)
       const response = await api.createChallenge(challengeData);
       navigate(`/challenges/${response._id}`);
+      
     } catch (err) {
       console.error(err);
       // Differentiate between user rejecting tx vs backend error

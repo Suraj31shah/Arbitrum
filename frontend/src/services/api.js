@@ -1,4 +1,9 @@
-const API_BASE = '/api';
+export const getApiUrl = () => {
+  // If deployed, this will be your backend URL. If local, it defaults to localhost.
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+};
+
+const API_BASE = `${getApiUrl()}/api`;
 
 const handleResponse = async (response) => {
   if (!response.ok) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { getApiUrl } from '../services/api';
 import './MainLayout.css';
 
 const MainLayout = () => {
@@ -8,7 +9,7 @@ const MainLayout = () => {
 
   useEffect(() => {
     // Check if already logged in
-    fetch('http://localhost:5000/api/auth/current-user', { credentials: 'include' })
+    fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.user && data.user.walletAddress) {
@@ -28,7 +29,7 @@ const MainLayout = () => {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const address = accounts[0];
       
-      const response = await fetch('http://localhost:5000/api/auth/wallet', {
+      const response = await fetch(`${getApiUrl()}/api/auth/wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -47,7 +48,7 @@ const MainLayout = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/api/auth/logout', { 
+      await fetch(`${getApiUrl()}/api/auth/logout`, { 
         method: 'POST',
         credentials: 'include'
       });

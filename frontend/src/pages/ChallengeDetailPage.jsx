@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { api, getApiUrl } from '../services/api';
+import { ethers } from 'ethers';
 import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
 import VerificationDisplay from '../components/VerificationDisplay';
@@ -53,12 +54,20 @@ const ChallengeDetailPage = () => {
         console.warn('Network switch failed, proceeding anyway', e);
       }
       
-      const valueHex = ethers.toBeHex(ethers.parseEther(challenge.stakeAmount.toString()));
+      // Encode the smart contract function call: joinChallenge(string, uint256)
+      const iface = new ethers.Interface([
+        "function joinChallenge(string challengeId, uint256 requiredStake) external payable"
+      ]);
+      const parsedStake = ethers.parseEther(challenge.stakeAmount.toString());
+      const data = iface.encodeFunctionData("joinChallenge", [challenge.title, parsedStake]);
+      
+      const valueHex = ethers.toBeHex(parsedStake);
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [{
           from: globalWalletAddress,
-          to: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+          to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
+          data: data,
           value: valueHex,
           gas: "0x2DC6C0"
         }]
@@ -68,7 +77,7 @@ const ChallengeDetailPage = () => {
       await provider.waitForTransaction(txHash);
 
       // 2. Join in Backend
-      const response = await fetch(`http://localhost:5000/api/challenges/${id}/join`, {
+      const response = await fetch(`${getApiUrl()}/api/challenges/${id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
