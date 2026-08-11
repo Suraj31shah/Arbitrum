@@ -52,23 +52,18 @@ const ConfirmChallengePage = () => {
         const parsedStake = ethers.parseEther(challengeData.stakeAmount.toString());
         const data = iface.encodeFunctionData("joinChallenge", [challengeData.title, parsedStake]);
 
-        // 1. Process MetaMask Transaction manually
-        const valueHex = ethers.toBeHex(parsedStake);
+        // 1. Process MetaMask Transaction using ethers signer to automatically calculate perfect gas fees for Arbitrum
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
         
-        const txHash = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: walletAddress,
-            to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
-            data: data,
-            value: valueHex,
-            gas: "0x2DC6C0"
-          }]
+        const tx = await signer.sendTransaction({
+          to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
+          data: data,
+          value: parsedStake
         });
         
         // Wait for the transaction to be mined
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.waitForTransaction(txHash);
+        await tx.wait();
       }
 
       // 2. Save challenge to backend once transaction is confirmed (or if no stake)

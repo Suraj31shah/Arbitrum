@@ -61,20 +61,16 @@ const ChallengeDetailPage = () => {
       const parsedStake = ethers.parseEther(challenge.stakeAmount.toString());
       const data = iface.encodeFunctionData("joinChallenge", [challenge.title, parsedStake]);
       
-      const valueHex = ethers.toBeHex(parsedStake);
-      const txHash = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [{
-          from: globalWalletAddress,
-          to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
-          data: data,
-          value: valueHex,
-          gas: "0x2DC6C0"
-        }]
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      
+      const tx = await signer.sendTransaction({
+        to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
+        data: data,
+        value: parsedStake
       });
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.waitForTransaction(txHash);
+      await tx.wait();
 
       // 2. Join in Backend
       const response = await fetch(`${getApiUrl()}/api/challenges/${id}/join`, {
