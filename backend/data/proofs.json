@@ -102,5 +102,47 @@
     "createdAt": "2026-08-08T07:07:54.135Z",
     "updatedAt": "2026-08-08T07:07:54.135Z",
     "source": "local-fallback"
+  },
+  {
+    "challengeId": "6a7b1eba0d64f7cb0b736c40",
+    "description": "made website",
+    "filePath": "D:/Arbitrum/backend/uploads/1786460169078-583763736-Screenshot 2026-08-09 195546.png",
+    "aiAnalysis": {
+      "confidence": 0,
+      "completed": false,
+      "summary": "Challenge validation failed: status: `ai_verified` is not a valid enum value for path `status`."
+    },
+    "_id": "1786460178029-395219253",
+    "createdAt": "2026-08-11T14:56:18.029Z",
+    "updatedAt": "2026-08-11T14:56:18.029Z",
+    "source": "local-fallback"
+  },
+  {
+    "challengeId": "6a7b1eba0d64f7cb0b736c40",
+    "description": "made website",
+    "filePath": "D:/Arbitrum/backend/uploads/1786463085392-633009488-Screenshot 2026-08-09 195546.png",
+    "aiAnalysis": {
+      "confidence": 0,
+      "completed": false,
+      "summary": "Challenge validation failed: status: `ai_verified` is not a valid enum value for path `status`."
+    },
+    "_id": "1786463095019-822154636",
+    "createdAt": "2026-08-11T15:44:55.019Z",
+    "updatedAt": "2026-08-11T15:44:55.019Z",
+    "source": "local-fallback"
+  },
+  {
+    "challengeId": "6a7b1eba0d64f7cb0b736c40",
+    "description": "made website",
+    "filePath": "D:/Arbitrum/backend/uploads/1786463312981-621173792-Screenshot 2026-08-09 195546.png",
+    "aiAnalysis": {
+      "confidence": 0,
+      "completed": false,
+      "summary": "Challenge validation failed: status: `ai_verified` is not a valid enum value for path `status`."
+    },
+    "_id": "1786463322427-673615501",
+    "createdAt": "2026-08-11T15:48:42.427Z",
+    "updatedAt": "2026-08-11T15:48:42.427Z",
+    "source": "local-fallback"
   }
 ]
