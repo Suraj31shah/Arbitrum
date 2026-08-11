@@ -68,6 +68,11 @@ passport.use(new GitHubStrategy({
       if (req.user) {
         let user = await User.findById(req.user.id);
         if (!user.githubId) {
+          const existing = await User.findOne({ githubId: profile.id });
+          if (existing && existing._id.toString() !== user._id.toString()) {
+            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
+            else return done(new Error("This GitHub account is already linked to another wallet."));
+          }
           user.githubId = profile.id;
           user.username = user.username || profile.username;
           await user.save();
@@ -145,9 +150,15 @@ passport.use(new CustomTodoistStrategy({
   async function(req, accessToken, refreshToken, profile, done) {
     try {
       if (req.user) {
-        // Link Todoist to existing user
         let user = await User.findById(req.user.id);
-        user.todoistId = profile.id;
+        if (user.todoistId !== profile.id) {
+          const existing = await User.findOne({ todoistId: profile.id });
+          if (existing && existing._id.toString() !== user._id.toString()) {
+            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
+            else return done(new Error("This Todoist account is already linked to another wallet."));
+          }
+          user.todoistId = profile.id;
+        }
         user.todoistAccessToken = accessToken;
         await user.save();
         return done(null, user);
@@ -182,9 +193,16 @@ passport.use(new NotionStrategy({
   async function(req, accessToken, refreshToken, params, profile, done) {
     try {
       if (req.user) {
-        // Link Notion to existing user
         let user = await User.findById(req.user.id);
-        user.notionId = profile.id || (profile.person && profile.person.email) || profile.name;
+        const notionId = profile.id || (profile.person && profile.person.email) || profile.name;
+        if (user.notionId !== notionId) {
+          const existing = await User.findOne({ notionId: notionId });
+          if (existing && existing._id.toString() !== user._id.toString()) {
+            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
+            else return done(new Error("This Notion account is already linked to another wallet."));
+          }
+          user.notionId = notionId;
+        }
         user.notionAccessToken = accessToken;
         await user.save();
         return done(null, user);
@@ -220,7 +238,14 @@ passport.use(new GoogleStrategy({
     try {
       if (req.user) {
         let user = await User.findById(req.user.id);
-        user.googleId = profile.id;
+        if (user.googleId !== profile.id) {
+          const existing = await User.findOne({ googleId: profile.id });
+          if (existing && existing._id.toString() !== user._id.toString()) {
+            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
+            else return done(new Error("This Google account is already linked to another wallet."));
+          }
+          user.googleId = profile.id;
+        }
         user.googleAccessToken = accessToken;
         user.googleRefreshToken = refreshToken;
         await user.save();
