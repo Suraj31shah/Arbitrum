@@ -72,6 +72,18 @@ const createProof = async (req, res) => {
       filePath: req.file?.path?.replace(/\\/g, '/') || '',
       aiAnalysis: { confidence: 0, completed: false, summary: error.message }
     });
+    
+    // Make sure we still update the challenge status so the UI shows the AI error instead of skipping it
+    try {
+      const existingChallenge = await Challenge.findById(challengeId?.trim());
+      if (existingChallenge) {
+        existingChallenge.status = 'ai_verified';
+        await existingChallenge.save();
+      }
+    } catch (e) {
+      // Ignore
+    }
+
     return res.status(201).json({ ...localProof, message: 'Saved locally due to database error.' });
   }
 };
