@@ -21,27 +21,30 @@ const handleResponse = async (response) => {
 
 export const api = {
   // Stats
-  getDashboardStats: () => fetch(`${API_BASE}/stats`).then(handleResponse),
+  getDashboardStats: () => fetch(`${API_BASE}/stats`, { credentials: 'include' }).then(handleResponse),
 
   // Challenges
-  getChallenges: () => fetch(`${API_BASE}/challenges`).then(handleResponse),
-  getChallengeById: (id) => fetch(`${API_BASE}/challenges/${id}`).then(handleResponse),
+  getChallenges: () => fetch(`${API_BASE}/challenges`, { credentials: 'include' }).then(handleResponse),
+  getChallengeById: (id) => fetch(`${API_BASE}/challenges/${id}`, { credentials: 'include' }).then(handleResponse),
   createChallenge: (data) => fetch(`${API_BASE}/challenges`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(data)
   }).then(handleResponse),
   updateChallengeStatus: (id, status) => fetch(`${API_BASE}/challenges/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ status })
   }).then(handleResponse),
 
   // Proofs
-  getProofsByChallenge: (challengeId) => fetch(`${API_BASE}/proofs?challengeId=${challengeId}`).then(handleResponse),
-  getProofById: (id) => fetch(`${API_BASE}/proofs/${id}`).then(handleResponse),
+  getProofsByChallenge: (challengeId) => fetch(`${API_BASE}/proofs?challengeId=${challengeId}`, { credentials: 'include' }).then(handleResponse),
+  getProofById: (id) => fetch(`${API_BASE}/proofs/${id}`, { credentials: 'include' }).then(handleResponse),
   createProof: (formData) => fetch(`${API_BASE}/proofs`, {
     method: 'POST',
+    credentials: 'include',
     body: formData // Note: no Content-Type header needed for FormData
   }).then(handleResponse)
 };
