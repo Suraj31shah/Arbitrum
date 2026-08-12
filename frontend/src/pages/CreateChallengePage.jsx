@@ -294,15 +294,6 @@ const CreateChallengePage = () => {
                </div>
             )}
 
-            {selectedIntegrationId === 'github' && currentUser && currentUser.githubId && (
-               <div className="text-center mb-4 flex justify-center items-center gap-4">
-                 <span className="text-success">✓ GitHub Connected</span>
-                 <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }} onClick={() => window.location.href = `${getApiUrl()}/api/auth/github/disconnect`}>
-                   Disconnect
-                 </button>
-               </div>
-            )}
-
             {selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId) && (
                <div className="text-center mb-4">
                  <button type="button" className="btn btn-secondary" onClick={handleConnectTodoist}>
@@ -328,28 +319,10 @@ const CreateChallengePage = () => {
                </div>
             )}
 
-            {selectedIntegrationId === 'notion' && currentUser && currentUser.notionId && (
-               <div className="text-center mb-4 flex justify-center items-center gap-4">
-                 <span className="text-success">✓ Notion Connected</span>
-                 <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }} onClick={() => window.location.href = `${getApiUrl()}/api/auth/notion/disconnect`}>
-                   Disconnect
-                 </button>
-               </div>
-            )}
-
             {selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId) && (
                <div className="text-center mb-4">
                  <button type="button" className="btn btn-secondary" onClick={handleConnectGoogle}>
                    Connect Google Health / Fit Account
-                 </button>
-               </div>
-            )}
-
-            {selectedIntegrationId === 'google' && currentUser && currentUser.googleId && (
-               <div className="text-center mb-4 flex justify-center items-center gap-4">
-                 <span className="text-success">✓ Google Health Connected</span>
-                 <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }} onClick={() => window.location.href = `${getApiUrl()}/api/auth/google/disconnect`}>
-                   Disconnect
                  </button>
                </div>
             )}
