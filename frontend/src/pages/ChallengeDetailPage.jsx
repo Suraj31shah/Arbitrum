@@ -79,6 +79,14 @@ const ChallengeDetailPage = () => {
       
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+      
+      if (signerAddress.toLowerCase() !== globalWalletAddress.toLowerCase()) {
+        alert(`Mismatch! Your website account is linked to ${globalWalletAddress.substring(0,6)}..., but your active MetaMask account is ${signerAddress.substring(0,6)}.... Please switch to the correct account in MetaMask, or logout and connect the correct wallet.`);
+        setLoading(false);
+        return;
+      }
+
       const feeData = await provider.getFeeData();
       
       const tx = await signer.sendTransaction({
