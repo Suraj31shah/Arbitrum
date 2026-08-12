@@ -4,18 +4,10 @@ import { api, getApiUrl } from '../services/api';
 
 const INTEGRATIONS = [
   { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
-  { id: 'strava', label: 'Strava', metricLabel: 'Steps / km' },
-  { id: 'fitbit', label: 'Fitbit', metricLabel: 'Steps' },
   { id: 'github', label: 'GitHub', metricLabel: 'Commits / PRs' },
-  { id: 'wakatime', label: 'WakaTime', metricLabel: 'Hours' },
-  { id: 'leetcode', label: 'LeetCode', metricLabel: 'Problems' },
-  { id: 'goodreads', label: 'Goodreads', metricLabel: 'Pages / Books' },
-  { id: 'youtube', label: 'YouTube', metricLabel: 'Videos watched' },
-  { id: 'toggl', label: 'Toggl Track', metricLabel: 'Hours logged' },
   { id: 'todoist', label: 'Todoist', metricLabel: 'Tasks completed' },
   { id: 'notion', label: 'Notion', metricLabel: 'Pages updated' },
-  { id: 'google', label: 'Google Health / Fit', metricLabel: 'Steps' },
-  { id: 'twitter', label: 'X (Twitter)', metricLabel: 'Posts' }
+  { id: 'google', label: 'Google Health / Fit', metricLabel: 'Steps' }
 ];
 
 const CreateChallengePage = () => {
