@@ -132,19 +132,27 @@ async function fetchTodoistData(todoistId, dateStart, dateEnd) {
     throw new Error('Todoist user not found or access token missing.');
   }
 
-  // Use the Todoist Unified API v1 to fetch active tasks
-  const response = await fetch(`https://api.todoist.com/api/v1/tasks`, {
+  // Use the Todoist Unified API v1 Sync endpoint to fetch active tasks
+  const response = await fetch(`https://api.todoist.com/api/v1/sync`, {
+    method: 'POST',
     headers: {
-      'Authorization': `Bearer ${user.todoistAccessToken}`
-    }
+      'Authorization': `Bearer ${user.todoistAccessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      sync_token: '*',
+      resource_types: ['items']
+    })
   });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch Todoist tasks: ${response.status} ${response.statusText}`);
   }
 
-  const tasks = await response.json();
-  const tasksCount = tasks.length || 0;
+  const data = await response.json();
+  const tasks = data.items || [];
+  const activeTasks = tasks.filter(t => t.checked === false);
+  const tasksCount = activeTasks.length || 0;
 
   return `Todoist Telemetry: User currently has ${tasksCount} active tasks.`;
 }
