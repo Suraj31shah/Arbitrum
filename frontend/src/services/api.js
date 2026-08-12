@@ -21,10 +21,16 @@ const handleResponse = async (response) => {
 
 export const api = {
   // Stats
-  getDashboardStats: () => fetch(`${API_BASE}/stats`, { credentials: 'include' }).then(handleResponse),
+  getDashboardStats: (wallet) => fetch(`${API_BASE}/stats${wallet ? `?walletAddress=${wallet}` : ''}`, { credentials: 'include' }).then(handleResponse),
 
   // Challenges
-  getChallenges: () => fetch(`${API_BASE}/challenges`, { credentials: 'include' }).then(handleResponse),
+  getChallenges: (filter = '', wallet = '') => {
+    const params = new URLSearchParams();
+    if (filter) params.append('filter', filter);
+    if (wallet) params.append('wallet', wallet);
+    const queryString = params.toString();
+    return fetch(`${API_BASE}/challenges${queryString ? `?${queryString}` : ''}`, { credentials: 'include' }).then(handleResponse);
+  },
   getChallengeById: (id) => fetch(`${API_BASE}/challenges/${id}?t=${Date.now()}`, { credentials: 'include' }).then(handleResponse),
   createChallenge: (data) => fetch(`${API_BASE}/challenges`, {
     method: 'POST',
@@ -32,19 +38,31 @@ export const api = {
     credentials: 'include',
     body: JSON.stringify(data)
   }).then(handleResponse),
+  joinChallenge: (id) => fetch(`${API_BASE}/challenges/${id}/join`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  }).then(handleResponse),
   updateChallengeStatus: (id, status) => fetch(`${API_BASE}/challenges/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ status })
   }).then(handleResponse),
+  updateParticipantStatus: (id, walletAddress, status) => fetch(`${API_BASE}/challenges/${id}/participant`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ walletAddress, status })
+  }).then(handleResponse),
 
   // Proofs
-  getProofsByChallenge: (challengeId) => fetch(`${API_BASE}/proofs?challengeId=${challengeId}`, { credentials: 'include' }).then(handleResponse),
+  getProofsByChallenge: (challengeId, walletAddress = '') => fetch(`${API_BASE}/proofs?challengeId=${challengeId}${walletAddress ? `&walletAddress=${walletAddress}` : ''}`, { credentials: 'include' }).then(handleResponse),
   getProofById: (id) => fetch(`${API_BASE}/proofs/${id}?t=${Date.now()}`, { credentials: 'include' }).then(handleResponse),
   createProof: (formData) => fetch(`${API_BASE}/proofs`, {
     method: 'POST',
     credentials: 'include',
     body: formData // Note: no Content-Type header needed for FormData
-  }).then(handleResponse)
+  }).then(handleResponse),
+  getIntegrationPreview: (challengeId) => fetch(`${API_BASE}/challenges/${challengeId}/integration-preview`, { credentials: 'include' }).then(handleResponse)
 };

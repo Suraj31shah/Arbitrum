@@ -1,448 +1,297 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { api, getApiUrl } from '../services/api';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-const INTEGRATIONS = [
-  { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
-  { id: 'github', label: 'GitHub', metricLabel: 'Commits / PRs' },
-  { id: 'todoist', label: 'Todoist', metricLabel: 'Tasks completed' },
-  { id: 'notion', label: 'Notion', metricLabel: 'Pages updated' },
-  { id: 'google', label: 'Google Health / Fit', metricLabel: 'Steps' }
-];
+const MIN_STAKE = 0.0000000000001;
+const MAX_STAKE = 0.1;
 
 const CreateChallengePage = () => {
   const navigate = useNavigate();
   const context = useOutletContext();
   const globalWalletAddress = context?.walletAddress;
-  const [currentUser, setCurrentUser] = useState(null);
-
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    deadline: '',
-    stakeAmount: 0.01
+    goal: '',
+    deadline: null,
+    stakeAmount: '0.001',
+    startMode: 'immediate',
+    startTime: null,
+    integrationId: 'none',
+    integrationHandle: '',
+    metricValue: ''
   });
 
-  const [selectedIntegrationId, setSelectedIntegrationId] = useState('none');
-  const [integrationHandle, setIntegrationHandle] = useState('');
-  const [metricValue, setMetricValue] = useState('');
-  const [googleMetrics, setGoogleMetrics] = useState({
-    'Steps': '',
-    'Calories': '',
-    'Active Minutes': ''
-  });
-  const [githubMetrics, setGithubMetrics] = useState({
-    'Commits': '',
-    'Pull Requests': '',
-    'Issues': ''
-  });
-
-  useEffect(() => {
-    // Restore form data from before OAuth redirect
-    const savedFormData = localStorage.getItem('pendingFormData');
-    if (savedFormData) {
-      try { setFormData(JSON.parse(savedFormData)); } catch(e){}
-      localStorage.removeItem('pendingFormData');
-    }
-    const savedMetric = localStorage.getItem('pendingMetricValue');
-    if (savedMetric) {
-      setMetricValue(savedMetric);
-      localStorage.removeItem('pendingMetricValue');
-    }
-    const savedHandle = localStorage.getItem('pendingIntegrationHandle');
-    if (savedHandle) {
-      setIntegrationHandle(savedHandle);
-      localStorage.removeItem('pendingIntegrationHandle');
-    }
-
-    // Check if user is logged in via OAuth
-    fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setCurrentUser(data.user);
-          // Restore the integration the user was trying to connect
-          const pending = localStorage.getItem('pendingIntegration');
-          if (pending) {
-            setSelectedIntegrationId(pending);
-            localStorage.removeItem('pendingIntegration');
-          }
-        }
-      })
-      .catch(err => console.error('Not logged in:', err));
-  }, []);
-
-  const selectedIntegration = INTEGRATIONS.find(i => i.id === selectedIntegrationId);
+  const [showOauthModal, setShowOauthModal] = useState(false);
+  const [oauthInput, setOauthInput] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'stakeAmount' ? parseFloat(value) : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Reset connection if they change the app provider
+    if (name === 'integrationId' && value !== 'none') {
+      setFormData(prev => ({ ...prev, integrationHandle: '' }));
+    }
   };
 
-  const handleConnectGithub = () => {
-    localStorage.setItem('pendingIntegration', 'github');
-    localStorage.setItem('pendingFormData', JSON.stringify(formData));
-    localStorage.setItem('pendingMetricValue', metricValue);
-    localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = `${getApiUrl()}/api/auth/github`;
+  const handleConnectApp = (e) => {
+    e.preventDefault();
+    setShowOauthModal(true);
+    setOauthInput('');
   };
 
-  const handleConnectTodoist = () => {
-    localStorage.setItem('pendingIntegration', 'todoist');
-    localStorage.setItem('pendingFormData', JSON.stringify(formData));
-    localStorage.setItem('pendingMetricValue', metricValue);
-    localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = `${getApiUrl()}/api/auth/todoist`;
-  };
-
-  const handleConnectNotion = () => {
-    localStorage.setItem('pendingIntegration', 'notion');
-    localStorage.setItem('pendingFormData', JSON.stringify(formData));
-    localStorage.setItem('pendingMetricValue', metricValue);
-    localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = `${getApiUrl()}/api/auth/notion`;
-  };
-
-  const handleConnectGoogle = () => {
-    localStorage.setItem('pendingIntegration', 'google');
-    localStorage.setItem('pendingFormData', JSON.stringify(formData));
-    localStorage.setItem('pendingMetricValue', metricValue);
-    localStorage.setItem('pendingIntegrationHandle', integrationHandle);
-    window.location.href = `${getApiUrl()}/api/auth/google`;
+  const handleSimulateOauth = (e) => {
+    e.preventDefault();
+    setIsConnecting(true);
+    setTimeout(() => {
+      setFormData(prev => ({ ...prev, integrationHandle: oauthInput }));
+      setIsConnecting(false);
+      setShowOauthModal(false);
+    }, 1200);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validate
+    const stake = parseFloat(formData.stakeAmount);
+    if (isNaN(stake) || stake < MIN_STAKE || stake > MAX_STAKE) {
+      alert(`Stake amount must be between ${MIN_STAKE} and ${MAX_STAKE} ETH`);
+      return;
+    }
+
     if (new Date(formData.deadline) <= new Date()) {
       alert('Deadline must be in the future');
       return;
     }
 
-    if (formData.stakeAmount < 0) {
-      alert('Stake amount cannot be negative');
+    if (formData.startMode === 'scheduled' && new Date(formData.startTime) <= new Date()) {
+      alert('Start time must be in the future');
       return;
     }
 
-    if (selectedIntegrationId !== 'none' && selectedIntegrationId !== 'google' && !metricValue) {
-      alert(`Please enter the number of ${selectedIntegration.metricLabel} to complete.`);
+    if (formData.integrationId !== 'none' && !formData.integrationHandle) {
+      alert(`Please connect your ${formData.integrationId} account before continuing.`);
       return;
-    }
-
-    if (selectedIntegrationId === 'google') {
-      const hasAnyMetric = Object.values(googleMetrics).some(val => val !== '');
-      if (!hasAnyMetric) {
-        alert("Please select at least one Google Health metric and enter a target amount.");
-        return;
-      }
-    }
-
-    if (selectedIntegrationId === 'github') {
-      const hasAnyMetric = Object.values(githubMetrics).some(val => val !== '');
-      if (!hasAnyMetric) {
-        alert("Please select at least one GitHub metric and enter a target amount.");
-        return;
-      }
-    }
-
-    let finalHandle = integrationHandle;
-    if (selectedIntegrationId === 'github' && currentUser && currentUser.githubId) {
-      finalHandle = currentUser.username;
-    } else if (selectedIntegrationId === 'todoist' && currentUser && currentUser.todoistId) {
-      finalHandle = currentUser.todoistId;
-    } else if (selectedIntegrationId === 'notion' && currentUser && currentUser.notionId) {
-      finalHandle = currentUser.notionId;
-    } else if (selectedIntegrationId === 'google' && currentUser && currentUser.googleId) {
-      finalHandle = currentUser.googleId;
-    }
-
-    // Enhance description with integration if selected
-    let enhancedDescription = formData.description;
-    if (selectedIntegrationId === 'google') {
-      const activeGoogleMetrics = Object.entries(googleMetrics)
-        .filter(([_, val]) => val !== '')
-        .map(([key, val]) => `${val} ${key}`)
-        .join(' and ');
-      enhancedDescription = `Google Health Integration: Goal is to complete ${activeGoogleMetrics}.\n\n` + formData.description;
-    } else if (selectedIntegrationId === 'github') {
-      const activeGithubMetrics = Object.entries(githubMetrics)
-        .filter(([_, val]) => val !== '')
-        .map(([key, val]) => `${val} ${key}`)
-        .join(' and ');
-      enhancedDescription = `GitHub Integration: Goal is to complete ${activeGithubMetrics}.\n\n` + formData.description;
-    } else if (selectedIntegrationId !== 'none') {
-      enhancedDescription = `${selectedIntegration.label} Integration: Goal is to complete ${metricValue} ${selectedIntegration.metricLabel}.\n\n` + formData.description;
     }
 
     const challengeData = {
       ...formData,
-      description: enhancedDescription,
-      integrationId: selectedIntegrationId,
-      integrationHandle: finalHandle,
-      metricValue: Number(metricValue) || null
+      stakeAmount: stake,
+      metricValue: formData.metricValue ? Number(formData.metricValue) : null,
+      startTime: formData.startTime ? formData.startTime.toISOString() : null,
+      deadline: formData.deadline ? formData.deadline.toISOString() : null
     };
 
-    // Move to confirm step, pass data via router state
     navigate('/challenges/new/confirm', { state: { challengeData } });
   };
 
-  return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <div className="flex justify-between items-end mb-2">
-        <h1>New Commitment</h1>
-        {(currentUser || globalWalletAddress) && <div style={{fontSize: '0.875rem', color: 'var(--accent)'}}>Logged in as {currentUser?.username || `${globalWalletAddress.substring(0,6)}...`}</div>}
+  if (!globalWalletAddress) {
+    return (
+      <div className="card text-center" style={{ padding: '4rem 2rem', maxWidth: '600px', margin: '0 auto' }}>
+        <h2 className="mb-4">Wallet Required</h2>
+        <p className="text-muted mb-6">You must connect your Web3 wallet to create a challenge.</p>
       </div>
-      <p className="text-muted mb-8">Define what you want to achieve and set the stakes.</p>
+    );
+  }
 
-      {(!currentUser || !currentUser.walletAddress) && !globalWalletAddress ? (
-        <div className="card text-center" style={{ padding: '4rem 2rem' }}>
-          <h2 className="mb-4">Wallet Required</h2>
-          <p className="text-muted mb-6" style={{ fontSize: '1.1rem' }}>
-            You must connect your Web3 wallet to create a new challenge and stake ETH.
-          </p>
-          <p className="text-muted">
-            Please click <strong>Connect Wallet to Login</strong> in the top right corner of the navigation bar to continue.
-          </p>
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div className="mb-8">
+        <h1>New Challenge</h1>
+        <p className="text-muted">Set a goal, choose your stakes, and invite others.</p>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="card mb-6">
+          <h3 className="mb-4">The Challenge</h3>
+          
+          <div className="form-group">
+            <label className="form-label" htmlFor="title">Title</label>
+            <input type="text" id="title" name="title" className="form-input" value={formData.title} onChange={handleChange} placeholder="e.g., Run 5km daily" required maxLength={100} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="goal">Specific Goal (What needs to be done?)</label>
+            <input type="text" id="goal" name="goal" className="form-input" value={formData.goal} onChange={handleChange} placeholder="e.g., 35km total distance" required />
+          </div>
+
+          <div className="form-group mb-0">
+            <label className="form-label" htmlFor="description">Rules & Details</label>
+            <textarea id="description" name="description" className="form-textarea" value={formData.description} onChange={handleChange} placeholder="Any specific constraints or rules..." required />
+          </div>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="card">
+
+        <div className="card mb-6">
+          <h3 className="mb-4">Verification Tracking</h3>
+          <p className="text-muted mb-4">Connect a 3rd-party app to automatically verify completion based on real data.</p>
+          
           <div className="form-group">
-            <label className="form-label" htmlFor="title">Challenge Title</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="form-input"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="e.g., Run 5km every day for a week"
-              required
-              maxLength={100}
-            />
+            <label className="form-label" htmlFor="integrationId">App Integration</label>
+            <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
+              <option value="none">None (Manual Proof Submission)</option>
+              <option value="github">GitHub (Commits/PRs/Issues)</option>
+              <option value="leetcode">LeetCode (Problems Solved)</option>
+              <option value="wakatime">WakaTime (Hours Coded)</option>
+            </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="description">Details</label>
-            <textarea
-              id="description"
-              name="description"
-              className="form-textarea"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe the exact requirements for this to be considered complete..."
-              required
-            />
-          </div>
-
-          <div className="flex gap-4 mb-6">
-            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-              <label className="form-label" htmlFor="deadline">Deadline</label>
-              <input
-                type="datetime-local"
-                id="deadline"
-                name="deadline"
-                className="form-input"
-                value={formData.deadline}
-                onChange={handleChange}
-                required
-              />
+          {formData.integrationId !== 'none' && (
+            <div className="mt-4">
+              {!formData.integrationHandle ? (
+                <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px dashed var(--border)' }}>
+                  <p className="mb-4">You need to authorize CommitX to read your {formData.integrationId} activity.</p>
+                  <button onClick={handleConnectApp} className="btn btn-secondary">
+                    Connect {formData.integrationId} Account
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-4 items-end">
+                  <div className="form-group mb-0" style={{ flex: 1 }}>
+                    <label className="form-label">Connected Account</label>
+                    <div style={{ padding: '0.75rem 1rem', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--success)' }}>
+                      <span style={{ fontSize: '1.2rem' }}>✅</span>
+                      Authorized as <strong>{formData.integrationHandle}</strong>
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, integrationHandle: '' }))} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
+                        Disconnect
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-group mb-0" style={{ flex: 1 }}>
+                    <label className="form-label" htmlFor="metricValue">Target Goal (Number)</label>
+                    <input type="number" id="metricValue" name="metricValue" className="form-input" value={formData.metricValue} onChange={handleChange} required min="1" placeholder="e.g., 10" />
+                  </div>
+                </div>
+              )}
             </div>
+          )}
+        </div>
 
-            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-              <label className="form-label" htmlFor="stakeAmount">Stake Amount (ETH)</label>
-              <input
-                type="number"
-                id="stakeAmount"
-                name="stakeAmount"
-                className="form-input"
-                value={formData.stakeAmount}
+        <div className="card mb-6">
+          <h3 className="mb-4">Stake Amount</h3>
+          <p className="text-muted mb-4">Choose how much ETH each participant must put on the line. Everyone joining this challenge stakes the same amount.</p>
+          
+          <div className="form-group mb-2">
+            <div className="flex items-center gap-4">
+              <input 
+                type="number" 
+                id="stakeAmount" 
+                name="stakeAmount" 
+                className="form-input" 
+                value={formData.stakeAmount} 
                 onChange={handleChange}
                 step="any"
-                min="0"
+                min={MIN_STAKE}
+                max={MAX_STAKE}
+                required 
+                style={{ flex: 1, fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center' }}
+              />
+              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>ETH</span>
+            </div>
+          </div>
+          <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+            Min: {MIN_STAKE} ETH &nbsp;·&nbsp; Max: {MAX_STAKE} ETH
+          </div>
+        </div>
+
+        <div className="card mb-6">
+          <h3 className="mb-4">Timeline</h3>
+          
+          <div className="form-group">
+            <label className="form-label">When does this start?</label>
+            <div className="flex gap-4">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input type="radio" name="startMode" value="immediate" checked={formData.startMode === 'immediate'} onChange={handleChange} />
+                Start Now (Join anytime before deadline)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input type="radio" name="startMode" value="scheduled" checked={formData.startMode === 'scheduled'} onChange={handleChange} />
+                Schedule for later
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            {formData.startMode === 'scheduled' && (
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label" htmlFor="startTime">Start Time</label>
+                <DatePicker
+                  selected={formData.startTime}
+                  onChange={(date) => setFormData(prev => ({ ...prev, startTime: date }))}
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={15}
+                  timeCaption="time"
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  className="form-input"
+                  placeholderText="Select start date & time"
+                  required={formData.startMode === 'scheduled'}
+                  minDate={new Date()}
+                />
+              </div>
+            )}
+            
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label" htmlFor="deadline">Deadline</label>
+              <DatePicker
+                selected={formData.deadline}
+                onChange={(date) => setFormData(prev => ({ ...prev, deadline: date }))}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                timeCaption="time"
+                dateFormat="MMMM d, yyyy h:mm aa"
+                className="form-input"
+                placeholderText="Select deadline date & time"
                 required
+                minDate={formData.startMode === 'scheduled' && formData.startTime ? formData.startTime : new Date()}
               />
             </div>
           </div>
+        </div>
 
-          {/* Integration Section */}
-          <div className="form-group p-4" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
-            <label className="form-label">Auto-Verify with 3rd Party App (Optional)</label>
-            
-            <div className="mb-4">
-              <select 
-                className="form-input"
-                value={selectedIntegrationId}
-                onChange={(e) => setSelectedIntegrationId(e.target.value)}
-              >
-                {INTEGRATIONS.map(integration => (
-                  <option key={integration.id} value={integration.id}>
-                    {integration.label}
-                  </option>
-                ))}
-              </select>
+        <button type="submit" className="btn btn-primary btn-full mt-4" style={{ padding: '1rem', fontSize: '1.125rem' }}>
+          Continue to Confirmation
+        </button>
+      </form>
+
+      {showOauthModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-primary)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+            <div className="text-center mb-6">
+              <div style={{ width: '64px', height: '64px', background: 'var(--bg-secondary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '2rem' }}>
+                🔗
+              </div>
+              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Connect {formData.integrationId}</h2>
+              <p className="text-muted" style={{ fontSize: '0.875rem' }}>Authorize CommitX to read your public activity and verify your challenges automatically.</p>
             </div>
             
-            {selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId) && (
-               <div className="text-center mb-4">
-                 <button type="button" className="btn btn-secondary" onClick={handleConnectGithub}>
-                   Connect GitHub Account
-                 </button>
-               </div>
-            )}
-
-            {selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId) && (
-               <div className="text-center mb-4">
-                 <button type="button" className="btn btn-secondary" onClick={handleConnectTodoist}>
-                   Connect Todoist Account
-                 </button>
-               </div>
-            )}
-            
-            {selectedIntegrationId === 'todoist' && currentUser && currentUser.todoistId && (
-               <div className="text-center mb-4 flex justify-center items-center gap-4">
-                 <span className="text-success">✓ Todoist Connected</span>
-                 <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }} onClick={() => window.location.href = `${getApiUrl()}/api/auth/todoist/disconnect`}>
-                   Disconnect
-                 </button>
-               </div>
-            )}
-
-            {selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId) && (
-               <div className="text-center mb-4">
-                 <button type="button" className="btn btn-secondary" onClick={handleConnectNotion}>
-                   Connect Notion Account
-                 </button>
-               </div>
-            )}
-
-            {selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId) && (
-               <div className="text-center mb-4">
-                 <button type="button" className="btn btn-secondary" onClick={handleConnectGoogle}>
-                   Connect Google Health / Fit Account
-                 </button>
-               </div>
-            )}
-
-            {selectedIntegrationId !== 'none' && 
-             !(selectedIntegrationId === 'github' && (!currentUser || !currentUser.githubId)) &&
-             !(selectedIntegrationId === 'todoist' && (!currentUser || !currentUser.todoistId)) &&
-             !(selectedIntegrationId === 'notion' && (!currentUser || !currentUser.notionId)) &&
-             !(selectedIntegrationId === 'google' && (!currentUser || !currentUser.googleId)) && (
-              <div className="flex gap-4 flex-col">
-                {selectedIntegrationId === 'google' && (
-                  <div className="form-group mb-0">
-                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metrics to Track</label>
-                    <div className="flex flex-col gap-3 mt-2">
-                      {['Steps', 'Calories', 'Active Minutes'].map(metric => (
-                        <div key={metric} className="flex items-center gap-3">
-                          <label className="flex items-center gap-2" style={{ minWidth: '130px', cursor: 'pointer' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={googleMetrics[metric] !== ''}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setGoogleMetrics(prev => ({ ...prev, [metric]: '0' }));
-                                } else {
-                                  setGoogleMetrics(prev => ({ ...prev, [metric]: '' }));
-                                }
-                              }}
-                            />
-                            {metric}
-                          </label>
-                          {googleMetrics[metric] !== '' && (
-                            <input 
-                              type="number" 
-                              className="form-input py-1"
-                              style={{ flex: 1 }}
-                              value={googleMetrics[metric] === '0' ? '' : googleMetrics[metric]}
-                              onChange={(e) => setGoogleMetrics(prev => ({ ...prev, [metric]: e.target.value }))}
-                              placeholder={`Target ${metric}`}
-                              min="1"
-                              required
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {selectedIntegrationId === 'github' && (
-                  <div className="form-group mb-0">
-                    <label className="form-label text-muted" style={{ fontSize: '0.875rem' }}>Select Metrics to Track</label>
-                    <div className="flex flex-col gap-3 mt-2">
-                      {['Commits', 'Pull Requests', 'Issues'].map(metric => (
-                        <div key={metric} className="flex items-center gap-3">
-                          <label className="flex items-center gap-2" style={{ minWidth: '130px', cursor: 'pointer' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={githubMetrics[metric] !== ''}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setGithubMetrics(prev => ({ ...prev, [metric]: '0' }));
-                                } else {
-                                  setGithubMetrics(prev => ({ ...prev, [metric]: '' }));
-                                }
-                              }}
-                            />
-                            {metric}
-                          </label>
-                          {githubMetrics[metric] !== '' && (
-                            <input 
-                              type="number" 
-                              className="form-input py-1"
-                              style={{ flex: 1 }}
-                              value={githubMetrics[metric] === '0' ? '' : githubMetrics[metric]}
-                              onChange={(e) => setGithubMetrics(prev => ({ ...prev, [metric]: e.target.value }))}
-                              placeholder={`Target ${metric}`}
-                              min="1"
-                              required
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google' && (
-                  <div>
-                    <input 
-                      type="text" 
-                      className="form-input"
-                      value={integrationHandle}
-                      onChange={(e) => setIntegrationHandle(e.target.value)}
-                      placeholder={`Enter your ${selectedIntegration.label} username or API key`}
-                      required={selectedIntegrationId !== 'github' && selectedIntegrationId !== 'todoist' && selectedIntegrationId !== 'notion' && selectedIntegrationId !== 'google'}
-                    />
-                  </div>
-                )}
-                {selectedIntegrationId !== 'google' && selectedIntegrationId !== 'github' && (
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="number" 
-                      className="form-input"
-                      style={{ flex: 1 }}
-                      value={metricValue}
-                      onChange={(e) => setMetricValue(e.target.value)}
-                      placeholder={`Target ${selectedIntegration?.metricLabel} (e.g. 5)`}
-                      required
-                    />
-                    <span className="text-muted" style={{ minWidth: '100px' }}>
-                      {selectedIntegration?.metricLabel}
-                    </span>
-                  </div>
-                )}
+            <form onSubmit={handleSimulateOauth}>
+              <div className="form-group mb-6">
+                <label className="form-label">{formData.integrationId === 'wakatime' ? 'Your WakaTime API Key' : `Your ${formData.integrationId} Username`}</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  autoFocus
+                  required
+                  value={oauthInput}
+                  onChange={(e) => setOauthInput(e.target.value)}
+                  placeholder={formData.integrationId === 'wakatime' ? 'sec_...' : 'username'}
+                />
               </div>
-            )}
-          </div>
 
-          <button type="submit" className="btn btn-primary btn-full mt-4">
-            Continue to Confirmation
-          </button>
-        </form>
+              <div className="flex gap-4">
+                <button type="button" onClick={() => setShowOauthModal(false)} className="btn btn-secondary" style={{ flex: 1 }} disabled={isConnecting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isConnecting || !oauthInput}>
+                  {isConnecting ? 'Authorizing...' : 'Authorize App'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

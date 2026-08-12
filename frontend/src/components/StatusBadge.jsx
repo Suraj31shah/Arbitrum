@@ -9,6 +9,15 @@ const StatusBadge = ({ status }) => {
   };
 
   switch (status) {
+    case 'joining':
+    case 'upcoming':
+      config = {
+        label: 'Joining Open',
+        bg: 'rgba(59, 130, 246, 0.1)',
+        color: 'var(--info)',
+        border: 'rgba(59, 130, 246, 0.2)'
+      };
+      break;
     case 'active':
       config = {
         label: 'Active',
@@ -17,28 +26,21 @@ const StatusBadge = ({ status }) => {
         border: 'rgba(245, 158, 11, 0.2)'
       };
       break;
+    case 'submission':
     case 'proof_submitted':
     case 'verifying':
       config = {
         label: 'Verifying',
-        bg: 'rgba(59, 130, 246, 0.1)',
-        color: '#3b82f6',
-        border: 'rgba(59, 130, 246, 0.2)'
-      };
-      break;
-    case 'ai_verified':
-      config = {
-        label: 'Reviewing',
         bg: 'rgba(168, 85, 247, 0.1)',
-        color: '#a855f7', // Purple
+        color: '#a855f7',
         border: 'rgba(168, 85, 247, 0.2)'
       };
       break;
     case 'completed':
       config = {
         label: 'Completed',
-        bg: 'var(--accent-dim)',
-        color: 'var(--accent)',
+        bg: 'var(--success-bg)',
+        color: 'var(--success)',
         border: 'rgba(34, 197, 94, 0.2)'
       };
       break;
@@ -48,14 +50,6 @@ const StatusBadge = ({ status }) => {
         bg: 'var(--error-bg)',
         color: 'var(--error)',
         border: 'rgba(239, 68, 68, 0.2)'
-      };
-      break;
-    case 'expired':
-      config = {
-        label: 'Expired',
-        bg: 'var(--bg-secondary)',
-        color: 'var(--text-muted)',
-        border: 'var(--border)'
       };
       break;
   }
