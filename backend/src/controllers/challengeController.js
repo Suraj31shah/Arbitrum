@@ -1,6 +1,58 @@
 const mongoose = require('mongoose');
 const Challenge = require('../models/Challenge');
+const { MIN_STAKE, MAX_STAKE } = require('../models/Challenge');
 const { readChallenges, saveChallengeLocally } = require('../utils/localChallengeStore');
+const { resolveOnChain } = require('../services/resolveService');
+
+// Max simultaneous active challenges per wallet
+const MAX_ACTIVE_PER_WALLET = 3;
+
+/**
+ * Transition challenge statuses based on current time.
+ * Called on read to keep statuses accurate without a cron job.
+ * If a challenge becomes completed/failed, triggers on-chain resolution.
+ */
+function transitionStatus(challenge) {
+  const now = new Date();
+  const status = challenge.status;
+
+  // upcoming → active (start time reached)
+  if (status === 'upcoming' && now >= new Date(challenge.startTime)) {
+    challenge.status = 'active';
+  }
+  // active → failed (deadline passed, auto-fail anyone still 'active')
+  if (challenge.status === 'active' && now >= new Date(challenge.deadline)) {
+    let anyoneCompleted = false;
+    challenge.participants.forEach(p => {
+      if (p.status === 'completed') {
+        anyoneCompleted = true;
+      } else if (p.status === 'active' || p.status === 'proof_submitted' || p.status === 'verifying') {
+        p.status = 'failed';
+      }
+    });
+    challenge.status = anyoneCompleted ? 'completed' : 'failed';
+    challenge.completedAt = now;
+
+    // Trigger on-chain resolution (fire and forget — don't block the read)
+    if (!challenge.resolvedOnChain) {
+      const winnersAddresses = challenge.participants
+        .filter(p => p.status === 'completed')
+        .map(p => p.walletAddress);
+      resolveOnChain(challenge._id.toString(), winnersAddresses)
+        .then(txHash => {
+          if (txHash) {
+            Challenge.findByIdAndUpdate(challenge._id, {
+              resolvedOnChain: true,
+              resolveTxHash: txHash
+            }).catch(e => console.error('Failed to save resolve tx hash:', e.message));
+          }
+        })
+        .catch(e => console.error('On-chain resolution failed:', e.message));
+    }
+  }
+
+  return challenge;
+}
 
 const getChallenges = async (req, res) => {
   try {
@@ -9,25 +61,47 @@ const getChallenges = async (req, res) => {
       return res.json(localChallenges);
     }
 
-    let challenges = await Challenge.find()
+    const { filter, wallet } = req.query;
+
+    let query = {};
+
+    if (filter === 'mine' && wallet) {
+      // Challenges where this wallet is a participant
+      query['participants.walletAddress'] = wallet.toLowerCase();
+    } else if (filter === 'joinable') {
+      // Challenges currently accepting participants (before deadline)
+      query.status = { $in: ['upcoming', 'active'] };
+      query.deadline = { $gt: new Date() };
+    }
+
+    let challenges = await Challenge.find(query)
       .populate('creator', 'username profileUrl walletAddress')
       .populate('participants.user', 'username profileUrl walletAddress')
       .sort({ createdAt: -1 });
-    
-    const now = new Date();
-    
-    // Automatically fail expired active challenges
-    challenges = await Promise.all(challenges.map(async (c) => {
-      if (c.status === 'active' && new Date(c.deadline) < now) {
-        c.status = 'failed';
-        await c.save();
+
+    // Auto-transition statuses
+    const savePromises = [];
+    challenges = challenges.map(c => {
+      const oldStatus = c.status;
+      transitionStatus(c);
+      if (c.status !== oldStatus) {
+        savePromises.push(c.save());
       }
       return c;
-    }));
+    });
+    if (savePromises.length > 0) await Promise.all(savePromises);
+
+    // If filter=joinable and a wallet is provided, exclude challenges the wallet already joined
+    if (filter === 'joinable' && wallet) {
+      const lowerWallet = wallet.toLowerCase();
+      challenges = challenges.filter(c =>
+        !c.participants.some(p => p.walletAddress.toLowerCase() === lowerWallet)
+      );
+    }
 
     res.json(challenges);
   } catch (error) {
-    console.error('Failed to fetch challenges from MongoDB, serving local store:', error.message);
+    console.error('Failed to fetch challenges:', error.message);
     const localChallenges = readChallenges();
     res.json(localChallenges);
   }
@@ -45,16 +119,15 @@ const getChallengeById = async (req, res) => {
     const challenge = await Challenge.findById(req.params.id)
       .populate('creator', 'username profileUrl walletAddress')
       .populate('participants.user', 'username profileUrl walletAddress');
-      
+
     if (!challenge) {
       return res.status(404).json({ error: 'Challenge not found.' });
     }
 
-    // Automatically fail if expired and active
-    if (challenge.status === 'active' && new Date(challenge.deadline) < new Date()) {
-      challenge.status = 'expired';
-      await challenge.save();
-    }
+    // Auto-transition
+    const oldStatus = challenge.status;
+    transitionStatus(challenge);
+    if (challenge.status !== oldStatus) await challenge.save();
 
     res.json(challenge);
   } catch (error) {
@@ -71,37 +144,91 @@ const createChallenge = async (req, res) => {
     return res.status(401).json({ error: 'You must be logged in with a wallet to create a challenge.' });
   }
 
-  const { title, description, stakeAmount, deadline, status, integrationId, integrationHandle, metricValue } = req.body;
+  const { title, description, goal, deadline, stakeAmount, startMode, startTime,
+          integrationId, integrationHandle, metricValue } = req.body;
 
+  // Validation
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Title is required.' });
   }
-
   if (!description || typeof description !== 'string' || description.trim() === '') {
     return res.status(400).json({ error: 'Description is required.' });
   }
-
-  if (typeof stakeAmount !== 'number' || !Number.isFinite(stakeAmount) || stakeAmount < 0) {
-    return res.status(400).json({ error: 'stakeAmount must be a non-negative number.' });
+  if (!goal || typeof goal !== 'string' || goal.trim() === '') {
+    return res.status(400).json({ error: 'Goal is required.' });
   }
-
   if (!deadline) {
     return res.status(400).json({ error: 'Deadline is required.' });
+  }
+  if (new Date(deadline) <= new Date()) {
+    return res.status(400).json({ error: 'Deadline must be in the future.' });
+  }
+
+  // Validate stake amount (free-form with min/max bounds)
+  const parsedStake = parseFloat(stakeAmount);
+  if (isNaN(parsedStake) || parsedStake < MIN_STAKE || parsedStake > MAX_STAKE) {
+    return res.status(400).json({
+      error: `Stake amount must be between ${MIN_STAKE} and ${MAX_STAKE} ETH.`
+    });
+  }
+
+  // Validate start mode
+  const mode = startMode === 'scheduled' ? 'scheduled' : 'immediate';
+
+  // Calculate start time and initial status
+  const now = new Date();
+  let challengeStartTime, initialStatus;
+
+  if (mode === 'immediate') {
+    challengeStartTime = now;
+    initialStatus = 'active';
+  } else {
+    // Scheduled: user provides startTime
+    if (!startTime || new Date(startTime) <= now) {
+      return res.status(400).json({ error: 'Scheduled start time must be in the future.' });
+    }
+    challengeStartTime = new Date(startTime);
+    initialStatus = 'upcoming';
+
+    if (new Date(deadline) <= challengeStartTime) {
+      return res.status(400).json({ error: 'Deadline must be after the start time.' });
+    }
+  }
+
+  // Enforce max active challenges per wallet
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const activeCount = await Challenge.countDocuments({
+        creatorWallet: req.user.walletAddress.toLowerCase(),
+        status: { $in: ['joining', 'upcoming', 'active'] }
+      });
+      if (activeCount >= MAX_ACTIVE_PER_WALLET) {
+        return res.status(400).json({
+          error: `You can only have ${MAX_ACTIVE_PER_WALLET} active challenges at a time.`
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Could not check active challenge limit:', e.message);
   }
 
   const challengeData = {
     title: title.trim(),
     description: description.trim(),
-    stakeAmount,
-    prizePool: stakeAmount,
+    goal: goal.trim(),
+    stakeAmount: parsedStake,
+    startMode: mode,
+    startTime: challengeStartTime,
     deadline: new Date(deadline),
-    status: status && typeof status === 'string' && status.trim() !== '' ? status.trim() : 'active',
+    status: initialStatus,
     creator: req.user._id,
+    creatorWallet: req.user.walletAddress.toLowerCase(),
     participants: [{
       user: req.user._id,
       walletAddress: req.user.walletAddress,
       status: 'active'
     }],
+    charityAddress: process.env.CHARITY_WALLET_ADDRESS || '0x000000000000000000000000000000000000dEaD',
     integrationId: integrationId || 'none',
     integrationHandle: integrationHandle || '',
     metricValue: metricValue || null
@@ -135,11 +262,21 @@ const joinChallenge = async (req, res) => {
     const challenge = await Challenge.findById(req.params.id);
     if (!challenge) return res.status(404).json({ error: 'Challenge not found.' });
 
-    if (challenge.status !== 'active') {
-      return res.status(400).json({ error: 'This challenge is no longer accepting participants.' });
+    // Auto-transition
+    transitionStatus(challenge);
+
+    // Check joining window (can join anytime before deadline)
+    const now = new Date();
+    if (now >= new Date(challenge.deadline)) {
+      return res.status(400).json({ error: 'The deadline for this challenge has passed.' });
+    }
+    if (['completed', 'failed'].includes(challenge.status)) {
+      return res.status(400).json({ error: 'This challenge has already concluded.' });
     }
 
-    const alreadyJoined = challenge.participants.some(p => p.user.toString() === req.user._id.toString());
+    const alreadyJoined = challenge.participants.some(
+      p => p.walletAddress.toLowerCase() === req.user.walletAddress.toLowerCase()
+    );
     if (alreadyJoined) {
       return res.status(400).json({ error: 'You have already joined this challenge.' });
     }
@@ -149,10 +286,8 @@ const joinChallenge = async (req, res) => {
       walletAddress: req.user.walletAddress,
       status: 'active'
     });
-    
-    challenge.prizePool += challenge.stakeAmount;
-    await challenge.save();
 
+    await challenge.save();
     res.json(challenge);
   } catch (error) {
     console.error('Failed to join challenge:', error.message);
@@ -160,12 +295,84 @@ const joinChallenge = async (req, res) => {
   }
 };
 
+/**
+ * Update a specific participant's status (used after proof verification)
+ * SECURED: requires authentication
+ */
+const updateParticipantStatus = async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
+  const { walletAddress, status } = req.body;
+  const validStatuses = ['active', 'proof_submitted', 'verifying', 'completed', 'failed'];
+
+  if (!walletAddress || !status || !validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'walletAddress and valid status are required.' });
+  }
+
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) return res.status(404).json({ error: 'Challenge not found.' });
+
+    const participant = challenge.participants.find(
+      p => p.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+    );
+    if (!participant) {
+      return res.status(404).json({ error: 'Participant not found in this challenge.' });
+    }
+
+    participant.status = status;
+    if (status === 'completed') {
+      participant.completedAt = new Date();
+    }
+
+    // Check if challenge is fully resolved (all participants completed or failed)
+    const allResolved = challenge.participants.every(
+      p => p.status === 'completed' || p.status === 'failed'
+    );
+    if (allResolved) {
+      const anyCompleted = challenge.participants.some(p => p.status === 'completed');
+      challenge.status = anyCompleted ? 'completed' : 'failed';
+      challenge.completedAt = new Date();
+
+      // Trigger on-chain resolution
+      if (!challenge.resolvedOnChain) {
+        const winnersAddresses = challenge.participants
+          .filter(p => p.status === 'completed')
+          .map(p => p.walletAddress);
+        resolveOnChain(challenge._id.toString(), winnersAddresses)
+          .then(txHash => {
+            if (txHash) {
+              Challenge.findByIdAndUpdate(challenge._id, {
+                resolvedOnChain: true,
+                resolveTxHash: txHash
+              }).catch(e => console.error('Failed to save resolve tx hash:', e.message));
+            }
+          })
+          .catch(e => console.error('On-chain resolution failed:', e.message));
+      }
+    }
+
+    await challenge.save();
+    res.json(challenge);
+  } catch (error) {
+    console.error('Failed to update participant status:', error.message);
+    res.status(500).json({ error: 'Failed to update participant status.' });
+  }
+};
+
+/**
+ * Legacy: update global challenge status (kept for compatibility)
+ * SECURED: requires authentication
+ */
 const updateChallengeStatus = async (req, res) => {
-  // This function would normally verify proofs. For now we just update global status, 
-  // but in multiplayer we should update the specific participant's status instead.
-  // We will keep this simple for now.
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
   const { status } = req.body;
-  const validStatuses = ['active', 'expired', 'completed', 'failed'];
+  const validStatuses = ['joining', 'upcoming', 'active', 'submission', 'completed', 'failed'];
 
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
@@ -198,5 +405,6 @@ module.exports = {
   getChallengeById,
   createChallenge,
   joinChallenge,
+  updateParticipantStatus,
   updateChallengeStatus
 };

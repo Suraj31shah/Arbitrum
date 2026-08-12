@@ -7,6 +7,11 @@ const proofSchema = new mongoose.Schema(
       ref: 'Challenge',
       required: true
     },
+    walletAddress: {
+      type: String,
+      required: true,
+      lowercase: true
+    },
     githubUrl: {
       type: String,
       trim: true,

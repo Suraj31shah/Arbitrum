@@ -4,7 +4,8 @@ const {
   getChallengeById,
   createChallenge,
   joinChallenge,
-  updateChallengeStatus
+  updateChallengeStatus,
+  updateParticipantStatus
 } = require('../controllers/challengeController');
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.post('/api/challenges', createChallenge);
 router.get('/api/challenges/:id', getChallengeById);
 router.post('/api/challenges/:id/join', joinChallenge);
 router.patch('/api/challenges/:id', updateChallengeStatus);
+router.patch('/api/challenges/:id/participant', updateParticipantStatus);
 
 // Aliases for compatibility
 router.get('/api/goals', getChallenges);

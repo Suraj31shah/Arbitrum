@@ -76,6 +76,12 @@ const MainLayout = () => {
             >
               Dashboard
             </Link>
+            <Link 
+              to="/discover" 
+              className={`nav-link ${location.pathname === '/discover' ? 'active' : ''}`}
+            >
+              Discover
+            </Link>
           </nav>
           
           <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

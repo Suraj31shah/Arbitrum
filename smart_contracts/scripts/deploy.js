@@ -21,6 +21,12 @@ async function main() {
     privateKey = '0x' + privateKey;
   }
 
+  const charityAddress = process.env.CHARITY_WALLET_ADDRESS;
+  if (!charityAddress) {
+    console.error("❌ ERROR: No CHARITY_WALLET_ADDRESS found in backend/.env!");
+    process.exit(1);
+  }
+
   const rpcUrl = process.env.ARBITRUM_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
   
   // Read compiled artifact
@@ -37,10 +43,11 @@ async function main() {
   const wallet = new ethers.Wallet(privateKey, provider);
   
   console.log(`Deploying from account: ${wallet.address}`);
+  console.log(`Charity/Demo Fund address: ${charityAddress}`);
   
-  // Deploy
+  // Deploy with charity address as constructor argument
   const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, wallet);
-  const contract = await factory.deploy();
+  const contract = await factory.deploy(charityAddress);
   
   console.log("Transaction sent! Waiting for confirmation...");
   await contract.waitForDeployment();
@@ -49,9 +56,11 @@ async function main() {
 
   console.log(`\n🎉 CommitX successfully deployed!`);
   console.log(`Contract Address: ${address}`);
+  console.log(`Charity Address:  ${charityAddress}`);
   console.log(`\nNext Steps:`);
-  console.log(`1. Copy this address into your frontend code (ConfirmChallengePage & ChallengeDetailPage)`);
-  console.log(`2. Update the backend to use this address for resolving challenges!`);
+  console.log(`1. Add CONTRACT_ADDRESS=${address} to your backend/.env`);
+  console.log(`2. Update the frontend contract address in ConfirmChallengePage and ChallengeDetailPage`);
+  console.log(`3. Restart the backend and frontend dev servers`);
 }
 
 main().catch((error) => {

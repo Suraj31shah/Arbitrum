@@ -101,7 +101,7 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
 
 async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd) {
   if (!integrationHandle) {
-    return `Error: No username or API key provided by the user for ${integrationId}.`;
+    return { text: `Error: No username or API key provided for ${integrationId}.`, value: 0 };
   }
 
   try {
@@ -118,10 +118,10 @@ async function fetchIntegrationData(integrationId, integrationHandle, dateStart,
     } else if (integrationId === 'google') {
       return await fetchGoogleFitData(integrationHandle, dateStart, dateEnd);
     }
-    return `Telemetry data for ${integrationId} (user: ${integrationHandle})`;
+    return { text: `Telemetry data for ${integrationId} (user: ${integrationHandle})`, value: 0 };
   } catch (error) {
     console.error(`Error fetching ${integrationId} data:`, error.message);
-    return `Error fetching telemetry: ${error.message}`;
+    return { text: `Error fetching telemetry: ${error.message}`, value: 0 };
   }
 }
 
@@ -191,7 +191,10 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
   const issueEvents = events.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'opened');
   const totalIssues = issueEvents.length;
 
-  return `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests opened, and ${totalIssues} issues opened recently.`;
+  return {
+    text: `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests, and ${totalIssues} issues recently.`,
+    value: totalCommits
+  };
 }
 
 async function fetchLeetCodeData(username) {
@@ -221,10 +224,13 @@ async function fetchLeetCodeData(username) {
   if (data.errors) throw new Error(data.errors[0].message);
   
   const stats = data.data.matchedUser?.submitStats?.acSubmissionNum;
-  if (!stats) return `LeetCode Telemetry: User ${username} not found or has no solved problems.`;
+  if (!stats) return { text: `LeetCode: User ${username} not found or has no solved problems.`, value: 0 };
 
   const totalSolved = stats.find(s => s.difficulty === 'All')?.count || 0;
-  return `LeetCode Telemetry for ${username}: Total Problems Solved = ${totalSolved}`;
+  return {
+    text: `LeetCode Telemetry for ${username}: Total Problems Solved = ${totalSolved}`,
+    value: totalSolved
+  };
 }
 
 async function fetchWakaTimeData(apiKey) {
@@ -239,9 +245,16 @@ async function fetchWakaTimeData(apiKey) {
   const data = await response.json();
   
   if (data.data && data.data.length > 0) {
-    return `WakaTime Telemetry: Logged ${data.data[0].grand_total.text} today.`;
+    // WakaTime time is complex, for simplicity let's just use 1 if they coded, 0 if not, or we parse hours.
+    // Let's parse total seconds from grand_total.total_seconds
+    const totalSeconds = data.data[0].grand_total.total_seconds || 0;
+    const hours = Math.round((totalSeconds / 3600) * 10) / 10;
+    return {
+      text: `WakaTime: Logged ${data.data[0].grand_total.text} today.`,
+      value: hours
+    };
   }
-  return 'WakaTime Telemetry: No data logged today.';
+  return { text: 'WakaTime: No data logged today.', value: 0 };
 }
 
 module.exports = {

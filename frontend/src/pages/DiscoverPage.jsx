@@ -1,58 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, Link } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { api } from '../services/api';
-import StakeSummary from '../components/StakeSummary';
 import ChallengeCard from '../components/ChallengeCard';
 import EmptyState from '../components/EmptyState';
 
-const DashboardPage = () => {
+const DiscoverPage = () => {
   const { walletAddress } = useOutletContext();
-  const [stats, setStats] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!walletAddress) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchData = async () => {
+    const fetchChallenges = async () => {
       try {
-        const [statsData, challengesData] = await Promise.all([
-          api.getDashboardStats(walletAddress),
-          api.getChallenges('mine', walletAddress)
-        ]);
-        setStats(statsData);
-        setChallenges(challengesData);
+        const data = await api.getChallenges('joinable', walletAddress || '');
+        setChallenges(data);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
+    fetchChallenges();
   }, [walletAddress]);
 
-  if (!walletAddress) {
-    return (
-      <EmptyState 
-        title="Connect Wallet" 
-        message="Please connect your wallet to view your dashboard and active commitments."
-      />
-    );
-  }
-
-  if (loading) {
-    return <div className="container text-center mt-8">Loading dashboard...</div>;
-  }
-
+  if (loading) return <div className="container text-center mt-8">Loading challenges...</div>;
+  
   if (error) {
     return (
       <div className="container mt-8">
-        <div style={{ color: 'var(--error)' }}>Failed to load dashboard: {error}</div>
+        <div style={{ color: 'var(--error)' }}>Failed to load discover page: {error}</div>
       </div>
     );
   }
@@ -60,19 +37,17 @@ const DashboardPage = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h2>My Dashboard</h2>
+        <h2>Discover Challenges</h2>
       </div>
 
-      <StakeSummary stats={stats} />
-
       <div className="mb-4">
-        <h3>My Commitments</h3>
+        <p className="text-muted">Join public challenges, put ETH on the line, and earn your share of the pool.</p>
       </div>
 
       {challenges.length === 0 ? (
         <EmptyState 
-          title="No commitments yet" 
-          message="It's time to put something on the line. Create your first challenge and stake some ETH."
+          title="No open challenges" 
+          message="There are currently no challenges accepting new participants. Be the first to start one!"
           actionText="Create Challenge"
           actionLink="/challenges/new"
         />
@@ -91,4 +66,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default DiscoverPage;
