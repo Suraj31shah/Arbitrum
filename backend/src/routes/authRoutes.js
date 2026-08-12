@@ -67,6 +67,14 @@ router.get('/notion/callback', (req, res, next) => {
   })(req, res, next);
 });
 
+router.get('/github/disconnect', async (req, res) => {
+  if (req.user) {
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user.id, { $unset: { githubId: "" } });
+  }
+  res.redirect(`${frontendUrl}/challenges/new`);
+});
+
 router.get('/google', passport.authenticate('google', { 
   scope: ['profile', 'email', 'https://www.googleapis.com/auth/fitness.activity.read'],
   accessType: 'offline',
@@ -87,6 +95,22 @@ router.get('/google/callback', (req, res, next) => {
       return res.redirect(`${frontendUrl}/challenges/new`);
     });
   })(req, res, next);
+});
+
+router.get('/google/disconnect', async (req, res) => {
+  if (req.user) {
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user.id, { $unset: { googleId: "", googleAccessToken: "", googleRefreshToken: "" } });
+  }
+  res.redirect(`${frontendUrl}/challenges/new`);
+});
+
+router.get('/notion/disconnect', async (req, res) => {
+  if (req.user) {
+    const User = require('../models/User');
+    await User.findByIdAndUpdate(req.user.id, { $unset: { notionId: "", notionAccessToken: "" } });
+  }
+  res.redirect(`${frontendUrl}/challenges/new`);
 });
 
 const User = require('../models/User');
