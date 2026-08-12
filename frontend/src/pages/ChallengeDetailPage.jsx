@@ -6,7 +6,7 @@ import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
 import VerificationDisplay from '../components/VerificationDisplay';
 
-const CONTRACT_ADDRESS = '0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c';
+const CONTRACT_ADDRESS = '0xEe4A913659e1d3F8d3bB67302a82B1f2eFAe3281';
 
 const ChallengeDetailPage = () => {
   const { id } = useParams();
