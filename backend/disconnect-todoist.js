@@ -15,4 +15,5 @@ async function disconnectTodoist() {
   process.exit(0);
 }
 
+
 disconnectTodoist();
