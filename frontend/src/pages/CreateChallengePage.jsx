@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { api, getApiUrl } from '../services/api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const MIN_STAKE = 0.0000000000001;
 const MAX_STAKE = 0.1;
 
+const INTEGRATIONS = [
+  { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
+  { id: 'github', label: 'GitHub', metricLabel: 'Commits / PRs' },
+  { id: 'todoist', label: 'Todoist', metricLabel: 'Tasks completed' },
+  { id: 'notion', label: 'Notion', metricLabel: 'Pages updated' },
+  { id: 'google', label: 'Google Health / Fit', metricLabel: 'Steps' }
+];
+
 const CreateChallengePage = () => {
   const navigate = useNavigate();
   const context = useOutletContext();
   const globalWalletAddress = context?.walletAddress;
+  const [currentUser, setCurrentUser] = useState(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -28,6 +38,44 @@ const CreateChallengePage = () => {
   const [oauthInput, setOauthInput] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
 
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('pendingFormData');
+    if (savedFormData) {
+      try { setFormData(JSON.parse(savedFormData)); } catch(e){}
+      localStorage.removeItem('pendingFormData');
+    }
+    const savedMetric = localStorage.getItem('pendingMetricValue');
+    if (savedMetric) {
+      setFormData(prev => ({ ...prev, metricValue: savedMetric }));
+      localStorage.removeItem('pendingMetricValue');
+    }
+
+    fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setCurrentUser(data.user);
+          const pending = localStorage.getItem('pendingIntegration');
+          if (pending) {
+            setFormData(prev => ({ ...prev, integrationId: pending }));
+            
+            // Auto-fill integration handle if connected
+            if (pending === 'github' && data.user.githubId) {
+              setFormData(prev => ({ ...prev, integrationHandle: data.user.username }));
+            } else if (pending === 'todoist' && data.user.todoistId) {
+              setFormData(prev => ({ ...prev, integrationHandle: data.user.todoistId }));
+            } else if (pending === 'notion' && data.user.notionId) {
+              setFormData(prev => ({ ...prev, integrationHandle: data.user.notionId }));
+            } else if (pending === 'google' && data.user.googleId) {
+              setFormData(prev => ({ ...prev, integrationHandle: data.user.googleId }));
+            }
+            localStorage.removeItem('pendingIntegration');
+          }
+        }
+      })
+      .catch(err => console.error('Not logged in:', err));
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -40,18 +88,16 @@ const CreateChallengePage = () => {
 
   const handleConnectApp = (e) => {
     e.preventDefault();
-    setShowOauthModal(true);
-    setOauthInput('');
+    const { integrationId } = formData;
+    localStorage.setItem('pendingIntegration', integrationId);
+    localStorage.setItem('pendingFormData', JSON.stringify(formData));
+    localStorage.setItem('pendingMetricValue', formData.metricValue);
+    
+    window.location.href = `${getApiUrl()}/api/auth/${integrationId}`;
   };
 
-  const handleSimulateOauth = (e) => {
-    e.preventDefault();
-    setIsConnecting(true);
-    setTimeout(() => {
-      setFormData(prev => ({ ...prev, integrationHandle: oauthInput }));
-      setIsConnecting(false);
-      setShowOauthModal(false);
-    }, 1200);
+  const handleDisconnectApp = () => {
+    window.location.href = `${getApiUrl()}/api/auth/${formData.integrationId}/disconnect`;
   };
 
   const handleSubmit = (e) => {
@@ -132,19 +178,25 @@ const CreateChallengePage = () => {
           <div className="form-group">
             <label className="form-label" htmlFor="integrationId">App Integration</label>
             <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
-              <option value="none">None (Manual Proof Submission)</option>
-              <option value="github">GitHub (Commits/PRs/Issues)</option>
-              <option value="leetcode">LeetCode (Problems Solved)</option>
-              <option value="wakatime">WakaTime (Hours Coded)</option>
+              {INTEGRATIONS.map(integration => (
+                <option key={integration.id} value={integration.id}>
+                  {integration.label}
+                </option>
+              ))}
             </select>
           </div>
 
           {formData.integrationId !== 'none' && (
             <div className="mt-4">
-              {!formData.integrationHandle ? (
+              {!(
+                (formData.integrationId === 'github' && currentUser?.githubId) ||
+                (formData.integrationId === 'todoist' && currentUser?.todoistId) ||
+                (formData.integrationId === 'notion' && currentUser?.notionId) ||
+                (formData.integrationId === 'google' && currentUser?.googleId)
+              ) ? (
                 <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px dashed var(--border)' }}>
                   <p className="mb-4">You need to authorize CommitX to read your {formData.integrationId} activity.</p>
-                  <button onClick={handleConnectApp} className="btn btn-secondary">
+                  <button type="button" onClick={handleConnectApp} className="btn btn-secondary">
                     Connect {formData.integrationId} Account
                   </button>
                 </div>
@@ -154,14 +206,14 @@ const CreateChallengePage = () => {
                     <label className="form-label">Connected Account</label>
                     <div style={{ padding: '0.75rem 1rem', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--success)' }}>
                       <span style={{ fontSize: '1.2rem' }}>✅</span>
-                      Authorized as <strong>{formData.integrationHandle}</strong>
-                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, integrationHandle: '' }))} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
+                      Authorized successfully!
+                      <button type="button" onClick={handleDisconnectApp} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
                         Disconnect
                       </button>
                     </div>
                   </div>
                   <div className="form-group mb-0" style={{ flex: 1 }}>
-                    <label className="form-label" htmlFor="metricValue">Target Goal (Number)</label>
+                    <label className="form-label" htmlFor="metricValue">Target Goal ({INTEGRATIONS.find(i => i.id === formData.integrationId)?.metricLabel || 'Number'})</label>
                     <input type="number" id="metricValue" name="metricValue" className="form-input" value={formData.metricValue} onChange={handleChange} required min="1" placeholder="e.g., 10" />
                   </div>
                 </div>
@@ -258,41 +310,6 @@ const CreateChallengePage = () => {
         </button>
       </form>
 
-      {showOauthModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div className="card" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-primary)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
-            <div className="text-center mb-6">
-              <div style={{ width: '64px', height: '64px', background: 'var(--bg-secondary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', fontSize: '2rem' }}>
-                🔗
-              </div>
-              <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Connect {formData.integrationId}</h2>
-              <p className="text-muted" style={{ fontSize: '0.875rem' }}>Authorize CommitX to read your public activity and verify your challenges automatically.</p>
-            </div>
-            
-            <form onSubmit={handleSimulateOauth}>
-              <div className="form-group mb-6">
-                <label className="form-label">{formData.integrationId === 'wakatime' ? 'Your WakaTime API Key' : `Your ${formData.integrationId} Username`}</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  autoFocus
-                  required
-                  value={oauthInput}
-                  onChange={(e) => setOauthInput(e.target.value)}
-                  placeholder={formData.integrationId === 'wakatime' ? 'sec_...' : 'username'}
-                />
-              </div>
-
-              <div className="flex gap-4">
-                <button type="button" onClick={() => setShowOauthModal(false)} className="btn btn-secondary" style={{ flex: 1 }} disabled={isConnecting}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isConnecting || !oauthInput}>
-                  {isConnecting ? 'Authorizing...' : 'Authorize App'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
