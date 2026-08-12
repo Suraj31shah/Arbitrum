@@ -56,11 +56,14 @@ const ConfirmChallengePage = () => {
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
+        const feeData = await provider.getFeeData();
         
         const tx = await signer.sendTransaction({
           to: CONTRACT_ADDRESS,
           data: data,
-          value: parsedStake
+          value: parsedStake,
+          maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 15n) / 10n : undefined,
+          maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
         });
         
         await tx.wait();
