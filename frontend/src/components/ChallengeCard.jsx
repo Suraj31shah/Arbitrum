@@ -16,9 +16,9 @@ const ChallengeCard = ({ challenge }) => {
       </div>
       
       <p className="challenge-desc text-muted">
-        {challenge.goal.length > 80 
-          ? challenge.goal.substring(0, 80) + '...' 
-          : challenge.goal}
+        {(challenge.goal || challenge.description || '').length > 80 
+          ? (challenge.goal || challenge.description || '').substring(0, 80) + '...' 
+          : (challenge.goal || challenge.description || '')}
       </p>
       
       {isJoinable && (
