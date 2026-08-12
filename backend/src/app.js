@@ -18,9 +18,14 @@ const User = require('./models/User');
 const app = express();
 
 // Enable Cross-Origin Resource Sharing
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://commitx-three.vercel.app',
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [])
+];
+
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-app.use(cors({ origin: frontendUrl, credentials: true }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 // Enable JSON request body parsing
 app.use(express.json());
