@@ -12,6 +12,8 @@ const MAX_ACTIVE_PER_WALLET = 3;
  * Called on read to keep statuses accurate without a cron job.
  * If a challenge becomes completed/failed, triggers on-chain resolution.
  */
+const resolvingChallenges = new Set();
+
 function transitionStatus(challenge) {
   const now = new Date();
   const status = challenge.status;
@@ -32,22 +34,34 @@ function transitionStatus(challenge) {
     });
     challenge.status = anyoneCompleted ? 'completed' : 'failed';
     challenge.completedAt = now;
+  }
 
-    // Trigger on-chain resolution (fire and forget — don't block the read)
-    if (!challenge.resolvedOnChain) {
+  // Self-Healing Retry Logic: Trigger on-chain resolution if concluded but not resolved
+  if ((challenge.status === 'completed' || challenge.status === 'failed') && !challenge.resolvedOnChain) {
+    const cid = challenge._id.toString();
+    if (!resolvingChallenges.has(cid)) {
+      resolvingChallenges.add(cid);
       const winnersAddresses = challenge.participants
         .filter(p => p.status === 'completed')
         .map(p => p.walletAddress);
-      resolveOnChain(challenge._id.toString(), winnersAddresses)
+        
+      resolveOnChain(cid, winnersAddresses)
         .then(txHash => {
           if (txHash) {
+            challenge.resolvedOnChain = true;
+            challenge.resolveTxHash = txHash;
             Challenge.findByIdAndUpdate(challenge._id, {
               resolvedOnChain: true,
               resolveTxHash: txHash
             }).catch(e => console.error('Failed to save resolve tx hash:', e.message));
+          } else {
+            resolvingChallenges.delete(cid);
           }
         })
-        .catch(e => console.error('On-chain resolution failed:', e.message));
+        .catch(e => {
+          console.error('On-chain resolution failed:', e.message);
+          resolvingChallenges.delete(cid);
+        });
     }
   }
 

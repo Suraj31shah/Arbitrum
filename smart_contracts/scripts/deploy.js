@@ -10,9 +10,9 @@ dotenv.config({ path: path.join(__dirname, '../../backend/.env') });
 async function main() {
   console.log("Deploying CommitX contract to Arbitrum Sepolia...");
 
-  let privateKey = process.env.PRIVATE_KEY;
+  let privateKey = process.env.BACKEND_WALLET_PRIVATE_KEY;
   if (!privateKey) {
-    console.error("❌ ERROR: No PRIVATE_KEY found in backend/.env!");
+    console.error("❌ ERROR: No BACKEND_WALLET_PRIVATE_KEY found in backend/.env!");
     process.exit(1);
   }
   
@@ -30,13 +30,15 @@ async function main() {
   const rpcUrl = process.env.ARBITRUM_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
   
   // Read compiled artifact
-  const artifactPath = path.join(__dirname, "../artifacts/contracts/CommitX.sol/CommitX.json");
-  if (!fs.existsSync(artifactPath)) {
-    console.error("❌ ERROR: Contract not compiled. Please run 'npx hardhat compile' first.");
+  const abiPath = path.join(__dirname, "../artifacts/contracts_CommitX_sol_CommitX.abi");
+  const binPath = path.join(__dirname, "../artifacts/contracts_CommitX_sol_CommitX.bin");
+  if (!fs.existsSync(abiPath) || !fs.existsSync(binPath)) {
+    console.error("❌ ERROR: Contract not compiled. Please run 'npx solcjs' first.");
     process.exit(1);
   }
   
-  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+  const abi = fs.readFileSync(abiPath, "utf8");
+  const bytecode = fs.readFileSync(binPath, "utf8");
   
   // Connect to network
   const provider = new ethers.JsonRpcProvider(rpcUrl);
@@ -46,7 +48,7 @@ async function main() {
   console.log(`Charity/Demo Fund address: ${charityAddress}`);
   
   // Deploy with charity address as constructor argument
-  const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, wallet);
+  const factory = new ethers.ContractFactory(abi, bytecode, wallet);
   const contract = await factory.deploy(charityAddress);
   
   console.log("Transaction sent! Waiting for confirmation...");

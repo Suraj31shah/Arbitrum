@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Navigate, useOutletContext } from 'react-rout
 import { api } from '../services/api';
 import { ethers } from 'ethers';
 
-const CONTRACT_ADDRESS = '0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c';
+const CONTRACT_ADDRESS = '0xEe4A913659e1d3F8d3bB67302a82B1f2eFAe3281';
 
 const ConfirmChallengePage = () => {
   const location = useLocation();
