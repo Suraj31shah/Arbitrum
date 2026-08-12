@@ -79,16 +79,14 @@ contract CommitX {
                 }
             }
 
-            // Send rounding dust to charity instead of locking it forever
+            // Map rounding dust to charity instead of pushing it
             uint256 dust = totalPool - distributed;
             if (dust > 0) {
-                (bool dustSuccess, ) = charityAddress.call{value: dust}("");
-                require(dustSuccess, "Dust transfer to charity failed");
+                claimable[challengeId][charityAddress] += dust;
             }
         } else {
-            // Nobody won — entire pool goes to charity/demo fund
-            (bool success, ) = charityAddress.call{value: totalPool}("");
-            require(success, "Charity transfer failed");
+            // Nobody won — entire pool goes to charity via pull-payment
+            claimable[challengeId][charityAddress] += totalPool;
         }
     }
 
