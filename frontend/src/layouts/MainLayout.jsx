@@ -3,6 +3,8 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { getApiUrl } from '../services/api';
 import './MainLayout.css';
 
+const CHARITY_WALLET_ADDRESS = '0x0302CDEF4ab13Ec1b17110110d1A4592B8866b72';
+
 const MainLayout = () => {
   const location = useLocation();
   const [walletAddress, setWalletAddress] = useState(null);
@@ -84,6 +86,15 @@ const MainLayout = () => {
             >
               Discover
             </Link>
+            {walletAddress?.toLowerCase() === CHARITY_WALLET_ADDRESS.toLowerCase() && (
+              <Link 
+                to="/charity" 
+                className={`nav-link ${location.pathname === '/charity' ? 'active' : ''}`}
+                style={{ color: 'var(--accent)', fontWeight: 'bold' }}
+              >
+                Charity
+              </Link>
+            )}
           </nav>
           
           <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

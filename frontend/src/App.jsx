@@ -7,6 +7,7 @@ import CreateChallengePage from './pages/CreateChallengePage';
 import ConfirmChallengePage from './pages/ConfirmChallengePage';
 import ChallengeDetailPage from './pages/ChallengeDetailPage';
 import SubmitProofPage from './pages/SubmitProofPage';
+import CharityDashboardPage from './pages/CharityDashboardPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/challenges/new/confirm" element={<ConfirmChallengePage />} />
         <Route path="/challenges/:id" element={<ChallengeDetailPage />} />
         <Route path="/challenges/:id/proof" element={<SubmitProofPage />} />
+        <Route path="/charity" element={<CharityDashboardPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
