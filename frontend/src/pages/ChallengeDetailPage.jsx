@@ -263,8 +263,16 @@ const ChallengeDetailPage = () => {
              </div>
           )}
 
-          {latestProof && (myParticipant.status === 'completed' || myParticipant.status === 'failed') && (
-            <div className="mt-4">
+          {latestProof && (myParticipant.status === 'completed' || myParticipant.status === 'failed' || latestProof.status === 'rejected') && (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+              {myParticipant.status === 'active' && latestProof.status === 'rejected' && (
+                <div style={{ padding: '1rem', background: 'var(--error-bg)', borderLeft: '4px solid var(--error)', borderRadius: '4px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: 'var(--error)', margin: 0, marginBottom: '0.5rem' }}>Previous Proof Rejected</h4>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                    Your last submission did not meet the requirements. Please review the feedback below and submit a new proof before the deadline.
+                  </p>
+                </div>
+              )}
               {(latestProof.filePaths?.length > 0 || latestProof.filePath) && (
                 <div className="mb-4">
                   <div className="form-label text-muted mb-2">Uploaded Evidence</div>

@@ -135,6 +135,8 @@ const createProof = async (req, res) => {
       };
     }
 
+    proofData.status = isSuccess ? 'approved' : 'rejected';
+
     // Save proof with analysis
     const proof = await Proof.create({
       ...proofData,
