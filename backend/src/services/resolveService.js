@@ -60,7 +60,13 @@ async function resolveOnChain(challengeId, winnersAddresses) {
 
   try {
     console.log(`[resolveService] Resolving challenge ${challengeId} with ${winnersAddresses.length} winners...`);
-    const tx = await c.resolveChallenge(challengeId, winnersAddresses);
+    
+    const feeData = await provider.getFeeData();
+    const tx = await c.resolveChallenge(challengeId, winnersAddresses, {
+      maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 15n) / 10n : undefined,
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
+    });
+    
     console.log(`[resolveService] Transaction sent: ${tx.hash}`);
     const receipt = await tx.wait();
     console.log(`[resolveService] Challenge ${challengeId} resolved on-chain. Block: ${receipt.blockNumber}`);

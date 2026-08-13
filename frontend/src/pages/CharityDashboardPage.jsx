@@ -72,7 +72,12 @@ const CharityDashboardPage = () => {
         "function claimReward(string challengeId) external"
       ], signer);
 
-      const tx = await contract.claimReward(challenge._id);
+      const feeData = await provider.getFeeData();
+      
+      const tx = await contract.claimReward(challenge._id, {
+        maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 15n) / 10n : undefined,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
+      });
       await tx.wait();
       
       alert(`Successfully collected ${challenge.claimableEth} ETH from ${challenge.title}!`);
