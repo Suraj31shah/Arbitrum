@@ -36,7 +36,7 @@ const createProof = async (req, res) => {
       return res.status(403).json({ error: 'You are not a participant in this challenge.' });
     }
 
-    if (participant.status !== 'active' && participant.status !== 'proof_submitted') {
+    if (participant.status !== 'active' && participant.status !== 'proof_submitted' && participant.status !== 'verifying') {
       return res.status(400).json({ error: `Cannot submit proof. Your status is ${participant.status}.` });
     }
 
