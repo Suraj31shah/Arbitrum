@@ -99,6 +99,7 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: '/api/auth/github/callback',
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
@@ -142,6 +143,7 @@ passport.use(new GitHubStrategy({
 passport.use(new NotionStrategy({
     clientID: process.env.NOTION_CLIENT_ID,
     clientSecret: process.env.NOTION_CLIENT_SECRET,
+    callbackURL: '/api/auth/notion/callback',
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, params, profile, done) {
@@ -185,6 +187,7 @@ passport.use(new NotionStrategy({
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: '/api/auth/google/callback',
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
