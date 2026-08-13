@@ -306,7 +306,7 @@ const CreateChallengePage = () => {
                     <label className="form-label">Connected Account</label>
                     <div style={{ padding: '0.75rem 1rem', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--success)' }}>
                       <span style={{ fontSize: '1.2rem' }}>✅</span>
-                      Authorized successfully! ({formData.integrationHandle})
+                      Authorized successfully!
                       <button type="button" onClick={() => setFormData(prev => ({...prev, integrationHandle: ''}))} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
                         Change
                       </button>
