@@ -107,21 +107,31 @@ const MainLayout = () => {
           </Link>
 
           <Link 
-            to="/challenges" 
+            to="/dashboard#my-challenges" 
             className={`sidebar-link ${location.pathname.startsWith('/challenges') ? 'active' : ''}`}
-            onClick={() => setMobileNavOpen(false)}
+            onClick={() => {
+              setMobileNavOpen(false);
+              if (location.pathname === '/dashboard') {
+                document.getElementById('my-challenges')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             <Target className="nav-icon" size={18} />
             <span className="nav-label">My Challenges</span>
           </Link>
 
           <Link 
-            to="/proofs" 
+            to="/dashboard#recent-activity" 
             className={`sidebar-link ${location.pathname.startsWith('/proof') ? 'active' : ''}`}
-            onClick={() => setMobileNavOpen(false)}
+            onClick={() => {
+              setMobileNavOpen(false);
+              if (location.pathname === '/dashboard') {
+                document.getElementById('recent-activity')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             <FileCheck className="nav-icon" size={18} />
-            <span className="nav-label">Proofs</span>
+            <span className="nav-label">Recent Activity</span>
           </Link>
 
           <a href="#achievements" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>

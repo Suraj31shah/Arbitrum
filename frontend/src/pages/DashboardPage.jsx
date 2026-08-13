@@ -63,6 +63,20 @@ const DashboardPage = () => {
     fetchData();
   }, [walletAddress, isCharity]);
 
+  // Handle scrolling to hash on mount/navigation
+  useEffect(() => {
+    if (!loading && window.location.hash) {
+      const id = window.location.hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        // slight timeout ensures DOM has painted
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [loading, window.location.hash]);
+
   if (!walletAddress) {
     return (
       <EmptyState 
@@ -160,7 +174,7 @@ const DashboardPage = () => {
       </section>
 
       {/* 3. My Challenges Section with Tabs & Max 3 Cards */}
-      <section className="my-challenges-section">
+      <section className="my-challenges-section" id="my-challenges">
         <div className="section-header-bar">
           <div className="section-title-group">
             <h2>My Challenges</h2>
@@ -214,7 +228,7 @@ const DashboardPage = () => {
       </section>
 
       {/* 4. Recent Activity Section */}
-      <section className="compact-activity-card">
+      <section className="compact-activity-card" id="recent-activity">
         <div className="compact-activity-header">
           <History size={16} style={{ color: 'var(--text-muted)' }} />
           <h3>Recent Activity</h3>
