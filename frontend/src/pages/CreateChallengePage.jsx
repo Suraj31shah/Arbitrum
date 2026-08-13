@@ -119,7 +119,17 @@ const CreateChallengePage = () => {
       const next = { ...prev, [name]: value };
       if (name === 'integrationId') {
         next.integrationMetrics = [];
-        next.integrationHandle = '';
+        if (value === 'github' && currentUser?.githubId) {
+          next.integrationHandle = currentUser.githubUsername || currentUser.username;
+        } else if (value === 'todoist' && currentUser?.todoistId) {
+          next.integrationHandle = currentUser.todoistId;
+        } else if (value === 'notion' && currentUser?.notionId) {
+          next.integrationHandle = currentUser.notionId;
+        } else if (value === 'google' && currentUser?.googleId) {
+          next.integrationHandle = currentUser.googleId;
+        } else {
+          next.integrationHandle = '';
+        }
       }
       return next;
     });
