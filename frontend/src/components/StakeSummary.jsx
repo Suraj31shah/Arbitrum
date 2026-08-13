@@ -4,26 +4,46 @@ import './StakeSummary.css';
 const StakeSummary = ({ stats }) => {
   if (!stats) return null;
 
+  const totalStakedEth = typeof stats.totalStaked === 'number' ? stats.totalStaked : 0;
+  const activeCount = typeof stats.activeChallenges === 'number' ? stats.activeChallenges : 0;
+  const completedCount = typeof stats.completedChallenges === 'number' ? stats.completedChallenges : 0;
+  const successRate = typeof stats.successRate === 'number' ? stats.successRate : 0;
+
   return (
     <div className="stake-summary-grid">
-      <div className="summary-card accent-card">
-        <div className="summary-label">Total Staked</div>
-        <div className="summary-value">{stats.totalStaked.toFixed(2)} <span className="summary-unit">ETH</span></div>
+      {/* 1. Total Staked */}
+      <div className="summary-card">
+        <div className="summary-label">TOTAL STAKED</div>
+        <div className="summary-value-row">
+          <span className="summary-number">{totalStakedEth.toFixed(2)}</span>
+          <span className="summary-unit">ETH</span>
+        </div>
       </div>
       
+      {/* 2. Ongoing */}
       <div className="summary-card">
-        <div className="summary-label">Active</div>
-        <div className="summary-value">{stats.activeChallenges}</div>
+        <div className="summary-label">ONGOING</div>
+        <div className="summary-value-row">
+          <span className="summary-number">{activeCount}</span>
+          <span className="summary-unit-muted">{activeCount === 1 ? 'Challenge' : 'Challenges'}</span>
+        </div>
       </div>
       
+      {/* 3. Completed */}
       <div className="summary-card">
-        <div className="summary-label">Completed</div>
-        <div className="summary-value">{stats.completedChallenges}</div>
+        <div className="summary-label">COMPLETED</div>
+        <div className="summary-value-row">
+          <span className="summary-number">{completedCount}</span>
+          <span className="summary-unit-muted">{completedCount === 1 ? 'Challenge' : 'Challenges'}</span>
+        </div>
       </div>
       
+      {/* 4. Success Rate */}
       <div className="summary-card">
-        <div className="summary-label">Success Rate</div>
-        <div className="summary-value">{stats.successRate}%</div>
+        <div className="summary-label">SUCCESS RATE</div>
+        <div className="summary-value-row">
+          <span className="summary-number">{successRate}%</span>
+        </div>
       </div>
     </div>
   );

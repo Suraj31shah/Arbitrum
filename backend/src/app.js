@@ -50,10 +50,40 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      if (typeof id === 'string' && id.startsWith('local-user-')) {
+        const walletAddress = id.replace('local-user-', '');
+        return done(null, {
+          _id: id,
+          id: id,
+          walletAddress: walletAddress,
+          username: walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4)
+        });
+      }
+      return done(null, null);
+    }
     const user = await User.findById(id);
-    done(null, user);
+    if (!user && typeof id === 'string' && id.startsWith('local-user-')) {
+      const walletAddress = id.replace('local-user-', '');
+      return done(null, {
+        _id: id,
+        id: id,
+        walletAddress: walletAddress,
+        username: walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4)
+      });
+    }
+    done(null, user || null);
   } catch (err) {
-    done(err, null);
+    if (typeof id === 'string' && id.startsWith('local-user-')) {
+      const walletAddress = id.replace('local-user-', '');
+      return done(null, {
+        _id: id,
+        id: id,
+        walletAddress: walletAddress,
+        username: walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4)
+      });
+    }
+    done(null, null);
   }
 });
 

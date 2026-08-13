@@ -4,19 +4,50 @@ const { readChallenges, saveChallengeLocally } = require('../utils/localChalleng
 
 const getChallenges = async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      const localChallenges = readChallenges();
-      return res.json(localChallenges);
+    // If no wallet is connected, do not return private user commitments
+    if (!req.isAuthenticated() || !req.user || !req.user.walletAddress) {
+      return res.json([]);
     }
 
-    let challenges = await Challenge.find()
+    const userId = req.user._id || req.user.id;
+    const userWallet = req.user.walletAddress ? req.user.walletAddress.toLowerCase() : null;
+
+    if (mongoose.connection.readyState !== 1) {
+      const localChallenges = readChallenges();
+      const userChallenges = localChallenges.filter(c => {
+        if (!c) return false;
+        const creatorId = c.creator?._id?.toString() || c.creator?.toString();
+        const currentUserId = userId?.toString();
+        if (creatorId && currentUserId && creatorId === currentUserId) return true;
+
+        if (Array.isArray(c.participants)) {
+          return c.participants.some(p => {
+            const pUserId = p.user?._id?.toString() || p.user?.toString();
+            if (pUserId && currentUserId && pUserId === currentUserId) return true;
+            if (userWallet && p.walletAddress && p.walletAddress.toLowerCase() === userWallet) return true;
+            return false;
+          });
+        }
+        return false;
+      });
+      return res.json(userChallenges);
+    }
+
+    const orConditions = [
+      { creator: userId },
+      { 'participants.user': userId }
+    ];
+    if (userWallet) {
+      orConditions.push({ 'participants.walletAddress': userWallet });
+      orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
+    }
+
+    let challenges = await Challenge.find({ $or: orConditions })
       .populate('creator', 'username profileUrl walletAddress')
       .populate('participants.user', 'username profileUrl walletAddress')
       .sort({ createdAt: -1 });
     
     const now = new Date();
-    
-    // Automatically fail expired active challenges
     challenges = await Promise.all(challenges.map(async (c) => {
       if (c.status === 'active' && new Date(c.deadline) < now) {
         c.status = 'failed';
@@ -28,8 +59,29 @@ const getChallenges = async (req, res) => {
     res.json(challenges);
   } catch (error) {
     console.error('Failed to fetch challenges from MongoDB, serving local store:', error.message);
+    if (!req.isAuthenticated() || !req.user || !req.user.walletAddress) {
+      return res.json([]);
+    }
+    const userId = req.user._id || req.user.id;
+    const userWallet = req.user.walletAddress ? req.user.walletAddress.toLowerCase() : null;
     const localChallenges = readChallenges();
-    res.json(localChallenges);
+    const userChallenges = localChallenges.filter(c => {
+      if (!c) return false;
+      const creatorId = c.creator?._id?.toString() || c.creator?.toString();
+      const currentUserId = userId?.toString();
+      if (creatorId && currentUserId && creatorId === currentUserId) return true;
+
+      if (Array.isArray(c.participants)) {
+        return c.participants.some(p => {
+          const pUserId = p.user?._id?.toString() || p.user?.toString();
+          if (pUserId && currentUserId && pUserId === currentUserId) return true;
+          if (userWallet && p.walletAddress && p.walletAddress.toLowerCase() === userWallet) return true;
+          return false;
+        });
+      }
+      return false;
+    });
+    res.json(userChallenges);
   }
 };
 
