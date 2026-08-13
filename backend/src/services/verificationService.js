@@ -163,14 +163,24 @@ async function fetchTodoistData(todoistId, dateStart, dateEnd) {
 }
 
 async function fetchGitHubData(username, dateStart, dateEnd) {
-  // We use the public events API for the user provided
-  const response = await fetch(`https://api.github.com/users/${username}/events/public?per_page=50`, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json'
-    }
+  // Find the user to get their access token to avoid the 60 req/hr public rate limit
+  const user = await User.findOne({ githubUsername: username });
+  const headers = {
+    'Accept': 'application/vnd.github.v3+json'
+  };
+  
+  let url = `https://api.github.com/users/${username}/events/public?per_page=50`;
+  if (user && user.githubAccessToken) {
+    headers['Authorization'] = `token ${user.githubAccessToken}`;
+    url = `https://api.github.com/users/${username}/events?per_page=50`;
+  }
+
+  // Fetch events
+  const response = await fetch(url, {
+    headers
   });
 
-  if (!response.ok) throw new Error('Failed to fetch GitHub events or user not found');
+  if (!response.ok) throw new Error(`Failed to fetch GitHub events or user not found (HTTP ${response.status})`);
   const events = await response.json();
   
   if (!Array.isArray(events)) {

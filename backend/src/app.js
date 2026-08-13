@@ -106,7 +106,7 @@ passport.use(new GitHubStrategy({
     try {
       if (req.user) {
         let user = await User.findById(req.user.id);
-        if (!user.githubId) {
+        if (!user.githubId || user.githubAccessToken !== accessToken) {
           const existing = await User.findOne({ githubId: profile.id });
           if (existing && existing._id.toString() !== user._id.toString()) {
             existing.githubId = undefined;
@@ -114,6 +114,7 @@ passport.use(new GitHubStrategy({
           }
           user.githubId = profile.id;
           user.githubUsername = profile.username;
+          user.githubAccessToken = accessToken;
           if (!user.username || user.username.startsWith('0x')) {
             user.username = profile.username;
           }
@@ -126,9 +127,13 @@ passport.use(new GitHubStrategy({
           user = await User.create({
             githubId: profile.id,
             githubUsername: profile.username,
+            githubAccessToken: accessToken,
             username: profile.username || profile.displayName,
             profileUrl: profile.profileUrl
           });
+        } else if (user.githubAccessToken !== accessToken) {
+          user.githubAccessToken = accessToken;
+          await user.save();
         }
         return done(null, user);
       }
