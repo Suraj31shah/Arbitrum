@@ -14,7 +14,6 @@ const INTEGRATIONS = [
     { id: 'prs', label: 'Pull Requests' },
     { id: 'issues', label: 'Issues Solved' }
   ]},
-  { id: 'todoist', label: 'Todoist', metrics: [{ id: 'tasks', label: 'Tasks completed' }] },
   { id: 'notion', label: 'Notion', metrics: [{ id: 'pages', label: 'Pages updated' }] },
   { id: 'google', label: 'Google Health / Fit', metrics: [
     { id: 'steps', label: 'Steps' },
@@ -99,8 +98,6 @@ const CreateChallengePage = () => {
             // Auto-fill integration handle if connected
             if (pending === 'github' && data.user.githubId) {
               setFormData(prev => ({ ...prev, integrationHandle: data.user.githubUsername || data.user.username }));
-            } else if (pending === 'todoist' && data.user.todoistId) {
-              setFormData(prev => ({ ...prev, integrationHandle: data.user.todoistId }));
             } else if (pending === 'notion' && data.user.notionId) {
               setFormData(prev => ({ ...prev, integrationHandle: data.user.notionId }));
             } else if (pending === 'google' && data.user.googleId) {

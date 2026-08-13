@@ -31,6 +31,9 @@ const proofSchema = new mongoose.Schema(
       type: String,
       default: 'pending'
     },
+    filePaths: [{
+      type: String
+    }],
     filePath: {
       type: String,
       default: ''

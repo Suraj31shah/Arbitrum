@@ -120,9 +120,16 @@ async function analyzeProof(proofData) {
     const promptText = buildPrompt(proofData);
     const contents = [promptText];
 
-    const filePart = getFilePart(proofData.filePath);
-    if (filePart) {
-      contents.push(filePart);
+    if (proofData.filePaths && proofData.filePaths.length > 0) {
+      for (const fp of proofData.filePaths) {
+        const filePart = getFilePart(fp);
+        if (filePart) contents.push(filePart);
+      }
+    } else if (proofData.filePath) {
+      const filePart = getFilePart(proofData.filePath);
+      if (filePart) {
+        contents.push(filePart);
+      }
     }
 
     let responseText = '';

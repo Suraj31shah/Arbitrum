@@ -47,7 +47,8 @@ const createProof = async (req, res) => {
       websiteUrl: websiteUrl && typeof websiteUrl === 'string' ? websiteUrl.trim() : '',
       description: description.trim(),
       status: 'pending',
-      filePath: req.file ? req.file.path.replace(/\\/g, '/') : ''
+      filePaths: req.files ? req.files.map(f => f.path.replace(/\\/g, '/')) : [],
+      filePath: req.files && req.files.length > 0 ? req.files[0].path.replace(/\\/g, '/') : ''
     };
 
     // First update status to show we're verifying

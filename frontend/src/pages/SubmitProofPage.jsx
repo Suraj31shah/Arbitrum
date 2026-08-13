@@ -15,7 +15,7 @@ const SubmitProofPage = () => {
     githubUrl: '',
     websiteUrl: ''
   });
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
 
   // Integration proof state
   const [previewData, setPreviewData] = useState(null);
@@ -61,7 +61,9 @@ const SubmitProofPage = () => {
       payload.append('description', formData.description);
       if (formData.githubUrl) payload.append('githubUrl', formData.githubUrl);
       if (formData.websiteUrl) payload.append('websiteUrl', formData.websiteUrl);
-      if (file) payload.append('file', file);
+      if (files.length > 0) {
+        files.forEach(f => payload.append('files', f));
+      }
     }
 
     try {
@@ -214,7 +216,7 @@ const SubmitProofPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="file">Upload Evidence (Optional)</label>
+            <label className="form-label" htmlFor="file">Upload Evidence (Optional, max 5)</label>
             <input
               type="file"
               id="file"
@@ -222,9 +224,26 @@ const SubmitProofPage = () => {
               className="form-input"
               style={{ padding: '8px' }}
               accept="image/*,application/pdf"
-              onChange={(e) => setFile(e.target.files[0])}
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files).slice(0, 5))}
             />
-            <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>Accepted formats: JPG, PNG, WEBP, PDF (Max 10MB)</div>
+            <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>Accepted formats: JPG, PNG, WEBP, PDF (Max 10MB per file)</div>
+            
+            {files.length > 0 && (
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                {files.map((f, i) => (
+                  <div key={i} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    {f.type.startsWith('image/') ? (
+                      <img src={URL.createObjectURL(f)} alt={`preview-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', fontSize: '0.7rem', textAlign: 'center', padding: '4px' }}>
+                        {f.name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="form-group">

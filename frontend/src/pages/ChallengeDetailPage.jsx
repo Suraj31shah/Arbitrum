@@ -263,9 +263,29 @@ const ChallengeDetailPage = () => {
              </div>
           )}
 
-          {latestProof && latestProof.aiAnalysis && (myParticipant.status === 'completed' || myParticipant.status === 'failed') && (
+          {latestProof && (myParticipant.status === 'completed' || myParticipant.status === 'failed') && (
             <div className="mt-4">
-              <VerificationDisplay analysis={latestProof.aiAnalysis} />
+              {(latestProof.filePaths?.length > 0 || latestProof.filePath) && (
+                <div className="mb-4">
+                  <div className="form-label text-muted mb-2">Uploaded Evidence</div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {latestProof.filePaths?.length > 0 ? (
+                      latestProof.filePaths.map((fp, i) => (
+                        <a key={i} href={`${api.defaults.baseURL.replace('/api', '')}/${fp}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                          <img src={`${api.defaults.baseURL.replace('/api', '')}/${fp}`} alt={`Evidence ${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                        </a>
+                      ))
+                    ) : (
+                      latestProof.filePath && (
+                        <a href={`${api.defaults.baseURL.replace('/api', '')}/${latestProof.filePath}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                          <img src={`${api.defaults.baseURL.replace('/api', '')}/${latestProof.filePath}`} alt="Evidence" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                        </a>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+              {latestProof.aiAnalysis && <VerificationDisplay analysis={latestProof.aiAnalysis} />}
             </div>
           )}
 

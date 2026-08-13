@@ -11,7 +11,7 @@ router.get('/api/challenges/:id/integration-preview', getIntegrationPreview);
 
 // Create proof with file upload
 router.post('/api/proofs', (req, res, next) => {
-  upload.single('file')(req, res, (error) => {
+  upload.array('files', 5)(req, res, (error) => {
     if (error) {
       return res.status(400).json({ error: error.message });
     }
