@@ -140,7 +140,7 @@ async function analyzeProof(proofData) {
     let lastError = null;
 
     // Use a single model and apply a strict timeout to prevent hanging on automatic 429 retries
-    const modelName = 'gemini-1.5-flash';
+    const modelName = 'gemini-2.5-flash';
     
     try {
       const apiCall = ai.models.generateContent({
