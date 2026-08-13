@@ -4,11 +4,12 @@ const passport = require('passport');
 const router = express.Router();
 
 function getFrontendUrl(req) {
-  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.split(',')[0];
-  if (req.hostname === 'localhost' || req.hostname === '127.0.0.1') {
-    return 'http://localhost:5173';
+  // If the backend being hit is the production Render backend, return the production Vercel frontend
+  if (req.hostname && req.hostname.includes('onrender.com')) {
+    return 'https://commitx-three.vercel.app';
   }
-  return 'https://commitx-three.vercel.app';
+  // Otherwise, default to local development frontend
+  return 'http://localhost:5173';
 }
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
