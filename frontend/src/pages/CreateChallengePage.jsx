@@ -251,31 +251,35 @@ const CreateChallengePage = () => {
               return (
                 <div className="form-group mb-4">
                   <label className="form-label">Select Tracking Metrics & Goals</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
                     {selectedIntegration.metrics.map(m => {
                       const isChecked = formData.integrationMetrics.some(im => im.id === m.id);
                       const currentGoal = formData.integrationMetrics.find(im => im.id === m.id)?.goal || '';
                       return (
-                        <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1 }}>
+                        <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: isChecked ? 'rgba(0, 219, 137, 0.05)' : 'var(--bg-primary)', border: isChecked ? '1px solid var(--primary)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', transition: 'all 0.2s' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', flex: 1, fontWeight: isChecked ? '600' : 'normal', color: isChecked ? 'var(--primary)' : 'var(--text-primary)' }}>
                             <input 
                               type="checkbox" 
                               checked={isChecked}
                               onChange={() => handleMetricToggle(m.id)}
+                              style={{ width: '1.1rem', height: '1.1rem', accentColor: 'var(--primary)', cursor: 'pointer' }}
                             />
                             {m.label}
                           </label>
                           {isChecked && (
-                            <input 
-                              type="number" 
-                              className="form-input" 
-                              style={{ width: '150px', padding: '0.25rem 0.5rem' }}
-                              placeholder="Target Goal"
-                              min="1"
-                              value={currentGoal}
-                              onChange={(e) => handleMetricGoalChange(m.id, e.target.value)}
-                              required
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', animation: 'fadeIn 0.2s ease-in-out' }}>
+                              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Target:</span>
+                              <input 
+                                type="number" 
+                                className="form-input" 
+                                style={{ width: '120px', padding: '0.4rem 0.75rem', margin: 0 }}
+                                placeholder="e.g. 50"
+                                min="1"
+                                value={currentGoal}
+                                onChange={(e) => handleMetricGoalChange(m.id, e.target.value)}
+                                required
+                              />
+                            </div>
                           )}
                         </div>
                       );
