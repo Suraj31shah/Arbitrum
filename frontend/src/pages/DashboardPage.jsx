@@ -4,13 +4,21 @@ import { api } from '../services/api';
 import StakeSummary from '../components/StakeSummary';
 import ChallengeCard from '../components/ChallengeCard';
 import EmptyState from '../components/EmptyState';
+import { ethers } from 'ethers';
+
+const CHARITY_WALLET_ADDRESS = '0x0302CDEF4ab13Ec1b17110110d1A4592B8866b72'.toLowerCase();
+const CONTRACT_ADDRESS = '0xEe4A913659e1d3F8d3bB67302a82B1f2eFAe3281';
 
 const DashboardPage = () => {
   const { walletAddress } = useOutletContext();
   const [stats, setStats] = useState(null);
   const [challenges, setChallenges] = useState([]);
+  const [allChallenges, setAllChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [claimingIds, setClaimingIds] = useState(new Set());
+  
+  const isCharity = walletAddress?.toLowerCase() === CHARITY_WALLET_ADDRESS;
 
   useEffect(() => {
     if (!walletAddress) {
@@ -20,12 +28,14 @@ const DashboardPage = () => {
 
     const fetchData = async () => {
       try {
-        const [statsData, challengesData] = await Promise.all([
+        const [statsData, challengesData, allData] = await Promise.all([
           api.getDashboardStats(walletAddress),
-          api.getChallenges('mine', walletAddress)
+          api.getChallenges('mine', walletAddress),
+          isCharity ? api.getChallenges() : Promise.resolve([])
         ]);
         setStats(statsData);
         setChallenges(challengesData);
+        if (isCharity) setAllChallenges(allData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -85,6 +95,71 @@ const DashboardPage = () => {
           {challenges.map(challenge => (
             <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} />
           ))}
+        </div>
+      )}
+
+      {isCharity && (
+        <div className="mt-8 pt-8" style={{ borderTop: '2px dashed var(--border)' }}>
+          <h2 className="mb-4" style={{ color: 'var(--accent)' }}>Charity Administration</h2>
+          <p className="text-muted mb-6">As the designated Charity Wallet, you can collect the unclaimed dust and failed stakes from concluded challenges here.</p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {allChallenges
+              .filter(c => (c.status === 'completed' || c.status === 'failed') && c.resolvedOnChain)
+              .map(challenge => {
+                const handleCharityClaim = async () => {
+                  setClaimingIds(prev => new Set(prev).add(challenge._id));
+                  try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    const signer = await provider.getSigner();
+                    const contract = new ethers.Contract(CONTRACT_ADDRESS, [
+                      "function claimReward(string challengeId) external",
+                      "function claimable(string challengeId, address account) external view returns (uint256)"
+                    ], signer);
+                    
+                    const amount = await contract.claimable(challenge._id, CHARITY_WALLET_ADDRESS);
+                    if (amount === 0n) {
+                      alert("Nothing left to claim for this challenge.");
+                      return;
+                    }
+                    
+                    const feeData = await provider.getFeeData();
+                    const tx = await contract.claimReward(challenge._id, {
+                      maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 15n) / 10n : undefined,
+                      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
+                    });
+                    await tx.wait();
+                    alert("Charity funds successfully claimed!");
+                  } catch (err) {
+                    console.error(err);
+                    alert("Failed to claim: " + err.message);
+                  } finally {
+                    const next = new Set(claimingIds);
+                    next.delete(challenge._id);
+                    setClaimingIds(next);
+                  }
+                };
+
+                return (
+                  <div key={challenge._id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h4 className="mb-1">{challenge.title}</h4>
+                      <div className="text-muted" style={{ fontSize: '0.875rem' }}>
+                        Status: <strong style={{ color: challenge.status === 'completed' ? 'var(--success)' : 'var(--error)' }}>{challenge.status}</strong> • 
+                        Total Pool: {challenge.participants.length * (challenge.stakeAmount || 0)} ETH
+                      </div>
+                    </div>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={handleCharityClaim}
+                      disabled={claimingIds.has(challenge._id)}
+                    >
+                      {claimingIds.has(challenge._id) ? 'Claiming...' : 'Claim Charity Funds'}
+                    </button>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       )}
     </div>

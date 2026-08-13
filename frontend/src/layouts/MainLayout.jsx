@@ -6,6 +6,7 @@ import './MainLayout.css';
 const MainLayout = () => {
   const location = useLocation();
   const [walletAddress, setWalletAddress] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     // Check if already logged in
@@ -14,6 +15,7 @@ const MainLayout = () => {
       .then(data => {
         if (data.user && data.user.walletAddress) {
           setWalletAddress(data.user.walletAddress);
+          setCurrentUser(data.user);
         }
       })
       .catch(console.error);
@@ -108,7 +110,7 @@ const MainLayout = () => {
 
       <main className="layout-main">
         <div className="container">
-          <Outlet context={{ walletAddress }} />
+          <Outlet context={{ walletAddress, currentUser }} />
         </div>
       </main>
       

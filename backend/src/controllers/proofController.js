@@ -61,7 +61,18 @@ const createProof = async (req, res) => {
     if (challenge.integrationId && challenge.integrationId !== 'none') {
       const end = new Date();
       const start = new Date(challenge.startTime); // Since challenge start
-      integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end);
+      
+      let participantHandle = '';
+      if (challenge.integrationId === 'github') participantHandle = req.user.username;
+      else if (challenge.integrationId === 'todoist') participantHandle = req.user.todoistId;
+      else if (challenge.integrationId === 'notion') participantHandle = req.user.notionId;
+      else if (challenge.integrationId === 'google') participantHandle = req.user.googleId;
+      
+      if (!participantHandle) {
+        return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account.` });
+      }
+
+      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end);
       
       // Deterministic check
       if (integrationData && typeof integrationData.value === 'number') {

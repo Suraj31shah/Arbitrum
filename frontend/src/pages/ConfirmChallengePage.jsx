@@ -58,8 +58,8 @@ const ConfirmChallengePage = () => {
         const signer = await provider.getSigner();
         const signerAddress = await signer.getAddress();
         
-        if (signerAddress.toLowerCase() !== globalWalletAddress.toLowerCase()) {
-          throw new Error(`Your website account is linked to ${globalWalletAddress.substring(0,6)}..., but your active MetaMask account is ${signerAddress.substring(0,6)}.... Please switch to the correct account in MetaMask.`);
+        if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+          throw new Error(`Your website account is linked to ${walletAddress.substring(0,6)}..., but your active MetaMask account is ${signerAddress.substring(0,6)}.... Please switch to the correct account in MetaMask.`);
         }
 
         const feeData = await provider.getFeeData();

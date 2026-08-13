@@ -21,18 +21,32 @@ const CreateChallengePage = () => {
   const globalWalletAddress = context?.walletAddress;
   const [currentUser, setCurrentUser] = useState(null);
   
+  const defaultStartTime = new Date();
+  const defaultDeadline = new Date(defaultStartTime.getTime() + 60 * 60 * 1000); // 1 hour ahead
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     goal: '',
-    deadline: null,
+    deadline: defaultDeadline,
     stakeAmount: '0.001',
     startMode: 'immediate',
-    startTime: null,
+    startTime: defaultStartTime,
     integrationId: 'none',
     integrationHandle: '',
     metricValue: ''
   });
+
+  const getMinTime = (date) => {
+    if (!date) return new Date();
+    const today = new Date();
+    const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    return isToday ? today : new Date(new Date().setHours(0, 0, 0, 0));
+  };
+  
+  const getMaxTime = () => {
+    return new Date(new Date().setHours(23, 59, 59, 999));
+  };
 
   const [showOauthModal, setShowOauthModal] = useState(false);
   const [oauthInput, setOauthInput] = useState('');
@@ -55,6 +69,15 @@ const CreateChallengePage = () => {
       .then(data => {
         if (data.user) {
           setCurrentUser(data.user);
+          
+          // Check if they were actually trying to join a challenge
+          const pendingJoin = localStorage.getItem('pendingJoinChallenge');
+          if (pendingJoin) {
+            localStorage.removeItem('pendingJoinChallenge');
+            navigate(`/challenges/${pendingJoin}`);
+            return;
+          }
+
           const pending = localStorage.getItem('pendingIntegration');
           if (pending) {
             setFormData(prev => ({ ...prev, integrationId: pending }));
@@ -275,13 +298,15 @@ const CreateChallengePage = () => {
                   onChange={(date) => setFormData(prev => ({ ...prev, startTime: date }))}
                   showTimeSelect
                   timeFormat="HH:mm"
-                  timeIntervals={15}
+                  timeIntervals={1}
                   timeCaption="time"
                   dateFormat="MMMM d, yyyy h:mm aa"
                   className="form-input"
                   placeholderText="Select start date & time"
                   required={formData.startMode === 'scheduled'}
                   minDate={new Date()}
+                  minTime={getMinTime(formData.startTime)}
+                  maxTime={getMaxTime()}
                 />
               </div>
             )}
@@ -293,13 +318,17 @@ const CreateChallengePage = () => {
                 onChange={(date) => setFormData(prev => ({ ...prev, deadline: date }))}
                 showTimeSelect
                 timeFormat="HH:mm"
-                timeIntervals={15}
+                timeIntervals={1}
                 timeCaption="time"
                 dateFormat="MMMM d, yyyy h:mm aa"
                 className="form-input"
                 placeholderText="Select deadline date & time"
                 required
                 minDate={formData.startMode === 'scheduled' && formData.startTime ? formData.startTime : new Date()}
+                minTime={formData.startMode === 'scheduled' && formData.startTime 
+                  ? (formData.deadline?.getDate() === formData.startTime.getDate() ? formData.startTime : new Date(new Date().setHours(0, 0, 0, 0)))
+                  : getMinTime(formData.deadline)}
+                maxTime={getMaxTime()}
               />
             </div>
           </div>

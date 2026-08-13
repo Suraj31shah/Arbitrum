@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useOutletContext, useNavigate } from 'react-router-dom';
+import { useParams, Link, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 import { ethers } from 'ethers';
 import StatusBadge from '../components/StatusBadge';
@@ -11,6 +11,7 @@ const CONTRACT_ADDRESS = '0xEe4A913659e1d3F8d3bB67302a82B1f2eFAe3281';
 const ChallengeDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [challenge, setChallenge] = useState(null);
   const [proofs, setProofs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +21,7 @@ const ChallengeDetailPage = () => {
 
   const context = useOutletContext();
   const globalWalletAddress = context?.walletAddress?.toLowerCase();
+  const currentUser = context?.currentUser;
 
   useEffect(() => {
     const fetchChallengeData = async () => {
@@ -59,6 +61,18 @@ const ChallengeDetailPage = () => {
       alert("Please connect your wallet to join!");
       return;
     }
+
+    // Check integration requirement
+    if (challenge.integrationId && challenge.integrationId !== 'none') {
+      const integrationField = challenge.integrationId + 'Id'; // e.g., githubId, todoistId
+      if (!currentUser || !currentUser[integrationField]) {
+        // Need to authenticate
+        localStorage.setItem('pendingJoinChallenge', challenge._id);
+        window.location.href = `${api.getApiUrl ? api.getApiUrl() : 'http://localhost:5000'}/api/auth/${challenge.integrationId}`;
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       try {
@@ -118,7 +132,12 @@ const ChallengeDetailPage = () => {
         "function claimReward(string challengeId) external"
       ], signer);
       
-      const tx = await contract.claimReward(challenge._id);
+      const feeData = await provider.getFeeData();
+
+      const tx = await contract.claimReward(challenge._id, {
+        maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 15n) / 10n : undefined,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
+      });
       await tx.wait();
       
       setClaimableAmount(0);
