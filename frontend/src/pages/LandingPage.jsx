@@ -6,107 +6,140 @@ import { api, getApiUrl } from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
 import './LandingPage.css';
 
-/* ─── Among Us–style SVG Crewmates ─── */
-const Crewmate = ({ color = '#22d3ee', visorColor = '#67e8f9', size = 120, style = {}, className = '' }) => (
+/* ─── Accurate Among Us–style SVG Crewmates ─── */
+const Crewmate = ({ color = '#22d3ee', shadowColor = '#0891b2', size = 120, style = {}, className = '' }) => (
   <svg width={size} height={size * 1.2} viewBox="0 0 100 120" fill="none" className={`crewmate ${className}`} style={style}>
-    {/* Body */}
-    <path d="M25 85 C25 45, 25 25, 50 20 C75 25, 75 45, 75 85 L70 90 L70 110 L58 110 L58 90 L42 90 L42 110 L30 110 L30 90 Z" fill={color} />
-    {/* Backpack */}
-    <rect x="12" y="45" width="16" height="30" rx="8" fill={color} opacity="0.8" />
-    {/* Visor */}
-    <ellipse cx="58" cy="48" rx="18" ry="14" fill={visorColor} opacity="0.9" />
-    <ellipse cx="60" cy="46" rx="6" ry="4" fill="white" opacity="0.4" />
-    {/* Shadow under body */}
-    <ellipse cx="50" cy="115" rx="22" ry="4" fill="black" opacity="0.15" />
+    {/* Backpack Shadow & Main */}
+    <rect x="8" y="42" width="22" height="42" rx="11" fill={shadowColor} />
+    <rect x="12" y="40" width="16" height="42" rx="8" fill={color} />
+    
+    {/* Body Shadow (Full shape) */}
+    <path d="M 25 90 C 25 35, 30 15, 55 15 C 80 15, 85 35, 85 90 L 85 110 A 8 8 0 0 1 69 110 L 69 95 L 41 95 L 41 110 A 8 8 0 0 1 25 110 Z" fill={shadowColor} />
+    {/* Body Main (Shifted up and right for shadow effect) */}
+    <path d="M 32 90 C 32 40, 35 22, 58 22 C 78 22, 82 40, 82 90 L 82 108 A 6 6 0 0 1 70 108 L 70 92 L 44 92 L 44 108 A 6 6 0 0 1 32 108 Z" fill={color} />
+    
+    {/* Visor Shadow, Main, and Glare */}
+    <rect x="42" y="32" width="46" height="30" rx="15" fill="#385a85" />
+    <rect x="45" y="30" width="40" height="26" rx="13" fill="#9dbcd4" />
+    <ellipse cx="68" cy="38" rx="10" ry="4" fill="white" transform="rotate(-8 68 38)" />
+    
+    {/* Ground Shadow */}
+    <ellipse cx="55" cy="116" rx="28" ry="4" fill="black" opacity="0.3" />
   </svg>
 );
 
-/* Crewmate with raised arms (celebrating) */
-const CrewmateCelebrating = ({ color = '#a855f7', visorColor = '#c084fc', size = 120, style = {}, className = '' }) => (
+const CrewmateCelebrating = ({ color = '#a855f7', shadowColor = '#7e22ce', size = 120, style = {}, className = '' }) => (
   <svg width={size} height={size * 1.4} viewBox="0 0 100 140" fill="none" className={`crewmate ${className}`} style={style}>
-    {/* Left arm up */}
-    <rect x="15" y="15" width="10" height="35" rx="5" fill={color} transform="rotate(-30 20 32)" />
-    {/* Right arm up */}
-    <rect x="70" y="10" width="10" height="35" rx="5" fill={color} transform="rotate(30 75 27)" />
-    {/* Body */}
-    <path d="M25 95 C25 55, 25 35, 50 30 C75 35, 75 55, 75 95 L70 100 L70 120 L58 120 L58 100 L42 100 L42 120 L30 120 L30 100 Z" fill={color} />
     {/* Backpack */}
-    <rect x="12" y="55" width="16" height="30" rx="8" fill={color} opacity="0.8" />
+    <rect x="8" y="52" width="22" height="42" rx="11" fill={shadowColor} />
+    <rect x="12" y="50" width="16" height="42" rx="8" fill={color} />
+    
+    {/* Left Arm Up */}
+    <rect x="10" y="20" width="14" height="40" rx="7" fill={shadowColor} transform="rotate(-30 17 40)" />
+    <rect x="14" y="20" width="10" height="38" rx="5" fill={color} transform="rotate(-30 19 39)" />
+    
+    {/* Right Arm Up */}
+    <rect x="75" y="15" width="14" height="40" rx="7" fill={shadowColor} transform="rotate(30 82 35)" />
+    <rect x="75" y="15" width="10" height="38" rx="5" fill={color} transform="rotate(30 80 34)" />
+
+    {/* Body */}
+    <path d="M 25 100 C 25 45, 30 25, 55 25 C 80 25, 85 45, 85 100 L 85 120 A 8 8 0 0 1 69 120 L 69 105 L 41 105 L 41 120 A 8 8 0 0 1 25 120 Z" fill={shadowColor} />
+    <path d="M 32 100 C 32 50, 35 32, 58 32 C 78 32, 82 50, 82 100 L 82 118 A 6 6 0 0 1 70 118 L 70 102 L 44 102 L 44 118 A 6 6 0 0 1 32 118 Z" fill={color} />
+    
     {/* Visor */}
-    <ellipse cx="58" cy="58" rx="18" ry="14" fill={visorColor} opacity="0.9" />
-    <ellipse cx="60" cy="56" rx="6" ry="4" fill="white" opacity="0.4" />
+    <rect x="42" y="42" width="46" height="30" rx="15" fill="#385a85" />
+    <rect x="45" y="40" width="40" height="26" rx="13" fill="#9dbcd4" />
+    <ellipse cx="68" cy="48" rx="10" ry="4" fill="white" transform="rotate(-8 68 48)" />
+    
     {/* Confetti */}
-    <rect x="10" y="5" width="4" height="8" rx="2" fill="#fbbf24" transform="rotate(15 12 9)" />
-    <rect x="82" y="8" width="4" height="8" rx="2" fill="#f472b6" transform="rotate(-20 84 12)" />
+    <rect x="15" y="5" width="5" height="10" rx="2" fill="#fbbf24" transform="rotate(15 15 5)" />
+    <rect x="80" y="8" width="5" height="10" rx="2" fill="#f472b6" transform="rotate(-20 80 8)" />
     <rect x="45" y="2" width="4" height="8" rx="2" fill="#34d399" />
-    <circle cx="30" cy="12" r="3" fill="#818cf8" />
+    <circle cx="30" cy="12" r="4" fill="#818cf8" />
     <circle cx="72" cy="3" r="3" fill="#fb923c" />
-    {/* Shadow */}
-    <ellipse cx="50" cy="128" rx="22" ry="4" fill="black" opacity="0.15" />
+    
+    {/* Ground Shadow */}
+    <ellipse cx="55" cy="126" rx="28" ry="4" fill="black" opacity="0.3" />
   </svg>
 );
 
-/* Crewmate with coin */
-const CrewmateStaking = ({ color = '#f87171', visorColor = '#fca5a5', size = 120, style = {}, className = '' }) => (
+const CrewmateStaking = ({ color = '#f87171', shadowColor = '#b91c1c', size = 120, style = {}, className = '' }) => (
   <svg width={size} height={size * 1.3} viewBox="0 0 120 135" fill="none" className={`crewmate ${className}`} style={style}>
     {/* Arm holding coin */}
-    <rect x="72" y="40" width="10" height="30" rx="5" fill={color} transform="rotate(20 77 55)" />
+    <rect x="75" y="50" width="14" height="35" rx="7" fill={shadowColor} transform="rotate(20 82 67)" />
+    <rect x="75" y="50" width="10" height="33" rx="5" fill={color} transform="rotate(20 80 66)" />
+    
     {/* Coin */}
-    <circle cx="95" cy="35" r="12" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
-    <text x="95" y="40" textAnchor="middle" fill="#92400e" fontSize="14" fontWeight="bold">Ξ</text>
-    {/* Body */}
-    <path d="M30 90 C30 50, 30 30, 55 25 C80 30, 80 50, 80 90 L75 95 L75 115 L63 115 L63 95 L47 95 L47 115 L35 115 L35 95 Z" fill={color} />
+    <circle cx="102" cy="45" r="14" fill="#fbbf24" stroke="#d97706" strokeWidth="3" />
+    <text x="102" y="51" textAnchor="middle" fill="#92400e" fontSize="16" fontWeight="bold">Ξ</text>
+    
     {/* Backpack */}
-    <rect x="17" y="50" width="16" height="30" rx="8" fill={color} opacity="0.8" />
+    <rect x="13" y="47" width="22" height="42" rx="11" fill={shadowColor} />
+    <rect x="17" y="45" width="16" height="42" rx="8" fill={color} />
+    
+    {/* Body */}
+    <path d="M 30 95 C 30 40, 35 20, 60 20 C 85 20, 90 40, 90 95 L 90 115 A 8 8 0 0 1 74 115 L 74 100 L 46 100 L 46 115 A 8 8 0 0 1 30 115 Z" fill={shadowColor} />
+    <path d="M 37 95 C 37 45, 40 27, 63 27 C 83 27, 87 45, 87 95 L 87 113 A 6 6 0 0 1 75 113 L 75 97 L 49 97 L 49 113 A 6 6 0 0 1 37 113 Z" fill={color} />
+    
     {/* Visor */}
-    <ellipse cx="63" cy="53" rx="18" ry="14" fill={visorColor} opacity="0.9" />
-    <ellipse cx="65" cy="51" rx="6" ry="4" fill="white" opacity="0.4" />
-    {/* Shadow */}
-    <ellipse cx="55" cy="122" rx="22" ry="4" fill="black" opacity="0.15" />
+    <rect x="47" y="37" width="46" height="30" rx="15" fill="#385a85" />
+    <rect x="50" y="35" width="40" height="26" rx="13" fill="#9dbcd4" />
+    <ellipse cx="73" cy="43" rx="10" ry="4" fill="white" transform="rotate(-8 73 43)" />
+    
+    {/* Ground Shadow */}
+    <ellipse cx="60" cy="121" rx="28" ry="4" fill="black" opacity="0.3" />
   </svg>
 );
 
-/* Crewmate working at desk */
-const CrewmateWorking = ({ color = '#fbbf24', visorColor = '#fde68a', size = 120, style = {}, className = '' }) => (
+const CrewmateWorking = ({ color = '#fbbf24', shadowColor = '#b45309', size = 120, style = {}, className = '' }) => (
   <svg width={size} height={size * 1.3} viewBox="0 0 140 140" fill="none" className={`crewmate ${className}`} style={style}>
     {/* Desk */}
-    <rect x="15" y="88" width="110" height="6" rx="2" fill="#475569" />
-    <rect x="25" y="94" width="6" height="25" rx="1" fill="#334155" />
-    <rect x="109" y="94" width="6" height="25" rx="1" fill="#334155" />
+    <rect x="15" y="88" width="110" height="8" rx="3" fill="#3f3f46" />
+    <rect x="25" y="96" width="8" height="25" rx="2" fill="#27272a" />
+    <rect x="107" y="96" width="8" height="25" rx="2" fill="#27272a" />
+    
     {/* Laptop on desk */}
-    <rect x="55" y="72" width="40" height="16" rx="2" fill="#1e293b" />
-    <rect x="57" y="74" width="36" height="12" rx="1" fill="#3b82f6" opacity="0.6" />
-    <rect x="50" y="88" width="50" height="3" rx="1" fill="#334155" />
+    <rect x="55" y="70" width="40" height="18" rx="3" fill="#18181b" />
+    <rect x="58" y="73" width="34" height="12" rx="1" fill="#0ea5e9" opacity="0.8" />
+    <rect x="50" y="88" width="50" height="4" rx="2" fill="#27272a" />
+    
     {/* Body (sitting) */}
-    <path d="M40 88 C40 60, 40 42, 58 38 C76 42, 76 60, 76 88 Z" fill={color} />
+    <path d="M 35 88 C 35 50, 35 30, 58 25 C 80 30, 80 50, 80 88 Z" fill={shadowColor} />
+    <path d="M 40 88 C 40 55, 42 35, 60 32 C 75 35, 75 55, 75 88 Z" fill={color} />
+    
     {/* Backpack */}
-    <rect x="28" y="52" width="14" height="26" rx="7" fill={color} opacity="0.8" />
+    <rect x="22" y="47" width="18" height="34" rx="9" fill={shadowColor} />
+    <rect x="26" y="45" width="12" height="34" rx="6" fill={color} />
+    
     {/* Visor */}
-    <ellipse cx="66" cy="55" rx="15" ry="12" fill={visorColor} opacity="0.9" />
-    <ellipse cx="68" cy="53" rx="5" ry="3.5" fill="white" opacity="0.4" />
+    <rect x="57" y="42" width="38" height="26" rx="13" fill="#385a85" />
+    <rect x="60" y="40" width="32" height="22" rx="11" fill="#9dbcd4" />
+    <ellipse cx="78" cy="46" rx="8" ry="3" fill="white" transform="rotate(-8 78 46)" />
+    
     {/* Arm on desk */}
-    <rect x="70" y="68" width="8" height="22" rx="4" fill={color} transform="rotate(15 74 79)" />
+    <rect x="65" y="65" width="12" height="26" rx="6" fill={shadowColor} transform="rotate(15 71 78)" />
+    <rect x="67" y="65" width="8" height="24" rx="4" fill={color} transform="rotate(15 71 77)" />
   </svg>
 );
 
-/* Dead crewmate (failed) */
-const CrewmateDead = ({ color = '#64748b', size = 80, style = {}, className = '' }) => (
-  <svg width={size} height={size * 0.6} viewBox="0 0 100 60" fill="none" className={`crewmate ${className}`} style={style}>
+const CrewmateDead = ({ color = '#52525b', shadowColor = '#27272a', size = 80, style = {}, className = '' }) => (
+  <svg width={size} height={size * 0.75} viewBox="0 0 100 75" fill="none" className={`crewmate ${className}`} style={style}>
     {/* Half body (dead) */}
-    <path d="M10 55 C10 30, 20 15, 40 10 C55 15, 60 30, 60 55 Z" fill={color} />
-    {/* Visor */}
-    <ellipse cx="48" cy="28" rx="14" ry="10" fill="#94a3b8" opacity="0.7" />
+    <path d="M 15 65 C 15 40, 25 25, 45 20 C 60 25, 65 40, 65 65 Z" fill={shadowColor} />
+    <path d="M 22 65 C 22 45, 30 32, 47 28 C 58 32, 60 45, 60 65 Z" fill={color} />
+    
     {/* Bone */}
-    <rect x="55" y="40" width="30" height="5" rx="2.5" fill="#e2e8f0" />
-    <circle cx="55" cy="37" r="4" fill="#e2e8f0" />
-    <circle cx="55" cy="48" r="4" fill="#e2e8f0" />
-    <circle cx="85" cy="37" r="4" fill="#e2e8f0" />
-    <circle cx="85" cy="48" r="4" fill="#e2e8f0" />
-    {/* X eyes on visor */}
-    <text x="48" y="32" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">✕</text>
+    <rect x="35" y="10" width="20" height="15" rx="4" fill="#d4d4d8" />
+    <circle cx="40" cy="8" r="7" fill="#d4d4d8" />
+    <circle cx="50" cy="8" r="7" fill="#d4d4d8" />
+    
+    {/* Visor on ground */}
+    <rect x="60" y="50" width="35" height="18" rx="9" fill="#385a85" transform="rotate(15 77 59)" />
+    <rect x="62" y="52" width="31" height="14" rx="7" fill="#71717a" transform="rotate(15 77 59)" />
+    
+    <text x="75" y="62" textAnchor="middle" fill="#18181b" fontSize="12" fontWeight="900" transform="rotate(15 77 59)">✕</text>
   </svg>
 );
-
 
 const fallbackChallenges = [
   {
@@ -140,7 +173,6 @@ const fallbackChallenges = [
     participants: [{ walletAddress: '0x1' }, { walletAddress: '0x2' }, { walletAddress: '0x3' }, { walletAddress: '0x4' }, { walletAddress: '0x5' }]
   }
 ];
-
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -215,15 +247,8 @@ const LandingPage = () => {
     }
   };
 
-  const displayChallenges = challenges.length >= 3
-    ? challenges.slice(0, 3)
-    : (challenges.length > 0
-        ? [...challenges, ...fallbackChallenges].slice(0, 3)
-        : fallbackChallenges);
-
   return (
     <div className="landing-root">
-
       {/* ─── Navbar ─── */}
       <header className="landing-nav">
         <div className="landing-nav-inner">
@@ -233,7 +258,7 @@ const LandingPage = () => {
           </Link>
           <nav className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
             <a href="#story" onClick={() => setMobileMenuOpen(false)}>How it works</a>
-            <a href="#challenges-section" onClick={() => setMobileMenuOpen(false)}>Challenges</a>
+            <a href="#challenges-section" onClick={() => setMobileMenuOpen(false)}>Live Challenges</a>
           </nav>
           <div className="nav-actions">
             {walletAddress ? (
@@ -248,18 +273,16 @@ const LandingPage = () => {
         </div>
       </header>
 
-
       {/* ─── Hero ─── */}
       <section className="hero">
         <div className="hero-content">
           <h1>
-            Promises are easy.<br />
-            <span className="hero-highlight">Keeping them is hard.</span>
+            You said you'd do it.<br />
+            <span className="hero-highlight">Now put something behind it.</span>
           </h1>
           <p className="hero-sub">
-            What if breaking a promise to yourself actually cost you something?
-            CommitX turns your goals into commitments backed by real stakes.
-            Complete what you promised — or lose what you put up.
+            You set the goal. You put something real on the line. 
+            Then you either show up — or someone who did gets your stake.
           </p>
           <div className="hero-actions">
             {walletAddress ? (
@@ -277,13 +300,12 @@ const LandingPage = () => {
 
         {/* Decorative crewmates in hero */}
         <div className="hero-characters">
-          <Crewmate color="#22d3ee" visorColor="#67e8f9" size={90} className="hero-crew hero-crew-1" />
-          <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={90} className="hero-crew hero-crew-2" />
-          <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={100} className="hero-crew hero-crew-3" />
-          <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={85} className="hero-crew hero-crew-4" />
+          <Crewmate color="#0ea5e9" shadowColor="#0369a1" size={90} className="hero-crew hero-crew-1" />
+          <CrewmateStaking color="#f43f5e" shadowColor="#be123c" size={90} className="hero-crew hero-crew-2" />
+          <CrewmateWorking color="#f59e0b" shadowColor="#b45309" size={100} className="hero-crew hero-crew-3" />
+          <CrewmateCelebrating color="#a855f7" shadowColor="#7e22ce" size={85} className="hero-crew hero-crew-4" />
         </div>
       </section>
-
 
       {/* ─── Scroll Storytelling ─── */}
       <section id="story" className="story-section">
@@ -294,18 +316,18 @@ const LandingPage = () => {
         {/* Scene 1: The Promise */}
         <div className="story-scene" ref={el => storyRefs.current[0] = el}>
           <div className="scene-illustration">
-            <Crewmate color="#22d3ee" visorColor="#67e8f9" size={140} className="scene-character" />
+            <Crewmate color="#0ea5e9" shadowColor="#0369a1" size={140} className="scene-character" />
             <div className="thought-bubble">
               <span>"I'll exercise every day this week."</span>
             </div>
           </div>
           <div className="scene-text">
-            <div className="scene-step">Step 1</div>
-            <h2>You make a promise to yourself.</h2>
+            <h2>You already know what you need to do.</h2>
             <p>
-              We all do it. "I'll study harder." "I'll ship that feature."
-              "I'll run every morning." But without consequences,
-              most promises quietly die by Wednesday.
+              Study for the exam. Ship the project. Run 5 km. 
+              Finish the thing you've been putting off for three weeks.
+              <br/><br/>
+              The hard part isn't knowing. <strong>It's doing it when nobody is watching.</strong>
             </p>
           </div>
         </div>
@@ -313,7 +335,7 @@ const LandingPage = () => {
         {/* Scene 2: Put skin in the game */}
         <div className="story-scene scene-reverse" ref={el => storyRefs.current[1] = el}>
           <div className="scene-illustration">
-            <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={150} className="scene-character" />
+            <CrewmateStaking color="#f43f5e" shadowColor="#be123c" size={150} className="scene-character" />
             <div className="coin-trail">
               <div className="floating-coin">Ξ</div>
               <div className="floating-coin delay-1">Ξ</div>
@@ -321,54 +343,53 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="scene-text">
-            <div className="scene-step">Step 2</div>
-            <h2>Put something real on the line.</h2>
+            <h2>So make yourself a deal.</h2>
             <p>
-              You stake a small amount of ETH on your commitment.
-              Not a lot — just enough that breaking your promise
-              actually stings. Now it's not just words. It's a contract
-              with yourself.
+              Pick something you actually want to finish. Set the deadline. 
+              Put ETH behind the promise. 
+              <br/><br/>
+              Then get out of the way and do the work.
             </p>
           </div>
         </div>
 
-        {/* Scene 3: Do the work */}
+        {/* Scene 3: The consequence */}
         <div className="story-scene" ref={el => storyRefs.current[2] = el}>
-          <div className="scene-illustration">
-            <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={160} className="scene-character" />
-          </div>
-          <div className="scene-text">
-            <div className="scene-step">Step 3</div>
-            <h2>Actually do the work.</h2>
-            <p>
-              You have a deadline. You have skin in the game.
-              Now the only thing left is to show up and do what
-              you said you'd do. When you're done, submit your proof —
-              a screenshot, a photo, a commit log, whatever fits.
-            </p>
-          </div>
-        </div>
-
-        {/* Scene 4: The Outcome */}
-        <div className="story-scene scene-reverse" ref={el => storyRefs.current[3] = el}>
           <div className="scene-illustration scene-outcome">
             <div className="outcome-winner">
-              <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={120} className="scene-character" />
+              <CrewmateCelebrating color="#a855f7" shadowColor="#7e22ce" size={120} className="scene-character" />
               <span className="outcome-label win">Completed ✓</span>
             </div>
             <div className="outcome-loser">
-              <CrewmateDead color="#64748b" size={80} className="scene-character dead-mate" />
+              <CrewmateDead color="#52525b" shadowColor="#27272a" size={80} className="scene-character dead-mate" />
               <span className="outcome-label lose">Gave up ✕</span>
             </div>
           </div>
           <div className="scene-text">
-            <div className="scene-step">Step 4</div>
-            <h2>Winners take the pool.</h2>
+            <h2>Because this time, breaking it costs you.</h2>
             <p>
-              If you complete the challenge, you get your stake back —
-              plus a share of the stakes from everyone who didn't finish.
-              If nobody finishes, the pool goes to charity.
-              Simple. Fair. Motivating.
+              Everyone who joins puts up the same stake.
+              Finish your commitment → <strong>you get your stake back.</strong><br/>
+              Don't → <strong>your stake goes to the people who did.</strong>
+              <br/><br/>
+              And if nobody manages to finish? <strong>It goes to charity.</strong><br/>
+              No house. No hidden winner. No one gets paid for simply showing up.
+            </p>
+          </div>
+        </div>
+
+        {/* Scene 4: Proof */}
+        <div className="story-scene scene-reverse" ref={el => storyRefs.current[3] = el}>
+          <div className="scene-illustration">
+            <CrewmateWorking color="#f59e0b" shadowColor="#b45309" size={160} className="scene-character" />
+          </div>
+          <div className="scene-text">
+            <h2>We don't just take your word for it.</h2>
+            <p>
+              When the deadline arrives, show what you actually did.
+              A GitHub commit. A fitness record. A screenshot. Whatever proves the commitment.
+              <br/><br/>
+              <strong>Your promise starts the challenge.<br/>Your proof finishes it.</strong>
             </p>
           </div>
         </div>
@@ -377,29 +398,15 @@ const LandingPage = () => {
         <div className="story-line" aria-hidden="true" />
       </section>
 
-
-      {/* ─── The Point ─── */}
-      <section className="the-point" ref={el => storyRefs.current[4] = el}>
-        <div className="the-point-inner">
-          <h2>It's not about the money.</h2>
-          <p>
-            It's about the person you become when you actually
-            follow through. The ETH is just the nudge. The real reward
-            is proving to yourself that you can keep a promise.
-          </p>
-        </div>
-      </section>
-
-
       {/* ─── Live Challenges ─── */}
-      <section id="challenges-section" className="challenges-section" ref={el => storyRefs.current[5] = el}>
+      <section id="challenges-section" className="challenges-section" ref={el => storyRefs.current[4] = el}>
         <div className="challenges-inner">
           <h2>Jump into a challenge.</h2>
           <p className="challenges-sub">
             These are real commitments from real people. Pick one, stake your ETH, and prove yourself.
           </p>
           <div className="challenges-grid">
-            {displayChallenges.map(challenge => (
+            {(challenges.length > 0 ? challenges : fallbackChallenges).slice(0, 3).map(challenge => (
               <ChallengeCard key={challenge._id} challenge={challenge} />
             ))}
           </div>
@@ -411,28 +418,20 @@ const LandingPage = () => {
         </div>
       </section>
 
-
       {/* ─── Final CTA ─── */}
-      <section className="final-cta" ref={el => storyRefs.current[6] = el}>
-        <h2>Ready to stop making excuses?</h2>
-        <p>Your next commitment starts now.</p>
+      <section className="final-cta" ref={el => storyRefs.current[5] = el}>
+        <h2>The money isn't the goal. It's the consequence.</h2>
+        <p>So... what are you going to finish? Don't make another to-do list.<br/><strong>Make it a commitment.</strong></p>
         <div className="final-cta-actions">
           {walletAddress ? (
-            <Link to="/challenges/new" className="btn-primary-landing">Create a Challenge</Link>
+            <Link to="/challenges/new" className="btn-primary-landing">Start a Challenge</Link>
           ) : (
             <button onClick={handleConnectWallet} className="btn-primary-landing">
               Connect Wallet & Start
             </button>
           )}
         </div>
-        <div className="final-characters">
-          <Crewmate color="#22d3ee" visorColor="#67e8f9" size={60} />
-          <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={60} />
-          <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={65} />
-          <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={55} />
-        </div>
       </section>
-
 
       {/* ─── Footer ─── */}
       <footer className="landing-footer">
