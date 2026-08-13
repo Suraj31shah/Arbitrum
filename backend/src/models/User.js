@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true // sparse allows multiple nulls
     },
+    githubUsername: String,
     todoistId: {
       type: String,
       unique: true,

@@ -79,7 +79,10 @@ passport.use(new GitHubStrategy({
             await existing.save();
           }
           user.githubId = profile.id;
-          user.username = user.username || profile.username;
+          user.githubUsername = profile.username;
+          if (!user.username || user.username.startsWith('0x')) {
+            user.username = profile.username;
+          }
           await user.save();
         }
         return done(null, user);
@@ -88,6 +91,7 @@ passport.use(new GitHubStrategy({
         if (!user) {
           user = await User.create({
             githubId: profile.id,
+            githubUsername: profile.username,
             username: profile.username || profile.displayName,
             profileUrl: profile.profileUrl
           });

@@ -90,7 +90,7 @@ const CreateChallengePage = () => {
             
             // Auto-fill integration handle if connected
             if (pending === 'github' && data.user.githubId) {
-              setFormData(prev => ({ ...prev, integrationHandle: data.user.username }));
+              setFormData(prev => ({ ...prev, integrationHandle: data.user.githubUsername || data.user.username }));
             } else if (pending === 'todoist' && data.user.todoistId) {
               setFormData(prev => ({ ...prev, integrationHandle: data.user.todoistId }));
             } else if (pending === 'notion' && data.user.notionId) {
