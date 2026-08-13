@@ -65,7 +65,7 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/auth/github/callback`,
+    callbackURL: `/api/auth/github/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
@@ -149,7 +149,7 @@ class CustomTodoistStrategy extends OAuth2Strategy {
 passport.use(new CustomTodoistStrategy({
     clientID: process.env.TODOIST_CLIENT_ID,
     clientSecret: process.env.TODOIST_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/auth/todoist/callback`,
+    callbackURL: `/api/auth/todoist/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
@@ -192,7 +192,7 @@ passport.use(new CustomTodoistStrategy({
 passport.use(new NotionStrategy({
     clientID: process.env.NOTION_CLIENT_ID,
     clientSecret: process.env.NOTION_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/auth/notion/callback`,
+    callbackURL: `/api/auth/notion/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, params, profile, done) {
@@ -236,7 +236,7 @@ passport.use(new NotionStrategy({
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `${backendUrl}/api/auth/google/callback`,
+    callbackURL: `/api/auth/google/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {

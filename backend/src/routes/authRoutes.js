@@ -134,7 +134,10 @@ router.post('/wallet', async (req, res, next) => {
     }
 
     req.logIn(user, (err) => {
-      if (err) return next(err);
+      if (err) {
+        console.error('req.logIn failed in wallet auth:', err);
+        return next(err);
+      }
       return res.json({ message: 'Logged in successfully', user });
     });
   } catch (err) {
