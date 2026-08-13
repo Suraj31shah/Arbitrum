@@ -263,11 +263,11 @@ const getIntegrationPreview = async (req, res) => {
     const participant = challenge.participants.find(
       p => p.walletAddress.toLowerCase() === req.user.walletAddress.toLowerCase()
     );
-    if (!participant) {
-      return res.status(403).json({ error: 'You are not a participant in this challenge.' });
+    if (!participant || !participant.integrationHandle) {
+      return res.status(403).json({ error: 'You have not linked your account for this challenge.' });
     }
     
-    const handleToUse = participant.integrationHandle || challenge.integrationHandle;
+    const handleToUse = participant.integrationHandle;
 
     const end = new Date();
     const start = new Date(challenge.startTime);
