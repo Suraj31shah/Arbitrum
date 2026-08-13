@@ -1,1 +1,1 @@
-CommitX
+CommitX : An accountability app
