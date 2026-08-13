@@ -63,8 +63,20 @@ const createProof = async (req, res) => {
       const end = new Date();
       const start = new Date(challenge.startTime); // Since challenge start
       
-      const participantHandle = participant.integrationHandle;
+      let participantHandle = participant.integrationHandle;
       
+      // Auto-recover missing handle if user is authenticated now
+      if (!participantHandle) {
+        if (challenge.integrationId === 'github') participantHandle = req.user.githubUsername || (req.user.username && !req.user.username.startsWith('0x') ? req.user.username : '');
+        else if (challenge.integrationId === 'notion') participantHandle = req.user.notionId;
+        else if (challenge.integrationId === 'google') participantHandle = req.user.googleId;
+        
+        if (participantHandle) {
+          participant.integrationHandle = participantHandle;
+          await challenge.save();
+        }
+      }
+
       if (!participantHandle) {
         return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account or handle is missing.` });
       }
@@ -263,8 +275,23 @@ const getIntegrationPreview = async (req, res) => {
     const participant = challenge.participants.find(
       p => p.walletAddress.toLowerCase() === req.user.walletAddress.toLowerCase()
     );
-    if (!participant || !participant.integrationHandle) {
-      return res.status(403).json({ error: 'You have not linked your account for this challenge.' });
+    if (!participant) {
+      return res.status(403).json({ error: 'You are not a participant in this challenge.' });
+    }
+
+    // Auto-recover missing handle if user is authenticated now
+    if (!participant.integrationHandle) {
+      let recoveredHandle = '';
+      if (challenge.integrationId === 'github') recoveredHandle = req.user.githubUsername || (req.user.username && !req.user.username.startsWith('0x') ? req.user.username : '');
+      else if (challenge.integrationId === 'notion') recoveredHandle = req.user.notionId;
+      else if (challenge.integrationId === 'google') recoveredHandle = req.user.googleId;
+      
+      if (recoveredHandle) {
+        participant.integrationHandle = recoveredHandle;
+        await challenge.save();
+      } else {
+        return res.status(403).json({ error: 'You have not linked your account for this challenge.' });
+      }
     }
     
     const handleToUse = participant.integrationHandle;
