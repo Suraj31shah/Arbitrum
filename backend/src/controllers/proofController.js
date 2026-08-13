@@ -63,14 +63,10 @@ const createProof = async (req, res) => {
       const end = new Date();
       const start = new Date(challenge.startTime); // Since challenge start
       
-      let participantHandle = '';
-      if (challenge.integrationId === 'github') participantHandle = req.user.username;
-      else if (challenge.integrationId === 'todoist') participantHandle = req.user.todoistId;
-      else if (challenge.integrationId === 'notion') participantHandle = req.user.notionId;
-      else if (challenge.integrationId === 'google') participantHandle = req.user.googleId;
+      const participantHandle = participant.integrationHandle;
       
       if (!participantHandle) {
-        return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account.` });
+        return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account or handle is missing.` });
       }
 
       integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end);
@@ -264,9 +260,18 @@ const getIntegrationPreview = async (req, res) => {
       return res.status(400).json({ error: 'This challenge does not use an app integration.' });
     }
 
+    const participant = challenge.participants.find(
+      p => p.walletAddress.toLowerCase() === req.user.walletAddress.toLowerCase()
+    );
+    if (!participant) {
+      return res.status(403).json({ error: 'You are not a participant in this challenge.' });
+    }
+    
+    const handleToUse = participant.integrationHandle || challenge.integrationHandle;
+
     const end = new Date();
     const start = new Date(challenge.startTime);
-    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end);
+    const integrationData = await fetchIntegrationData(challenge.integrationId, handleToUse, start, end);
 
     return res.json(integrationData); // { text, value }
   } catch (error) {

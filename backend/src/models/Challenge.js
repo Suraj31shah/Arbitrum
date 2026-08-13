@@ -13,6 +13,7 @@ const participantSchema = new mongoose.Schema({
     default: 'active'
   },
   proofId: { type: mongoose.Schema.Types.ObjectId, ref: 'Proof', default: null },
+  integrationHandle: { type: String, default: '' },
   completedAt: { type: Date, default: null }
 }, { _id: false, timestamps: true });
 

@@ -352,10 +352,18 @@ const joinChallenge = async (req, res) => {
       return res.status(400).json({ error: 'You have already joined this challenge.' });
     }
 
+    let handle = '';
+    if (challenge.integrationId && challenge.integrationId !== 'none') {
+      if (challenge.integrationId === 'github') handle = req.user.githubUsername || req.user.username;
+      else if (challenge.integrationId === 'notion') handle = req.user.notionId;
+      else if (challenge.integrationId === 'google') handle = req.user.googleId;
+    }
+
     challenge.participants.push({
       user: req.user._id,
       walletAddress: req.user.walletAddress,
-      status: 'active'
+      status: 'active',
+      integrationHandle: handle
     });
 
     await challenge.save();
