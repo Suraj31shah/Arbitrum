@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { api } from '../services/api';
 
 const SubmitProofPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const context = useOutletContext();
+  const globalWalletAddress = context?.walletAddress || '';
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -81,6 +83,8 @@ const SubmitProofPage = () => {
   if (!challenge) return <div className="container text-center mt-8">Loading challenge context...</div>;
 
   const isIntegration = challenge.integrationId && challenge.integrationId !== 'none';
+  const myParticipant = challenge?.participants?.find(p => p.walletAddress.toLowerCase() === globalWalletAddress.toLowerCase());
+  const displayHandle = myParticipant?.integrationHandle || challenge.integrationHandle || 'unknown';
 
   const extraFormElements = (
     <>
@@ -204,7 +208,7 @@ const SubmitProofPage = () => {
           {isIntegration ? (
             <div className="card">
               <h3 className="mb-4 text-info">App Verification</h3>
-              <p className="mb-4">This challenge requires automatic verification via <strong>{challenge.integrationId}</strong> for the handle <code>{challenge.integrationHandle}</code>.</p>
+              <p className="mb-4">This challenge requires automatic verification via <strong>{challenge.integrationId}</strong> for the handle <code>{displayHandle}</code>.</p>
               
               {challenge.integrationMetrics && challenge.integrationMetrics.length > 0 ? (
                 <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
