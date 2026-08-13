@@ -70,39 +70,59 @@ function transitionStatus(challenge) {
 
 const getChallenges = async (req, res) => {
   try {
+    // If no wallet is connected, do not return private user commitments
+    if (!req.isAuthenticated() || !req.user || !req.user.walletAddress) {
+      return res.json([]);
+    }
+
+    const userId = req.user._id || req.user.id;
+    const userWallet = req.user.walletAddress ? req.user.walletAddress.toLowerCase() : null;
+
     if (mongoose.connection.readyState !== 1) {
       const localChallenges = readChallenges();
-      return res.json(localChallenges);
+      const userChallenges = localChallenges.filter(c => {
+        if (!c) return false;
+        const creatorId = c.creator?._id?.toString() || c.creator?.toString();
+        const currentUserId = userId?.toString();
+        if (creatorId && currentUserId && creatorId === currentUserId) return true;
+
+        if (Array.isArray(c.participants)) {
+          return c.participants.some(p => {
+            const pUserId = p.user?._id?.toString() || p.user?.toString();
+            if (pUserId && currentUserId && pUserId === currentUserId) return true;
+            if (userWallet && p.walletAddress && p.walletAddress.toLowerCase() === userWallet) return true;
+            return false;
+          });
+        }
+        return false;
+      });
+      return res.json(userChallenges);
     }
 
-    const { filter, wallet } = req.query;
-
-    let query = {};
-
-    if (filter === 'mine' && wallet) {
-      // Challenges where this wallet is a participant
-      query['participants.walletAddress'] = wallet.toLowerCase();
-    } else if (filter === 'joinable') {
-      // Challenges currently accepting participants (before deadline)
-      query.status = { $in: ['upcoming', 'active'] };
-      query.deadline = { $gt: new Date() };
+    const orConditions = [
+      { creator: userId },
+      { 'participants.user': userId }
+    ];
+    if (userWallet) {
+      orConditions.push({ 'participants.walletAddress': userWallet });
+      orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
     }
 
-    let challenges = await Challenge.find(query)
+    let challenges = await Challenge.find()
       .populate('creator', 'username profileUrl walletAddress')
       .populate('participants.user', 'username profileUrl walletAddress')
       .sort({ createdAt: -1 });
-
-    // Auto-transition statuses
-    const savePromises = [];
-    challenges = challenges.map(c => {
-      const oldStatus = c.status;
-      transitionStatus(c);
-      if (c.status !== oldStatus) {
-        savePromises.push(c.save());
+    
+    const now = new Date();
+    
+    // Automatically fail expired active challenges
+    challenges = await Promise.all(challenges.map(async (c) => {
+      if (c.status === 'active' && new Date(c.deadline) < now) {
+        c.status = 'failed';
+        await c.save();
       }
       return c;
-    });
+    }));
     if (savePromises.length > 0) await Promise.all(savePromises);
 
     // If filter=joinable and a wallet is provided, exclude challenges the wallet already joined
@@ -115,9 +135,25 @@ const getChallenges = async (req, res) => {
 
     res.json(challenges);
   } catch (error) {
-    console.error('Failed to fetch challenges:', error.message);
+    console.error('Failed to fetch challenges from MongoDB, serving local store:', error.message);
     const localChallenges = readChallenges();
-    res.json(localChallenges);
+    const userChallenges = localChallenges.filter(c => {
+      if (!c) return false;
+      const creatorId = c.creator?._id?.toString() || c.creator?.toString();
+      const currentUserId = userId?.toString();
+      if (creatorId && currentUserId && creatorId === currentUserId) return true;
+
+      if (Array.isArray(c.participants)) {
+        return c.participants.some(p => {
+          const pUserId = p.user?._id?.toString() || p.user?.toString();
+          if (pUserId && currentUserId && pUserId === currentUserId) return true;
+          if (userWallet && p.walletAddress && p.walletAddress.toLowerCase() === userWallet) return true;
+          return false;
+        });
+      }
+      return false;
+    });
+    res.json(userChallenges);
   }
 };
 

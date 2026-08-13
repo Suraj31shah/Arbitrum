@@ -3,68 +3,174 @@
   flex-direction: column;
   background-color: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  transition: all 0.2s;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   height: 100%;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
 }
 
 .challenge-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
-.card-header {
+.card-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: var(--space-3);
-  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+
+.card-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.card-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.icon-green {
+  background-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.icon-purple {
+  background-color: var(--purple-dim);
+  color: var(--purple-accent);
+}
+
+.icon-blue {
+  background-color: var(--blue-dim);
+  color: var(--blue-accent);
+}
+
+.icon-red {
+  background-color: var(--error-bg);
+  color: var(--error);
+}
+
+.title-status-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .challenge-title {
-  font-size: 1.125rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.challenge-desc {
-  font-size: 0.875rem;
-  flex-grow: 1;
-  margin-bottom: var(--space-4);
+.challenge-subtitle {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
-.card-footer {
+.card-stake-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.stake-eth-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stake-usd-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.card-tags-row {
   display: flex;
-  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.tag-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.integration-pill {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.category-pill {
+  background-color: rgba(34, 197, 94, 0.08);
+  color: var(--accent);
+}
+
+.card-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border);
-  padding-top: var(--space-3);
   margin-top: auto;
 }
 
-.metric {
+.metric-col {
   display: flex;
   flex-direction: column;
 }
 
-.metric:last-child {
-  text-align: right;
-}
-
 .metric-label {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
-.metric-value {
-  font-size: 0.875rem;
-  font-weight: 600;
+.metric-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: var(--text-primary);
+}
+
+.card-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-progress-fill {
+  height: 100%;
+  background-color: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.card-progress-fill.fill-failed {
+  background-color: var(--error);
 }
