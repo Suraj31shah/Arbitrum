@@ -107,13 +107,32 @@ const createProof = async (req, res) => {
       analysisNotes = "Manual proof accepted.";
     }
 
-    // AI is sidelined per user request. We construct a fake aiAnalysis object to satisfy the schema/UI
-    const aiAnalysis = {
-      completed: isSuccess,
-      summary: analysisNotes,
-      strengths: integrationData ? [integrationData.text] : [],
-      weaknesses: []
-    };
+    let aiAnalysis;
+    try {
+      const analysisInput = {
+        ...proofData,
+        integrationData: integrationData ? integrationData.text : null,
+      };
+      
+      aiAnalysis = await analyzeProof(analysisInput);
+      
+      // Override AI success logic with hard deterministic data if available
+      if (challenge.integrationId !== 'none') {
+        aiAnalysis.completed = isSuccess; 
+        aiAnalysis.confidence = 100;
+      } else {
+        isSuccess = aiAnalysis.completed;
+      }
+    } catch (aiErr) {
+      console.error('AI analysis failed:', aiErr.message);
+      aiAnalysis = {
+        completed: isSuccess,
+        confidence: challenge.integrationId !== 'none' ? 100 : 0,
+        summary: analysisNotes || "Verification completed.",
+        strengths: integrationData ? [integrationData.text] : [],
+        missingEvidence: []
+      };
+    }
 
     // Save proof with analysis
     const proof = await Proof.create({
