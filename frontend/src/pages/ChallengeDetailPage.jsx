@@ -379,10 +379,36 @@ const ChallengeDetailPage = () => {
       )}
 
       {!isParticipant && isOpenToJoin && (
-        <div className="text-center mt-8">
-          <button onClick={handleJoinChallenge} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}>
-            Join Challenge & Stake {challenge.stakeAmount} ETH
-          </button>
+        <div className="card mt-8 text-center" style={{ border: '1px dashed var(--border)' }}>
+          <h3 className="mb-4">Ready to Join?</h3>
+          {challenge.integrationId && challenge.integrationId !== 'none' && (
+            <div className="mb-6 text-left mx-auto" style={{ maxWidth: '450px' }}>
+              <div className="form-label mb-2">Required Integration</div>
+              <p className="text-muted mb-3" style={{ fontSize: '0.875rem' }}>This challenge uses <strong>{challenge.integrationId}</strong> to automatically verify your progress.</p>
+              
+              {currentUser && currentUser[challenge.integrationId + 'Id'] ? (
+                <div style={{ padding: '0.75rem 1rem', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--success)' }}>
+                  <span style={{ fontSize: '1.2rem' }}>✅</span>
+                  Using your connected account
+                  <button onClick={() => {
+                    localStorage.setItem('pendingJoinChallenge', challenge._id);
+                    window.location.href = `${api.getApiUrl ? api.getApiUrl() : 'http://localhost:5000'}/api/auth/${challenge.integrationId}`;
+                  }} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
+                    Change Account
+                  </button>
+                </div>
+              ) : (
+                <div style={{ padding: '0.75rem 1rem', background: 'var(--warning-bg)', color: 'var(--warning)', borderRadius: 'var(--radius-md)', border: '1px solid var(--warning)' }}>
+                  You will be asked to connect your {challenge.integrationId} account.
+                </div>
+              )}
+            </div>
+          )}
+          <div>
+            <button onClick={handleJoinChallenge} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}>
+              Join Challenge & Stake {challenge.stakeAmount} ETH
+            </button>
+          </div>
         </div>
       )}
 
