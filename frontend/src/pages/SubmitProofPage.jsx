@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, getApiUrl } from '../services/api';
 
 const SubmitProofPage = () => {
   const { id } = useParams();
@@ -192,8 +192,21 @@ const SubmitProofPage = () => {
       </div>
 
       {error && (
-        <div style={{ color: 'var(--error)', backgroundColor: 'var(--error-bg)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)' }}>
-          {error}
+        <div style={{ color: 'var(--error)', backgroundColor: 'var(--error-bg)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>{error}</div>
+          {error.includes('linked your account') && (
+            <button 
+              type="button" 
+              onClick={() => {
+                localStorage.setItem('pendingJoinChallenge', challenge._id);
+                window.location.href = `${getApiUrl()}/api/auth/${challenge.integrationId}`;
+              }} 
+              className="btn" 
+              style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: 'transparent', color: 'var(--error)', border: '1px solid var(--error)' }}
+            >
+              Connect {challenge.integrationId}
+            </button>
+          )}
         </div>
       )}
 
