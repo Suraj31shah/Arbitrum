@@ -188,13 +188,29 @@ const CreateChallengePage = () => {
       return;
     }
 
-    if (formData.integrationId !== 'none' && !formData.integrationHandle) {
+    let finalHandle = formData.integrationHandle;
+    
+    // Robustly fetch handle if empty but user is authorized in state
+    if (!finalHandle && currentUser) {
+      if (formData.integrationId === 'github' && currentUser.githubId) {
+        finalHandle = currentUser.githubUsername || currentUser.username;
+      } else if (formData.integrationId === 'todoist' && currentUser.todoistId) {
+        finalHandle = currentUser.todoistId;
+      } else if (formData.integrationId === 'notion' && currentUser.notionId) {
+        finalHandle = currentUser.notionId;
+      } else if (formData.integrationId === 'google' && currentUser.googleId) {
+        finalHandle = currentUser.googleId;
+      }
+    }
+
+    if (formData.integrationId !== 'none' && !finalHandle) {
       alert(`Please connect your ${formData.integrationId} account before continuing.`);
       return;
     }
 
     const challengeData = {
       ...formData,
+      integrationHandle: finalHandle,
       stakeAmount: stake,
       metricValue: formData.metricValue ? Number(formData.metricValue) : null,
       startTime: formData.startTime ? formData.startTime.toISOString() : null,
