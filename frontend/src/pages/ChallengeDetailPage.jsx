@@ -71,7 +71,7 @@ const ChallengeDetailPage = () => {
       if (!currentUser || !currentUser[integrationField]) {
         // Need to authenticate
         localStorage.setItem('pendingJoinChallenge', challenge._id);
-        window.location.href = `${api.getApiUrl ? api.getApiUrl() : 'http://localhost:5000'}/api/auth/${challenge.integrationId}`;
+        window.location.href = `${getApiUrl()}/api/auth/${challenge.integrationId}`;
         return;
       }
     }
