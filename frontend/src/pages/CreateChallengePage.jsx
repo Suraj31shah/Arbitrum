@@ -119,17 +119,7 @@ const CreateChallengePage = () => {
       const next = { ...prev, [name]: value };
       if (name === 'integrationId') {
         next.integrationMetrics = [];
-        if (value === 'github' && currentUser?.githubId) {
-          next.integrationHandle = currentUser.githubUsername || currentUser.username;
-        } else if (value === 'todoist' && currentUser?.todoistId) {
-          next.integrationHandle = currentUser.todoistId;
-        } else if (value === 'notion' && currentUser?.notionId) {
-          next.integrationHandle = currentUser.notionId;
-        } else if (value === 'google' && currentUser?.googleId) {
-          next.integrationHandle = currentUser.googleId;
-        } else {
-          next.integrationHandle = '';
-        }
+        next.integrationHandle = ''; // Always require a fresh connection
       }
       return next;
     });
@@ -188,29 +178,13 @@ const CreateChallengePage = () => {
       return;
     }
 
-    let finalHandle = formData.integrationHandle;
-    
-    // Robustly fetch handle if empty but user is authorized in state
-    if (!finalHandle && currentUser) {
-      if (formData.integrationId === 'github' && currentUser.githubId) {
-        finalHandle = currentUser.githubUsername || currentUser.username;
-      } else if (formData.integrationId === 'todoist' && currentUser.todoistId) {
-        finalHandle = currentUser.todoistId;
-      } else if (formData.integrationId === 'notion' && currentUser.notionId) {
-        finalHandle = currentUser.notionId;
-      } else if (formData.integrationId === 'google' && currentUser.googleId) {
-        finalHandle = currentUser.googleId;
-      }
-    }
-
-    if (formData.integrationId !== 'none' && !finalHandle) {
+    if (formData.integrationId !== 'none' && !formData.integrationHandle) {
       alert(`Please connect your ${formData.integrationId} account before continuing.`);
       return;
     }
 
     const challengeData = {
       ...formData,
-      integrationHandle: finalHandle,
       stakeAmount: stake,
       metricValue: formData.metricValue ? Number(formData.metricValue) : null,
       startTime: formData.startTime ? formData.startTime.toISOString() : null,
@@ -319,12 +293,7 @@ const CreateChallengePage = () => {
 
           {formData.integrationId !== 'none' && (
             <div className="mt-4">
-              {!(
-                (formData.integrationId === 'github' && currentUser?.githubId) ||
-                (formData.integrationId === 'todoist' && currentUser?.todoistId) ||
-                (formData.integrationId === 'notion' && currentUser?.notionId) ||
-                (formData.integrationId === 'google' && currentUser?.googleId)
-              ) ? (
+              {!formData.integrationHandle ? (
                 <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px dashed var(--border)' }}>
                   <p className="mb-4">You need to authorize CommitX to read your {formData.integrationId} activity.</p>
                   <button type="button" onClick={handleConnectApp} className="btn btn-secondary">
@@ -337,9 +306,9 @@ const CreateChallengePage = () => {
                     <label className="form-label">Connected Account</label>
                     <div style={{ padding: '0.75rem 1rem', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--success)' }}>
                       <span style={{ fontSize: '1.2rem' }}>✅</span>
-                      Authorized successfully!
-                      <button type="button" onClick={handleDisconnectApp} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
-                        Disconnect
+                      Authorized successfully! ({formData.integrationHandle})
+                      <button type="button" onClick={() => setFormData(prev => ({...prev, integrationHandle: ''}))} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
+                        Change
                       </button>
                     </div>
                   </div>
