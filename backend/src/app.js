@@ -33,8 +33,6 @@ app.use(express.json());
 // Trust the Render proxy so secure cookies work properly
 app.set('trust proxy', 1);
 
-const MongoStore = require('connect-mongo');
-
 // Check if we are running in a production-like environment (e.g. Render)
 const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
@@ -43,9 +41,6 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ 
-    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/arbitrum-challenge'
-  }),
   cookie: {
     secure: isProd,
     sameSite: isProd ? 'none' : 'lax',
