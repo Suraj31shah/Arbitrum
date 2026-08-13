@@ -75,8 +75,8 @@ passport.use(new GitHubStrategy({
         if (!user.githubId) {
           const existing = await User.findOne({ githubId: profile.id });
           if (existing && existing._id.toString() !== user._id.toString()) {
-            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
-            else return done(new Error("This GitHub account is already linked to another wallet."));
+            existing.githubId = undefined;
+            await existing.save();
           }
           user.githubId = profile.id;
           user.username = user.username || profile.username;
@@ -159,8 +159,8 @@ passport.use(new CustomTodoistStrategy({
         if (user.todoistId !== profile.id) {
           const existing = await User.findOne({ todoistId: profile.id });
           if (existing && existing._id.toString() !== user._id.toString()) {
-            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
-            else return done(new Error("This Todoist account is already linked to another wallet."));
+            existing.todoistId = undefined;
+            await existing.save();
           }
           user.todoistId = profile.id;
         }
@@ -203,10 +203,10 @@ passport.use(new NotionStrategy({
         if (user.notionId !== notionId) {
           const existing = await User.findOne({ notionId: notionId });
           if (existing && existing._id.toString() !== user._id.toString()) {
-            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
-            else return done(new Error("This Notion account is already linked to another wallet."));
+            existing.notionId = undefined;
+            await existing.save();
           }
-          user.notionId = notionId;
+          user.notionId = profile.bot_id;
         }
         user.notionAccessToken = accessToken;
         await user.save();
@@ -246,8 +246,8 @@ passport.use(new GoogleStrategy({
         if (user.googleId !== profile.id) {
           const existing = await User.findOne({ googleId: profile.id });
           if (existing && existing._id.toString() !== user._id.toString()) {
-            if (!existing.walletAddress) await User.deleteOne({ _id: existing._id });
-            else return done(new Error("This Google account is already linked to another wallet."));
+            existing.googleId = undefined;
+            await existing.save();
           }
           user.googleId = profile.id;
         }
