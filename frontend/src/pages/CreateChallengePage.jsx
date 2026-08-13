@@ -8,11 +8,21 @@ const MIN_STAKE = 0.0000000000001;
 const MAX_STAKE = 0.1;
 
 const INTEGRATIONS = [
-  { id: 'none', label: 'None (Manual Proof)', metricLabel: '' },
-  { id: 'github', label: 'GitHub', metricLabel: 'Commits / PRs' },
-  { id: 'todoist', label: 'Todoist', metricLabel: 'Tasks completed' },
-  { id: 'notion', label: 'Notion', metricLabel: 'Pages updated' },
-  { id: 'google', label: 'Google Health / Fit', metricLabel: 'Steps' }
+  { id: 'none', label: 'None (Manual Proof)', metrics: [] },
+  { id: 'github', label: 'GitHub', metrics: [
+    { id: 'commits', label: 'Commits' },
+    { id: 'prs', label: 'Pull Requests' },
+    { id: 'issues', label: 'Issues Solved' },
+    { id: 'all', label: 'All of the above (Combined)' }
+  ]},
+  { id: 'todoist', label: 'Todoist', metrics: [{ id: 'tasks', label: 'Tasks completed' }] },
+  { id: 'notion', label: 'Notion', metrics: [{ id: 'pages', label: 'Pages updated' }] },
+  { id: 'google', label: 'Google Health / Fit', metrics: [
+    { id: 'steps', label: 'Steps' },
+    { id: 'calories', label: 'Calories Burned' },
+    { id: 'active_minutes', label: 'Active Minutes' },
+    { id: 'all', label: 'All of the above (Combined)' }
+  ]}
 ];
 
 const CreateChallengePage = () => {
@@ -34,6 +44,7 @@ const CreateChallengePage = () => {
     startTime: defaultStartTime,
     integrationId: 'none',
     integrationHandle: '',
+    integrationMetric: '',
     metricValue: ''
   });
 
@@ -107,12 +118,15 @@ const CreateChallengePage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Reset connection if they change the app provider
-    if (name === 'integrationId' && value !== 'none') {
-      setFormData(prev => ({ ...prev, integrationHandle: '' }));
-    }
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === 'integrationId') {
+        const selected = INTEGRATIONS.find(i => i.id === value);
+        next.integrationMetric = selected?.metrics?.[0]?.id || '';
+        next.integrationHandle = '';
+      }
+      return next;
+    });
   };
 
   const handleConnectApp = (e) => {
@@ -204,15 +218,34 @@ const CreateChallengePage = () => {
           <h3 className="mb-4">Verification Tracking</h3>
           <p className="text-muted mb-4">Connect a 3rd-party app to automatically verify completion based on real data.</p>
           
-          <div className="form-group">
-            <label className="form-label" htmlFor="integrationId">App Integration</label>
-            <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
-              {INTEGRATIONS.map(integration => (
-                <option key={integration.id} value={integration.id}>
-                  {integration.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex gap-4">
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label" htmlFor="integrationId">App Integration</label>
+              <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
+                {INTEGRATIONS.map(integration => (
+                  <option key={integration.id} value={integration.id}>
+                    {integration.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {(() => {
+              const selectedIntegration = INTEGRATIONS.find(i => i.id === formData.integrationId);
+              if (selectedIntegration && selectedIntegration.metrics && selectedIntegration.metrics.length > 1) {
+                return (
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label" htmlFor="integrationMetric">Tracking Metric</label>
+                    <select id="integrationMetric" name="integrationMetric" className="form-input" value={formData.integrationMetric} onChange={handleChange}>
+                      {selectedIntegration.metrics.map(m => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
 
           {formData.integrationId !== 'none' && (
@@ -242,7 +275,7 @@ const CreateChallengePage = () => {
                     </div>
                   </div>
                   <div className="form-group mb-0" style={{ flex: 1 }}>
-                    <label className="form-label" htmlFor="metricValue">Target Goal ({INTEGRATIONS.find(i => i.id === formData.integrationId)?.metricLabel || 'Number'})</label>
+                    <label className="form-label" htmlFor="metricValue">Target Goal (Number)</label>
                     <input type="number" id="metricValue" name="metricValue" className="form-input" value={formData.metricValue} onChange={handleChange} required min="1" placeholder="e.g., 10" />
                   </div>
                 </div>

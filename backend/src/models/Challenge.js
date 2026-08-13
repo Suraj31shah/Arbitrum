@@ -94,6 +94,10 @@ const challengeSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    integrationMetric: {
+      type: String,
+      default: 'all'
+    },
     metricValue: {
       type: Number,
       default: null

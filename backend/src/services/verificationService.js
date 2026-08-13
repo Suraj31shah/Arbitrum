@@ -37,17 +37,13 @@ async function fetchNotionData(userId, dateStart, dateEnd) {
   return `Notion Telemetry: User updated ${count} pages recently.`;
 }
 
-async function fetchGoogleFitData(userId, dateStart, dateEnd) {
+async function fetchGoogleFitData(userId, dateStart, dateEnd, integrationMetric) {
   const user = await User.findOne({ googleId: userId });
   if (!user || !user.googleAccessToken) {
     throw new Error('Google user not found or access token missing.');
   }
 
-  // Start of the day for dateStart
-  const startDate = new Date(dateStart);
-  startDate.setHours(0, 0, 0, 0);
-  const startTimeMillis = startDate.getTime();
-  
+  const startTimeMillis = new Date(dateStart).getTime();
   const endTimeMillis = new Date(dateEnd).getTime();
 
   const response = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`, {
@@ -100,20 +96,24 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
     }
   }
 
+  let finalValue = totalSteps;
+  if (integrationMetric === 'calories') finalValue = Math.round(totalCalories);
+  else if (integrationMetric === 'active_minutes') finalValue = totalActiveMinutes;
+
   return {
     text: `Google Health Telemetry: User logged ${totalSteps} steps, ${Math.round(totalCalories)} calories burned, and ${totalActiveMinutes} active minutes recently.`,
-    value: totalSteps
+    value: finalValue
   };
 }
 
-async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd) {
+async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd, integrationMetric = 'all') {
   if (!integrationHandle) {
     return { text: `Error: No username or API key provided for ${integrationId}.`, value: 0 };
   }
 
   try {
     if (integrationId === 'github') {
-      return await fetchGitHubData(integrationHandle, dateStart, dateEnd);
+      return await fetchGitHubData(integrationHandle, dateStart, dateEnd, integrationMetric);
     } else if (integrationId === 'leetcode') {
       return await fetchLeetCodeData(integrationHandle);
     } else if (integrationId === 'wakatime') {
@@ -123,7 +123,7 @@ async function fetchIntegrationData(integrationId, integrationHandle, dateStart,
     } else if (integrationId === 'notion') {
       return await fetchNotionData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'google') {
-      return await fetchGoogleFitData(integrationHandle, dateStart, dateEnd);
+      return await fetchGoogleFitData(integrationHandle, dateStart, dateEnd, integrationMetric);
     }
     return { text: `Telemetry data for ${integrationId} (user: ${integrationHandle})`, value: 0 };
   } catch (error) {
@@ -164,7 +164,7 @@ async function fetchTodoistData(todoistId, dateStart, dateEnd) {
   return `Todoist Telemetry: User currently has ${tasksCount} active tasks.`;
 }
 
-async function fetchGitHubData(username, dateStart, dateEnd) {
+async function fetchGitHubData(username, dateStart, dateEnd, integrationMetric) {
   // We use the public events API for the user provided
   const response = await fetch(`https://api.github.com/users/${username}/events/public?per_page=50`, {
     headers: {
@@ -208,10 +208,15 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
   const totalIssues = issueEvents.length;
 
   const total = totalCommits + totalPRs + totalIssues;
+  
+  let finalValue = total;
+  if (integrationMetric === 'commits') finalValue = totalCommits;
+  else if (integrationMetric === 'prs') finalValue = totalPRs;
+  else if (integrationMetric === 'issues') finalValue = totalIssues;
 
   return {
     text: `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests, and ${totalIssues} issues solved recently.`,
-    value: total
+    value: finalValue
   };
 }
 

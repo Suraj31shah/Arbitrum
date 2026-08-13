@@ -72,7 +72,7 @@ const createProof = async (req, res) => {
         return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account.` });
       }
 
-      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end);
+      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end, challenge.integrationMetric);
       
       // Deterministic check
       if (integrationData && typeof integrationData.value === 'number') {
@@ -229,7 +229,7 @@ const getIntegrationPreview = async (req, res) => {
 
     const end = new Date();
     const start = new Date(challenge.startTime);
-    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end);
+    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end, challenge.integrationMetric);
 
     return res.json(integrationData); // { text, value }
   } catch (error) {
