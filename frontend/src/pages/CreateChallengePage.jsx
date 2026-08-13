@@ -39,8 +39,9 @@ const CreateChallengePage = () => {
 
   const getMinTime = (date) => {
     if (!date) return new Date();
+    const d = date instanceof Date ? date : new Date(date);
     const today = new Date();
-    const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
     return isToday ? today : new Date(new Date().setHours(0, 0, 0, 0));
   };
   
@@ -55,7 +56,12 @@ const CreateChallengePage = () => {
   useEffect(() => {
     const savedFormData = localStorage.getItem('pendingFormData');
     if (savedFormData) {
-      try { setFormData(JSON.parse(savedFormData)); } catch(e){}
+      try {
+        const parsed = JSON.parse(savedFormData);
+        if (parsed.deadline) parsed.deadline = new Date(parsed.deadline);
+        if (parsed.startTime) parsed.startTime = new Date(parsed.startTime);
+        setFormData(parsed);
+      } catch(e){}
       localStorage.removeItem('pendingFormData');
     }
     const savedMetric = localStorage.getItem('pendingMetricValue');
