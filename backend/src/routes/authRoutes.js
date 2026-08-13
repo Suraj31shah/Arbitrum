@@ -3,7 +3,13 @@ const passport = require('passport');
 
 const router = express.Router();
 
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+function getFrontendUrl(req) {
+  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.split(',')[0];
+  if (req.hostname === 'localhost' || req.hostname === '127.0.0.1') {
+    return 'http://localhost:5173';
+  }
+  return 'https://commitx-three.vercel.app';
+}
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
@@ -14,11 +20,11 @@ router.get('/github/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'GitHub Auth Failed' });
     }
     if (!user) {
-      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect(`${frontendUrl}/challenges/new`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -28,7 +34,7 @@ router.get('/github/disconnect', async (req, res) => {
     const User = require('../models/User');
     await User.findByIdAndUpdate(req.user.id, { $unset: { githubId: "", githubAccessToken: "" } });
   }
-  res.redirect(`${frontendUrl}/challenges/new`);
+  res.redirect(`${getFrontendUrl(req)}/challenges/new`);
 });
 
 router.get('/todoist', passport.authenticate('todoist', { scope: ['data:read'] }));
@@ -40,11 +46,11 @@ router.get('/todoist/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Todoist Auth Failed' });
     }
     if (!user) {
-      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect(`${frontendUrl}/challenges/new`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -54,7 +60,7 @@ router.get('/todoist/disconnect', async (req, res) => {
     const User = require('../models/User');
     await User.findByIdAndUpdate(req.user.id, { $unset: { todoistId: "", todoistAccessToken: "" } });
   }
-  res.redirect(`${frontendUrl}/challenges/new`);
+  res.redirect(`${getFrontendUrl(req)}/challenges/new`);
 });
 
 router.get('/notion', passport.authenticate('notion'));
@@ -66,11 +72,11 @@ router.get('/notion/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Notion Auth Failed' });
     }
     if (!user) {
-      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect(`${frontendUrl}/challenges/new`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -80,7 +86,7 @@ router.get('/notion/disconnect', async (req, res) => {
     const User = require('../models/User');
     await User.findByIdAndUpdate(req.user.id, { $unset: { notionId: "", notionAccessToken: "" } });
   }
-  res.redirect(`${frontendUrl}/challenges/new`);
+  res.redirect(`${getFrontendUrl(req)}/challenges/new`);
 });
 
 router.get('/google', passport.authenticate('google', { 
@@ -96,11 +102,11 @@ router.get('/google/callback', (req, res, next) => {
       return res.status(500).json({ error: err.message || 'Google Auth Failed' });
     }
     if (!user) {
-      return res.redirect(`${frontendUrl}/challenges/new?error=auth_failed`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new?error=auth_failed`);
     }
     req.logIn(user, (logInErr) => {
       if (logInErr) return next(logInErr);
-      return res.redirect(`${frontendUrl}/challenges/new`);
+      return res.redirect(`${getFrontendUrl(req)}/challenges/new`);
     });
   })(req, res, next);
 });
@@ -110,7 +116,7 @@ router.get('/google/disconnect', async (req, res) => {
     const User = require('../models/User');
     await User.findByIdAndUpdate(req.user.id, { $unset: { googleId: "", googleAccessToken: "", googleRefreshToken: "" } });
   }
-  res.redirect(`${frontendUrl}/challenges/new`);
+  res.redirect(`${getFrontendUrl(req)}/challenges/new`);
 });
 
 const User = require('../models/User');
