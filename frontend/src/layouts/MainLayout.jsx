@@ -100,8 +100,8 @@ const MainLayout = () => {
           </Link>
 
           <Link 
-            to="/challenges" 
-            className={`sidebar-link ${location.pathname === '/challenges' ? 'active' : ''}`}
+            to="/my-challenges" 
+            className={`sidebar-link ${location.pathname === '/my-challenges' ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
             <Flag className="nav-icon" size={18} />
@@ -109,7 +109,7 @@ const MainLayout = () => {
           </Link>
 
           <Link 
-            to="/proofs" 
+            to="/dashboard" 
             className={`sidebar-link ${location.pathname.startsWith('/proof') ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
@@ -129,8 +129,8 @@ const MainLayout = () => {
 
           <div className="sidebar-section-header mt-4">COMMUNITY</div>
           <Link 
-            to="/challenges" 
-            className="sidebar-link"
+            to="/explore" 
+            className={`sidebar-link ${location.pathname === '/explore' ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
             <Flag className="nav-icon" size={18} />
@@ -186,9 +186,27 @@ const MainLayout = () => {
           </div>
 
           <div className="top-header-title-block desktop-only">
-            <h1 className="top-page-title">Dashboard</h1>
+            <h1 className="top-page-title">
+              {location.pathname === '/my-challenges' 
+                ? 'My Challenges' 
+                : location.pathname === '/explore' 
+                ? 'Explore Challenges' 
+                : location.pathname.startsWith('/challenges/new') 
+                ? 'Create Challenge' 
+                : location.pathname.startsWith('/challenges/') 
+                ? 'Challenge Detail' 
+                : 'Dashboard'}
+            </h1>
             <p className="top-page-subtitle">
-              Your accountability at a glance.
+              {location.pathname === '/my-challenges'
+                ? 'Your personal library of staked commitments.'
+                : location.pathname === '/explore'
+                ? 'Discover challenges from the community.'
+                : location.pathname.startsWith('/challenges/new')
+                ? 'Define your commitment & stake ETH.'
+                : location.pathname.startsWith('/challenges/')
+                ? 'Challenge details & participant journey.'
+                : 'Your accountability at a glance.'}
             </p>
           </div>
 

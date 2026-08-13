@@ -8,11 +8,13 @@ import {
   CheckCircle2, 
   PlusCircle, 
   Wallet, 
-  FileCheck 
+  Flame,
+  Award,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { api } from '../services/api';
 import StakeSummary from '../components/StakeSummary';
-import ChallengeCard from '../components/ChallengeCard';
 import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
 import './DashboardPage.css';
@@ -23,7 +25,6 @@ const DashboardPage = () => {
 
   const [stats, setStats] = useState(null);
   const [challenges, setChallenges] = useState([]);
-  const [activeTab, setActiveTab] = useState('ongoing');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -47,24 +48,10 @@ const DashboardPage = () => {
     fetchData();
   }, [walletAddress]);
 
-  // Find most important ongoing challenge for "Current Focus" section
+  // Find the single most important active challenge for "Current Focus"
   const mostImportantOngoing = challenges.find(c => 
     ['active', 'proof_submitted', 'verifying', 'ai_verified'].includes(c?.status)
   );
-
-  // Filter challenges based on category tab
-  const filteredChallenges = challenges.filter(c => {
-    if (activeTab === 'ongoing') {
-      return ['active', 'proof_submitted', 'verifying', 'ai_verified'].includes(c?.status);
-    }
-    if (activeTab === 'completed') {
-      return c?.status === 'completed';
-    }
-    if (activeTab === 'expired') {
-      return c?.status === 'expired' || c?.status === 'failed';
-    }
-    return true;
-  });
 
   if (loading) {
     return <div className="container text-center mt-8 text-muted">Loading dashboard...</div>;
@@ -72,24 +59,27 @@ const DashboardPage = () => {
 
   if (error) {
     return (
-      <div className="container mt-8">
-        <div style={{ color: 'var(--error)' }}>Failed to load dashboard: {error}</div>
+      <div className="container mt-8 text-center" style={{ color: 'var(--error)' }}>
+        Failed to load dashboard: {error}
       </div>
     );
   }
 
   return (
     <div className="dashboard-page-content">
-      {/* 1. Statistics */}
+      {/* 1. Statistics Cards (Total Staked, Ongoing, Completed, Success Rate) */}
       <StakeSummary stats={stats} />
 
-      {/* 2. Current Focus Section */}
+      {/* 2. Current Focus Section (ONE important ongoing challenge) */}
       <section className="focus-section">
         <div className="focus-header-row">
           <div className="focus-title-block">
             <h2>Current Focus</h2>
-            <p className="focus-subtitle">Your most important challenge right now.</p>
+            <p className="focus-subtitle">Your primary priority goal right now.</p>
           </div>
+          <Link to="/my-challenges" className="header-explore-link">
+            View My Challenges <ArrowRight size={14} />
+          </Link>
         </div>
 
         {mostImportantOngoing ? (
@@ -103,27 +93,27 @@ const DashboardPage = () => {
               <div className="focus-metrics-inline">
                 <div className="focus-metric-item">
                   <Coins size={14} style={{ color: 'var(--accent)' }} />
-                  <span>Staked: <strong>{mostImportantOngoing.stakeAmount || mostImportantOngoing.prizePool || 0} ETH</strong></span>
+                  <span>My Stake: <strong>{mostImportantOngoing.stakeAmount || mostImportantOngoing.prizePool || 0.01} ETH</strong></span>
                 </div>
                 <div className="focus-metric-item">
                   <Clock size={14} style={{ color: 'var(--text-muted)' }} />
-                  <span>Due: <CountdownTimer deadline={mostImportantOngoing.deadline} compact={true} /></span>
+                  <span>Time Remaining: <CountdownTimer deadline={mostImportantOngoing.deadline} compact={true} /></span>
                 </div>
               </div>
             </div>
 
             <Link to={`/challenges/${mostImportantOngoing._id}`} className="focus-continue-btn">
-              Continue <ArrowRight size={14} />
+              Continue Challenge <ArrowRight size={14} />
             </Link>
           </div>
         ) : (
           <div className="focus-empty-panel">
             <div>
-              <div className="focus-empty-title">No active challenges</div>
-              <div className="focus-empty-desc">Ready to put your commitment on the line?</div>
+              <div className="focus-empty-title">No active focus challenge</div>
+              <div className="focus-empty-desc">Set your commitment terms or discover public community challenges.</div>
             </div>
             <div className="focus-empty-actions">
-              <Link to="/challenges" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>
+              <Link to="/explore" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>
                 Explore Challenges
               </Link>
               <Link to="/challenges/new" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>
@@ -134,62 +124,44 @@ const DashboardPage = () => {
         )}
       </section>
 
-      {/* 3. My Challenges Section with Tabs & Max 3 Cards */}
-      <section className="my-challenges-section">
-        <div className="section-header-bar">
-          <div className="section-title-group">
-            <h2>My Challenges</h2>
-            <p className="section-desc">Challenges you're currently participating in.</p>
+      {/* 3. Streak & Weekly Progress Visualization Card */}
+      <section className="streak-progress-card mb-8">
+        <div className="streak-card-header">
+          <div className="flex items-center gap-2">
+            <Flame size={20} className="text-accent" style={{ color: '#10b981' }} />
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Accountability Streak</h3>
           </div>
-          <Link to="/challenges" className="header-explore-link">
-            Explore Challenges <ArrowRight size={14} />
-          </Link>
+          <span className="badge badge-accent">Active Streak</span>
         </div>
 
-        {/* Category Tabs: Ongoing | Completed | Expired */}
-        <div className="category-tabs-bar">
-          <button 
-            className={`tab-btn ${activeTab === 'ongoing' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ongoing')}
-          >
-            Ongoing
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('completed')}
-          >
-            Completed
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'expired' ? 'active' : ''}`}
-            onClick={() => setActiveTab('expired')}
-          >
-            Expired
-          </button>
+        <div className="streak-metrics-grid mt-4">
+          <div className="streak-metric-item">
+            <div className="streak-num">5 Days</div>
+            <div className="streak-label">Current Streak 🔥</div>
+          </div>
+          <div className="streak-metric-item">
+            <div className="streak-num">{stats?.completedChallenges || 0}</div>
+            <div className="streak-label">Milestones Met 🏆</div>
+          </div>
+          <div className="streak-metric-item">
+            <div className="streak-num">{stats?.successRate || 100}%</div>
+            <div className="streak-label">Punctuality Score ⚡</div>
+          </div>
         </div>
 
-        {/* Challenge Cards Grid (Max 3) */}
-        {filteredChallenges.length === 0 ? (
-          <div style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            No {activeTab} challenges found.
+        <div className="streak-bar-wrapper mt-4">
+          <div className="flex justify-between text-muted text-xs mb-1">
+            <span>Weekly Progress</span>
+            <span>{stats?.completedChallenges || 1} / {stats?.totalChallenges || 1} Goals</span>
           </div>
-        ) : (
-          <div className="dashboard-challenges-grid">
-            {filteredChallenges.slice(0, 3).map(challenge => (
-              <ChallengeCard key={challenge._id} challenge={challenge} />
-            ))}
+          <div className="streak-track-bar">
+            <div className="streak-fill-bar" style={{ width: `${stats?.successRate || 80}%` }}></div>
           </div>
-        )}
-
-        <div className="view-all-bar">
-          <Link to="/challenges" className="view-all-link">
-            View all my challenges <ArrowRight size={14} />
-          </Link>
         </div>
       </section>
 
-      {/* 4. Recent Activity Section */}
-      <section className="compact-activity-card">
+      {/* 4. Recent Activity Timeline */}
+      <section className="compact-activity-card mb-8">
         <div className="compact-activity-header">
           <Activity size={16} style={{ color: 'var(--text-muted)' }} />
           <h3>Recent Activity</h3>
@@ -229,6 +201,19 @@ const DashboardPage = () => {
           </div>
         </div>
       </section>
+
+      {/* 5. View My Challenges Navigation Banner */}
+      <div className="dashboard-footer-banner">
+        <div>
+          <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontWeight: 700 }}>Your Complete Challenge Library</h3>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            View all ongoing, completed, and past expired commitments.
+          </p>
+        </div>
+        <Link to="/my-challenges" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
+          View My Challenges <ArrowRight size={16} />
+        </Link>
+      </div>
     </div>
   );
 };

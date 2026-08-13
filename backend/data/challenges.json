@@ -1,5 +1,49 @@
 [
   {
+    "_id": "local-challenge-1786612673260",
+    "title": "run 2km",
+    "description": "run",
+    "stakeAmount": 0,
+    "prizePool": 0,
+    "deadline": "2026-08-15T08:30:00.000Z",
+    "status": "active",
+    "creator": "local-user-0x5f12bacdc833d3e5bb7ef23ce442a16f88242e7a",
+    "participants": [
+      {
+        "user": "local-user-0x5f12bacdc833d3e5bb7ef23ce442a16f88242e7a",
+        "walletAddress": "0x5f12bacdc833d3e5bb7ef23ce442a16f88242e7a",
+        "status": "active"
+      }
+    ],
+    "integrationId": "none",
+    "integrationHandle": "",
+    "metricValue": null,
+    "createdAt": "2026-08-13T09:17:53.260Z",
+    "updatedAt": "2026-08-13T09:17:53.260Z"
+  },
+  {
+    "_id": "local-challenge-1786611353572",
+    "title": "Test Stake Challenge",
+    "description": "Testing backend fallback save",
+    "stakeAmount": 0.01,
+    "prizePool": 0.01,
+    "deadline": "2026-08-14T08:55:53.555Z",
+    "status": "active",
+    "creator": "local-user-0x1234567890123456789012345678901234567890",
+    "participants": [
+      {
+        "user": "local-user-0x1234567890123456789012345678901234567890",
+        "walletAddress": "0x1234567890123456789012345678901234567890",
+        "status": "active"
+      }
+    ],
+    "integrationId": "none",
+    "integrationHandle": "",
+    "metricValue": null,
+    "createdAt": "2026-08-13T08:55:53.572Z",
+    "updatedAt": "2026-08-13T08:55:53.572Z"
+  },
+  {
     "_id": "local-challenge-1786172730975",
     "title": "run4km",
     "description": "run",

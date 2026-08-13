@@ -1,0 +1,209 @@
+/* Participant Journey Track Stylesheet */
+
+.participant-journey-card {
+  background: var(--bg-card, #121722);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 16px);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.journey-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.journey-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.journey-title-icon {
+  color: var(--accent, #10b981);
+}
+
+.journey-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+}
+
+.journey-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Track Area */
+.journey-track-container {
+  position: relative;
+  height: 90px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Dashed Center Track Line */
+.journey-track-line {
+  position: absolute;
+  top: 60%;
+  left: 3%;
+  right: 12%;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.4),
+    rgba(16, 185, 129, 0.4) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  z-index: 1;
+}
+
+/* Participant Avatars */
+.journey-participants-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.journey-node {
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: left 0.5s ease;
+}
+
+.journey-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.you-pill-badge {
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: #041208;
+  background: #10b981;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-bottom: 2px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.journey-avatar-wrapper {
+  transition: transform 0.2s ease;
+}
+
+.you-avatar .journey-avatar-svg {
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.6));
+}
+
+.journey-avatar-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+/* Finish Flag */
+.journey-finish-flag {
+  position: absolute;
+  right: 4%;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.finish-flag-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.finish-flag-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-top: 3px;
+}
+
+/* 2D Walking Animation when newly joined */
+.animate-walk-in {
+  animation: walkInToPosition 1.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-walk-in .leg-left {
+  animation: legBob 0.25s infinite alternate;
+}
+
+.animate-walk-in .leg-right {
+  animation: legBob 0.25s infinite alternate-reverse;
+}
+
+@keyframes walkInToPosition {
+  0% {
+    opacity: 0;
+    transform: translateX(-120%) scale(0.8);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes legBob {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-2px);
+  }
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 640px) {
+  .journey-track-container {
+    height: 100px;
+  }
+  .journey-avatar-svg {
+    width: 30px;
+    height: 36px;
+  }
+  .journey-avatar-name {
+    font-size: 0.65rem;
+  }
+}

@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
 import VerificationDisplay from '../components/VerificationDisplay';
+import ParticipantJourneyTrack from '../components/ParticipantJourneyTrack';
 
 const ChallengeDetailPage = () => {
   const { id } = useParams();
@@ -100,14 +101,23 @@ const ChallengeDetailPage = () => {
   if (!challenge) return <div className="container mt-8 text-center">Challenge not found</div>;
 
   const latestProof = proofs.length > 0 ? proofs[0] : null;
-  const isParticipant = challenge.participants?.some(p => p.walletAddress.toLowerCase() === globalWalletAddress);
+  
+  const creatorAddress = (challenge.creator?.walletAddress || challenge.creator || '').toString().toLowerCase();
+  const isCreator = globalWalletAddress && creatorAddress && (creatorAddress === globalWalletAddress);
+  const isParticipant = challenge.participants?.some(p => p.walletAddress?.toLowerCase() === globalWalletAddress);
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="mb-4">
-        <Link to="/dashboard" className="text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-          ← Back to Dashboard
+      <div className="mb-4 flex justify-between items-center">
+        <Link to="/explore" className="text-muted" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          ← Back to Explore
         </Link>
+
+        {isCreator ? (
+          <span className="badge badge-accent" style={{ fontSize: '0.8125rem' }}>You Created This Challenge</span>
+        ) : isParticipant ? (
+          <span className="badge badge-success" style={{ fontSize: '0.8125rem' }}>You're Participating</span>
+        ) : null}
       </div>
 
       <div className="card mb-8">
@@ -147,26 +157,35 @@ const ChallengeDetailPage = () => {
           </div>
         </div>
         
-        {challenge.participants && challenge.participants.length > 0 && (
-          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <h3 className="mb-4 text-muted" style={{ fontSize: '1rem' }}>Participants ({challenge.participants.length})</h3>
-            <div className="flex gap-4 flex-wrap">
-              {challenge.participants.map(p => (
-                <div key={p.user._id || p.walletAddress} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.status === 'completed' ? 'var(--success)' : p.status === 'failed' ? 'var(--error)' : 'var(--accent)' }}></div>
-                  <span style={{ fontFamily: 'monospace' }}>
-                    {p.user?.username || (p.walletAddress.substring(0,6) + '...')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+          {challenge.participants && challenge.participants.length > 0 && (
+            <>
+              <h3 className="mb-4 text-muted" style={{ fontSize: '1rem' }}>Participants ({challenge.participants.length})</h3>
+              <div className="flex gap-4 flex-wrap mb-4">
+                {challenge.participants.map(p => (
+                  <div key={p.user?._id || p.walletAddress} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: p.status === 'completed' ? 'var(--success)' : p.status === 'failed' ? 'var(--error)' : 'var(--accent)' }}></div>
+                    <span style={{ fontFamily: 'monospace' }}>
+                      {p.user?.username || (p.walletAddress ? (p.walletAddress.substring(0,6) + '...') : 'Anonymous')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Playful Journey Track Visualization */}
+          <ParticipantJourneyTrack 
+            participants={challenge.participants} 
+            creatorWallet={challenge.creator?.walletAddress}
+            globalWalletAddress={globalWalletAddress} 
+          />
+        </div>
       </div>
 
       {challenge.status === 'active' && (
         <div className="text-center">
-          {isParticipant ? (
+          {isCreator || isParticipant ? (
             <Link to={`/challenges/${challenge._id}/proof`} className="btn btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.125rem' }}>
               Submit Proof of Completion
             </Link>

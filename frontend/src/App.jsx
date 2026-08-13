@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
+import MyChallengesPage from './pages/MyChallengesPage';
+import ExploreChallengesPage from './pages/ExploreChallengesPage';
 import CreateChallengePage from './pages/CreateChallengePage';
 import ConfirmChallengePage from './pages/ConfirmChallengePage';
 import ChallengeDetailPage from './pages/ChallengeDetailPage';
@@ -17,6 +19,9 @@ function App() {
       {/* Main app pages wrapped in layout */}
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/my-challenges" element={<MyChallengesPage />} />
+        <Route path="/explore" element={<ExploreChallengesPage />} />
+        <Route path="/challenges" element={<Navigate to="/my-challenges" replace />} />
         <Route path="/challenges/new" element={<CreateChallengePage />} />
         <Route path="/challenges/new/confirm" element={<ConfirmChallengePage />} />
         <Route path="/challenges/:id" element={<ChallengeDetailPage />} />

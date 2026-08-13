@@ -5,8 +5,20 @@ const { readChallenges, saveChallengeLocally } = require('../utils/localChalleng
 const getChallenges = async (req, res) => {
   try {
     // If no wallet is connected, do not return private user commitments
-    if (!req.isAuthenticated() || !req.user || !req.user.walletAddress) {
-      return res.json([]);
+    // Public feed: return all challenges (no private user filtering)
+    try {
+      if (mongoose.connection.readyState !== 1) {
+        const localChallenges = readChallenges();
+        return res.json(localChallenges);
+      }
+      const publicChallenges = await Challenge.find({})
+        .populate('creator', 'username profileUrl walletAddress')
+        .populate('participants.user', 'username profileUrl walletAddress')
+        .sort({ createdAt: -1 });
+      return res.json(publicChallenges);
+    } catch (err) {
+      console.error('Failed to fetch public challenges:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch challenges.' });
     }
 
     const userId = req.user._id || req.user.id;
@@ -169,8 +181,14 @@ const createChallenge = async (req, res) => {
     const newChallenge = await Challenge.create(challengeData);
     return res.status(201).json(newChallenge);
   } catch (error) {
-    console.error('Failed to create challenge in DB:', error.message);
-    res.status(500).json({ error: 'Failed to create challenge.' });
+    console.error('Failed to create challenge in DB, using local store fallback:', error.message);
+    try {
+      const local = saveChallengeLocally(challengeData);
+      return res.status(201).json(local);
+    } catch (fallbackError) {
+      console.error('Local challenge fallback save failed:', fallbackError.message);
+      return res.status(500).json({ error: 'Failed to save challenge.' });
+    }
   }
 };
 

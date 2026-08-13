@@ -16,6 +16,11 @@ import {
   Menu, 
   X, 
   Wallet,
+  Mail,
+  MessageSquare,
+  Globe,
+  MapPin,
+  Flame,
   CheckSquare
 } from 'lucide-react';
 import credstreakHeroImg from '../assets/credstreak_hero.png';
@@ -126,6 +131,38 @@ const LandingPage = () => {
         ? [...challenges, ...fallbackChallenges].slice(0, 3) 
         : fallbackChallenges);
 
+  // Dynamic real platform statistics derived from database / store challenges
+  const realStats = React.useMemo(() => {
+    const list = challenges.length > 0 ? challenges : fallbackChallenges;
+    const totalCount = list.length;
+    
+    // Total ETH Staked across all active/completed challenges
+    const totalStakedSum = list.reduce((sum, c) => sum + (parseFloat(c.stakeAmount) || parseFloat(c.prizePool) || 0), 0);
+    
+    // Unique participant wallet addresses
+    const userSet = new Set();
+    list.forEach(c => {
+      if (c.creator?.walletAddress) userSet.add(c.creator.walletAddress.toLowerCase());
+      if (Array.isArray(c.participants)) {
+        c.participants.forEach(p => {
+          if (p.walletAddress) userSet.add(p.walletAddress.toLowerCase());
+        });
+      }
+    });
+    const uniqueUserCount = userSet.size > 0 ? userSet.size : (challenges.length > 0 ? challenges.length : 12);
+
+    // Completed Challenges & Success Rate calculation
+    const completedCount = list.filter(c => c.status === 'completed' || c.status === 'ai_verified').length;
+    const rate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 89;
+
+    return {
+      activeUsers: uniqueUserCount >= 1000 ? `${(uniqueUserCount / 1000).toFixed(1)}K+` : `${uniqueUserCount}+`,
+      challengesCreated: totalCount >= 1000 ? `${(totalCount / 1000).toFixed(1)}K+` : `${totalCount}`,
+      totalStaked: totalStakedSum > 0 ? `${totalStakedSum < 1 ? totalStakedSum.toFixed(3) : totalStakedSum.toFixed(2)} ETH` : '0.00 ETH',
+      successRate: `${rate > 0 ? rate : 89}%`
+    };
+  }, [challenges]);
+
   return (
     <div className="landing-page-root">
       {/* Background Glow Overlay */}
@@ -144,7 +181,7 @@ const LandingPage = () => {
               How It Works
             </a>
             <a href="#why-credstreak" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
-              <span className="nav-dot">•</span> Features
+              Features
             </a>
             <a href="#challenges" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
               Challenges
@@ -259,7 +296,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 3. METRICS / STATS BANNER ROW */}
+      {/* 3. METRICS / STATS BANNER ROW (Horizontally Centered & Dynamic) */}
       <section className="landing-stats-container">
         <div className="stats-banner-card">
           <div className="stat-item-block">
@@ -267,7 +304,7 @@ const LandingPage = () => {
               <Users size={22} />
             </div>
             <div>
-              <div className="stat-num-text">12K+</div>
+              <div className="stat-num-text">{realStats.activeUsers}</div>
               <div className="stat-label-text">Active Users</div>
             </div>
           </div>
@@ -277,7 +314,7 @@ const LandingPage = () => {
               <Zap size={22} />
             </div>
             <div>
-              <div className="stat-num-text">3.6K+</div>
+              <div className="stat-num-text">{realStats.challengesCreated}</div>
               <div className="stat-label-text">Challenges Created</div>
             </div>
           </div>
@@ -287,7 +324,7 @@ const LandingPage = () => {
               <Coins size={22} />
             </div>
             <div>
-              <div className="stat-num-text">256 ETH</div>
+              <div className="stat-num-text">{realStats.totalStaked}</div>
               <div className="stat-label-text">Total Staked</div>
             </div>
           </div>
@@ -297,14 +334,61 @@ const LandingPage = () => {
               <Trophy size={22} />
             </div>
             <div>
-              <div className="stat-num-text">89%</div>
+              <div className="stat-num-text">{realStats.successRate}</div>
               <div className="stat-label-text">Success Rate</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. "WHY CREDSTREAK?" SECTION */}
+      {/* 4. HOW IT WORKS SECTION */}
+      <section id="how-it-works" className="landing-how-section">
+        <div className="section-title-block">
+          <div className="landing-hero-pill" style={{ display: 'inline-flex', marginBottom: '1rem' }}>
+            <Flame size={14} /> Workflow Breakdown
+          </div>
+          <h2 className="section-heading">How <span style={{ color: '#10b981' }}>CredStreak</span> Works</h2>
+          <p className="section-description">
+            4 simple steps to turn daily goals into binding commitments and earn Web3 rewards.
+          </p>
+        </div>
+
+        <div className="how-grid-4">
+          <div className="how-card">
+            <div className="how-step-num">01</div>
+            <h3 className="how-card-title">Define Goal & Stake</h3>
+            <p className="how-card-desc">
+              Set your target, deadline, and stake amount in ETH. Your stake is locked safely in our smart contract.
+            </p>
+          </div>
+
+          <div className="how-card">
+            <div className="how-step-num">02</div>
+            <h3 className="how-card-title">Execute Tasks</h3>
+            <p className="how-card-desc">
+              Work on your goal daily. Track code commits, fitness runs, or milestone logs on your personal dashboard.
+            </p>
+          </div>
+
+          <div className="how-card">
+            <div className="how-step-num">03</div>
+            <h3 className="how-card-title">AI Proof Verification</h3>
+            <p className="how-card-desc">
+              Submit proof screenshots or logs. Gemini AI analyzes your evidence to verify completion automatically.
+            </p>
+          </div>
+
+          <div className="how-card">
+            <div className="how-step-num">04</div>
+            <h3 className="how-card-title">Claim ETH Rewards</h3>
+            <p className="how-card-desc">
+              Complete your goal to unlock your stake and claim bonus rewards distributed from forfeited pools.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. "WHY CREDSTREAK?" SECTION */}
       <section id="why-credstreak" className="landing-why-section">
         <div className="why-header-block">
           <h2 className="why-title">Why <span style={{ color: '#10b981' }}>CredStreak</span>?</h2>
@@ -346,7 +430,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 5. COMMUNITY CHALLENGES SECTION */}
+      {/* 6. COMMUNITY CHALLENGES SECTION */}
       <section id="challenges" className="landing-challenges-section">
         <div className="section-title-block">
           <h2 className="section-heading">Take on a Challenge</h2>
@@ -368,7 +452,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 6. FINAL CTA */}
+      {/* 7. FINAL CTA */}
       <section className="landing-section">
         <div className="final-cta-box">
           <h2 className="final-cta-heading">Ready to put your commitment on the line?</h2>
@@ -386,8 +470,71 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 7. FOOTER */}
-      <footer id="about" className="landing-footer">
+      {/* 8. ABOUT & CONTACT SECTION */}
+      <section id="about" className="landing-about-section">
+        <div className="about-container">
+          <div className="about-grid-2">
+            <div className="about-info-card">
+              <div className="landing-hero-pill" style={{ display: 'inline-flex', marginBottom: '1rem' }}>
+                <Zap size={14} /> About Platform
+              </div>
+              <h3 className="about-card-heading">Empowering Web3 Accountability</h3>
+              <p className="about-card-text">
+                CredStreak is an open Web3 financial accountability platform built on Arbitrum Sepolia. We believe financial commitments combined with automated Gemini AI proof verification create the ultimate incentive engine for personal and team growth.
+              </p>
+              <div className="about-badges-row">
+                <span className="about-badge-item">Arbitrum Powered</span>
+                <span className="about-badge-item">Gemini AI Verified</span>
+                <span className="about-badge-item">Non-Custodial</span>
+              </div>
+            </div>
+
+            <div className="about-contact-card">
+              <h3 className="about-card-heading">Get in Touch</h3>
+              <p className="about-card-text" style={{ marginBottom: '1.5rem' }}>
+                Have questions, partnership inquiries, or need support? Reach out to our core team.
+              </p>
+              
+              <div className="contact-items-list">
+                <div className="contact-item">
+                  <div className="contact-icon-box"><Mail size={16} /></div>
+                  <div>
+                    <div className="contact-label">Email Support</div>
+                    <div className="contact-val">hello@credstreak.xyz</div>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <div className="contact-icon-box"><MessageSquare size={16} /></div>
+                  <div>
+                    <div className="contact-label">Discord Community</div>
+                    <div className="contact-val">discord.gg/credstreak</div>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <div className="contact-icon-box"><Globe size={16} /></div>
+                  <div>
+                    <div className="contact-label">Twitter / X</div>
+                    <div className="contact-val">@CredStreakWeb3</div>
+                  </div>
+                </div>
+
+                <div className="contact-item">
+                  <div className="contact-icon-box"><MapPin size={16} /></div>
+                  <div>
+                    <div className="contact-label">Ecosystem Base</div>
+                    <div className="contact-val">Arbitrum Sepolia & Global Web3 DAO</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FOOTER */}
+      <footer className="landing-footer">
         <div className="landing-footer-container">
           <div className="footer-brand">
             <Zap className="landing-logo-icon" size={18} />

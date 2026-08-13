@@ -30,61 +30,62 @@ const ConfirmChallengePage = () => {
 
     setLoading(true);
     setError(null);
-    try {
-      if (Number(challengeData.stakeAmount) > 0) {
-        // Force MetaMask to switch to Arbitrum Sepolia (Chain ID: 421614 -> 0x66eee)
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x66eee' }],
-          });
-        } catch (switchError) {
-          // If the network is not added to MetaMask, we could ask to add it, 
-          // but assuming they have it since they showed a screenshot of it
-          throw new Error('Please switch to Arbitrum Sepolia in MetaMask first.');
-        }
 
-        // Encode the smart contract function call: joinChallenge(string, uint256)
-        // For the creator, we will temporarily use the title as the unique ID for the smart contract
+    if (Number(challengeData.stakeAmount) > 0) {
+      // Force MetaMask to switch to Arbitrum Sepolia (Chain ID: 421614 -> 0x66eee)
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x66eee' }],
+        });
+      } catch (switchError) {
+        setError('Please switch to Arbitrum Sepolia in MetaMask first.');
+        setLoading(false);
+        return;
+      }
+
+      // 1. Process MetaMask Blockchain Transaction
+      try {
         const iface = new ethers.Interface([
           "function joinChallenge(string challengeId, uint256 requiredStake) external payable"
         ]);
         const parsedStake = ethers.parseEther(challengeData.stakeAmount.toString());
         const data = iface.encodeFunctionData("joinChallenge", [challengeData.title, parsedStake]);
 
-        // 1. Process MetaMask Transaction using ethers signer to automatically calculate perfect gas fees for Arbitrum
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         
-        // Fetch current fee data and artificially inflate it to prevent Arbitrum baseFee spikes 
-        // while the user is taking time to click "Confirm" in MetaMask.
         const feeData = await provider.getFeeData();
         
         const tx = await signer.sendTransaction({
           to: "0x6d54080Ee9b54150C67b5D74B1A4DBBcD391815c",
           data: data,
           value: parsedStake,
-          // If maxFeePerGas exists, pad it by 50% to ensure success
           maxFeePerGas: feeData.maxFeePerGas ? (feeData.maxFeePerGas * 150n) / 100n : undefined,
           maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || undefined
         });
         
         // Wait for the transaction to be mined
         await tx.wait();
+      } catch (txErr) {
+        console.error('Blockchain transaction error:', txErr);
+        if (txErr.code === 'ACTION_REJECTED' || txErr.code === 4001) {
+          setError('Transaction was rejected in MetaMask.');
+        } else {
+          setError(`Transaction failed: ${txErr.message || 'Unknown blockchain error'}`);
+        }
+        setLoading(false);
+        return;
       }
+    }
 
-      // 2. Save challenge to backend once transaction is confirmed (or if no stake)
+    // 2. Save challenge to backend once transaction is confirmed (or if no stake)
+    try {
       const response = await api.createChallenge(challengeData);
-      navigate(`/challenges/${response._id}`);
-      
-    } catch (err) {
-      console.error(err);
-      // Differentiate between user rejecting tx vs backend error
-      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
-        setError('Transaction was rejected in MetaMask.');
-      } else {
-        setError(`Transaction failed: ${err.message || 'Unknown error'}`);
-      }
+      navigate(`/challenges/${response._id || response.id}`);
+    } catch (apiErr) {
+      console.error('Backend save error:', apiErr);
+      setError(`Failed to save challenge: ${apiErr.message || 'Unknown server error'}`);
       setLoading(false);
     }
   };
