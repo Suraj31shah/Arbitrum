@@ -1,27 +1,111 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Zap, 
-  ShieldCheck, 
-  ArrowRight, 
-  Sparkles, 
-  Trophy, 
-  Users, 
-  Coins, 
-  BarChart2, 
-  Target, 
-  CheckCircle2, 
-  Gift, 
-  Sun, 
-  Menu, 
-  X, 
-  Wallet,
-  CheckSquare
-} from 'lucide-react';
-import credstreakHeroImg from '../assets/credstreak_hero.png';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { api, getApiUrl } from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
 import './LandingPage.css';
+
+/* ─── Among Us–style SVG Crewmates ─── */
+const Crewmate = ({ color = '#22d3ee', visorColor = '#67e8f9', size = 120, style = {}, className = '' }) => (
+  <svg width={size} height={size * 1.2} viewBox="0 0 100 120" fill="none" className={`crewmate ${className}`} style={style}>
+    {/* Body */}
+    <path d="M25 85 C25 45, 25 25, 50 20 C75 25, 75 45, 75 85 L70 90 L70 110 L58 110 L58 90 L42 90 L42 110 L30 110 L30 90 Z" fill={color} />
+    {/* Backpack */}
+    <rect x="12" y="45" width="16" height="30" rx="8" fill={color} opacity="0.8" />
+    {/* Visor */}
+    <ellipse cx="58" cy="48" rx="18" ry="14" fill={visorColor} opacity="0.9" />
+    <ellipse cx="60" cy="46" rx="6" ry="4" fill="white" opacity="0.4" />
+    {/* Shadow under body */}
+    <ellipse cx="50" cy="115" rx="22" ry="4" fill="black" opacity="0.15" />
+  </svg>
+);
+
+/* Crewmate with raised arms (celebrating) */
+const CrewmateCelebrating = ({ color = '#a855f7', visorColor = '#c084fc', size = 120, style = {}, className = '' }) => (
+  <svg width={size} height={size * 1.4} viewBox="0 0 100 140" fill="none" className={`crewmate ${className}`} style={style}>
+    {/* Left arm up */}
+    <rect x="15" y="15" width="10" height="35" rx="5" fill={color} transform="rotate(-30 20 32)" />
+    {/* Right arm up */}
+    <rect x="70" y="10" width="10" height="35" rx="5" fill={color} transform="rotate(30 75 27)" />
+    {/* Body */}
+    <path d="M25 95 C25 55, 25 35, 50 30 C75 35, 75 55, 75 95 L70 100 L70 120 L58 120 L58 100 L42 100 L42 120 L30 120 L30 100 Z" fill={color} />
+    {/* Backpack */}
+    <rect x="12" y="55" width="16" height="30" rx="8" fill={color} opacity="0.8" />
+    {/* Visor */}
+    <ellipse cx="58" cy="58" rx="18" ry="14" fill={visorColor} opacity="0.9" />
+    <ellipse cx="60" cy="56" rx="6" ry="4" fill="white" opacity="0.4" />
+    {/* Confetti */}
+    <rect x="10" y="5" width="4" height="8" rx="2" fill="#fbbf24" transform="rotate(15 12 9)" />
+    <rect x="82" y="8" width="4" height="8" rx="2" fill="#f472b6" transform="rotate(-20 84 12)" />
+    <rect x="45" y="2" width="4" height="8" rx="2" fill="#34d399" />
+    <circle cx="30" cy="12" r="3" fill="#818cf8" />
+    <circle cx="72" cy="3" r="3" fill="#fb923c" />
+    {/* Shadow */}
+    <ellipse cx="50" cy="128" rx="22" ry="4" fill="black" opacity="0.15" />
+  </svg>
+);
+
+/* Crewmate with coin */
+const CrewmateStaking = ({ color = '#f87171', visorColor = '#fca5a5', size = 120, style = {}, className = '' }) => (
+  <svg width={size} height={size * 1.3} viewBox="0 0 120 135" fill="none" className={`crewmate ${className}`} style={style}>
+    {/* Arm holding coin */}
+    <rect x="72" y="40" width="10" height="30" rx="5" fill={color} transform="rotate(20 77 55)" />
+    {/* Coin */}
+    <circle cx="95" cy="35" r="12" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
+    <text x="95" y="40" textAnchor="middle" fill="#92400e" fontSize="14" fontWeight="bold">Ξ</text>
+    {/* Body */}
+    <path d="M30 90 C30 50, 30 30, 55 25 C80 30, 80 50, 80 90 L75 95 L75 115 L63 115 L63 95 L47 95 L47 115 L35 115 L35 95 Z" fill={color} />
+    {/* Backpack */}
+    <rect x="17" y="50" width="16" height="30" rx="8" fill={color} opacity="0.8" />
+    {/* Visor */}
+    <ellipse cx="63" cy="53" rx="18" ry="14" fill={visorColor} opacity="0.9" />
+    <ellipse cx="65" cy="51" rx="6" ry="4" fill="white" opacity="0.4" />
+    {/* Shadow */}
+    <ellipse cx="55" cy="122" rx="22" ry="4" fill="black" opacity="0.15" />
+  </svg>
+);
+
+/* Crewmate working at desk */
+const CrewmateWorking = ({ color = '#fbbf24', visorColor = '#fde68a', size = 120, style = {}, className = '' }) => (
+  <svg width={size} height={size * 1.3} viewBox="0 0 140 140" fill="none" className={`crewmate ${className}`} style={style}>
+    {/* Desk */}
+    <rect x="15" y="88" width="110" height="6" rx="2" fill="#475569" />
+    <rect x="25" y="94" width="6" height="25" rx="1" fill="#334155" />
+    <rect x="109" y="94" width="6" height="25" rx="1" fill="#334155" />
+    {/* Laptop on desk */}
+    <rect x="55" y="72" width="40" height="16" rx="2" fill="#1e293b" />
+    <rect x="57" y="74" width="36" height="12" rx="1" fill="#3b82f6" opacity="0.6" />
+    <rect x="50" y="88" width="50" height="3" rx="1" fill="#334155" />
+    {/* Body (sitting) */}
+    <path d="M40 88 C40 60, 40 42, 58 38 C76 42, 76 60, 76 88 Z" fill={color} />
+    {/* Backpack */}
+    <rect x="28" y="52" width="14" height="26" rx="7" fill={color} opacity="0.8" />
+    {/* Visor */}
+    <ellipse cx="66" cy="55" rx="15" ry="12" fill={visorColor} opacity="0.9" />
+    <ellipse cx="68" cy="53" rx="5" ry="3.5" fill="white" opacity="0.4" />
+    {/* Arm on desk */}
+    <rect x="70" y="68" width="8" height="22" rx="4" fill={color} transform="rotate(15 74 79)" />
+  </svg>
+);
+
+/* Dead crewmate (failed) */
+const CrewmateDead = ({ color = '#64748b', size = 80, style = {}, className = '' }) => (
+  <svg width={size} height={size * 0.6} viewBox="0 0 100 60" fill="none" className={`crewmate ${className}`} style={style}>
+    {/* Half body (dead) */}
+    <path d="M10 55 C10 30, 20 15, 40 10 C55 15, 60 30, 60 55 Z" fill={color} />
+    {/* Visor */}
+    <ellipse cx="48" cy="28" rx="14" ry="10" fill="#94a3b8" opacity="0.7" />
+    {/* Bone */}
+    <rect x="55" y="40" width="30" height="5" rx="2.5" fill="#e2e8f0" />
+    <circle cx="55" cy="37" r="4" fill="#e2e8f0" />
+    <circle cx="55" cy="48" r="4" fill="#e2e8f0" />
+    <circle cx="85" cy="37" r="4" fill="#e2e8f0" />
+    <circle cx="85" cy="48" r="4" fill="#e2e8f0" />
+    {/* X eyes on visor */}
+    <text x="48" y="32" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">✕</text>
+  </svg>
+);
+
 
 const fallbackChallenges = [
   {
@@ -56,14 +140,36 @@ const fallbackChallenges = [
   }
 ];
 
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const [walletAddress, setWalletAddress] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const storyRefs = useRef([]);
 
+  /* Scroll-triggered reveal */
   useEffect(() => {
-    // Fetch current logged in user
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('story-visible');
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    storyRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  /* Fetch user & challenges */
+  useEffect(() => {
     fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
@@ -73,19 +179,14 @@ const LandingPage = () => {
       })
       .catch(console.error);
 
-    // Fetch existing challenges
     api.getChallenges()
       .then(data => {
         if (Array.isArray(data)) {
           const valid = data.filter(c => c && typeof c === 'object' && c.title);
-          if (valid.length > 0) {
-            setChallenges(valid);
-          }
+          if (valid.length > 0) setChallenges(valid);
         }
       })
-      .catch(err => {
-        console.warn('Could not fetch challenges for landing page, using preview:', err.message);
-      });
+      .catch(() => {});
   }, []);
 
   const handleConnectWallet = async () => {
@@ -93,18 +194,15 @@ const LandingPage = () => {
       alert("Please install MetaMask to login");
       return;
     }
-    
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const address = accounts[0];
-      
       const response = await fetch(`${getApiUrl()}/api/auth/wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ walletAddress: address })
       });
-      
       if (response.ok) {
         setWalletAddress(address);
         navigate('/dashboard');
@@ -116,302 +214,227 @@ const LandingPage = () => {
     }
   };
 
-  const formattedAddress = walletAddress 
-    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
-    : null;
-
-  const displayChallenges = challenges.length >= 3 
-    ? challenges.slice(0, 3) 
-    : (challenges.length > 0 
-        ? [...challenges, ...fallbackChallenges].slice(0, 3) 
+  const displayChallenges = challenges.length >= 3
+    ? challenges.slice(0, 3)
+    : (challenges.length > 0
+        ? [...challenges, ...fallbackChallenges].slice(0, 3)
         : fallbackChallenges);
 
   return (
-    <div className="landing-page-root">
-      {/* Background Glow Overlay */}
-      <div className="landing-bg-grid"></div>
+    <div className="landing-root">
 
-      {/* 1. NAVBAR */}
-      <header className="landing-navbar">
-        <div className="landing-navbar-container">
-          <Link to="/" className="landing-logo-brand">
-            <Zap className="landing-logo-icon" size={22} />
-            <span>CredStreak</span>
-          </Link>
-
-          <nav className={`landing-nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-            <a href="#how-it-works" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
-              How It Works
-            </a>
-            <a href="#why-credstreak" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
-              <span className="nav-dot">•</span> Features
-            </a>
-            <a href="#challenges" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
-              Challenges
-            </a>
-            <a href="#about" className="landing-nav-link" onClick={() => setMobileMenuOpen(false)}>
-              About
-            </a>
+      {/* ─── Navbar ─── */}
+      <header className="landing-nav">
+        <div className="landing-nav-inner">
+          <Link to="/" className="nav-brand">CredStreak</Link>
+          <nav className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
+            <a href="#story" onClick={() => setMobileMenuOpen(false)}>How it works</a>
+            <a href="#challenges-section" onClick={() => setMobileMenuOpen(false)}>Challenges</a>
           </nav>
-
-          <div className="landing-nav-actions">
-            <button className="theme-toggle-btn" title="Toggle Theme">
-              <Sun size={18} />
-            </button>
-
+          <div className="nav-actions">
             {walletAddress ? (
-              <Link to="/dashboard" className="btn-hero-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-                Dashboard
-              </Link>
+              <Link to="/dashboard" className="nav-cta">Dashboard</Link>
             ) : (
-              <button onClick={handleConnectWallet} className="btn-hero-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-                Connect Wallet
-              </button>
+              <button onClick={handleConnectWallet} className="nav-cta">Connect Wallet</button>
             )}
-
-            <button className="mobile-menu-toggle-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            <button className="mobile-toggle" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* 2. HERO SECTION */}
-      <section id="how-it-works" className="landing-hero-section">
-        <div className="landing-hero-left">
-          <div className="hero-badge">
-            <Sparkles size={14} className="hero-badge-icon" /> 
-            <span>Welcome to the Future of Accountability</span>
-          </div>
 
-          <h1 className="hero-main-heading">
-            Public accountability,<br />
-            <span className="text-gradient">backed by stakes.</span>
+      {/* ─── Hero ─── */}
+      <section className="hero">
+        <div className="hero-content">
+          <h1>
+            Promises are easy.<br />
+            <span className="hero-highlight">Keeping them is hard.</span>
           </h1>
-
-          <p className="hero-main-subtext">
-            Join challenges, put ETH on the line, and prove your commitment. 
-            Succeed to earn your stake back and a share of the pool. Fail, and your funds go to the winners.
+          <p className="hero-sub">
+            What if breaking a promise to yourself actually cost you something?
+            CredStreak turns your goals into commitments backed by real stakes.
+            Complete what you promised — or lose what you put up.
           </p>
-
-          <div className="hero-action-buttons">
+          <div className="hero-actions">
             {walletAddress ? (
-              <Link to="/dashboard" className="btn-hero-primary">
-                Open Dashboard <ArrowRight size={18} />
+              <Link to="/dashboard" className="btn-primary-landing">
+                Go to Dashboard <ArrowRight size={18} />
               </Link>
             ) : (
-              <button onClick={handleConnectWallet} className="btn-hero-primary">
-                Connect Wallet <ArrowRight size={18} />
+              <button onClick={handleConnectWallet} className="btn-primary-landing">
+                Start a Commitment <ArrowRight size={18} />
               </button>
             )}
-            <Link to="/discover" className="btn-hero-secondary">
-              Explore Challenges
-            </Link>
-          </div>
-
-          <div className="hero-value-props">
-            <span className="hero-value-item">
-              <CheckSquare size={16} className="value-icon-green" /> Set Goals
-            </span>
-            <span className="hero-value-dot">•</span>
-            <span className="hero-value-item">
-              <ShieldCheck size={16} className="value-icon-purple" /> Verifiable Proof
-            </span>
-            <span className="hero-value-dot">•</span>
-            <span className="hero-value-item">
-              <Trophy size={16} className="value-icon-gold" /> Earn Rewards
-            </span>
+            <a href="#story" className="btn-ghost">See how it works ↓</a>
           </div>
         </div>
 
-        {/* Hero Right Column: 3D Illustration & Interactive Card */}
-        <div className="landing-hero-right">
-          <div className="hero-illustration-wrapper">
-            <img 
-              src={credstreakHeroImg} 
-              alt="CredStreak 3D Ethereum Commitment Platform" 
-              className="hero-3d-image" 
-            />
-
-            {/* Orbiting Badges */}
-            <div className="floating-badge badge-shield">
-              <ShieldCheck size={20} />
-            </div>
-            <div className="floating-badge badge-chart">
-              <BarChart2 size={20} />
-            </div>
-            <div className="floating-badge badge-trophy">
-              <Trophy size={20} />
-            </div>
-
-            {/* Floating Glass Commitment Card */}
-            <div className="hero-commitment-card">
-              <div className="commitment-card-title">Your Commitment</div>
-              <div className="commitment-step-list">
-                <div className="commitment-step-item">
-                  <CheckCircle2 size={15} className="step-icon-green" /> Set Goal
-                </div>
-                <div className="commitment-step-item">
-                  <CheckCircle2 size={15} className="step-icon-green" /> Stake ETH
-                </div>
-                <div className="commitment-step-item">
-                  <CheckCircle2 size={15} className="step-icon-green" /> Prove Progress
-                </div>
-                <div className="commitment-step-item">
-                  <Gift size={15} className="step-icon-purple" /> Earn Rewards
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Decorative crewmates in hero */}
+        <div className="hero-characters">
+          <Crewmate color="#22d3ee" visorColor="#67e8f9" size={90} className="hero-crew hero-crew-1" />
+          <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={90} className="hero-crew hero-crew-2" />
+          <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={100} className="hero-crew hero-crew-3" />
+          <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={85} className="hero-crew hero-crew-4" />
         </div>
       </section>
 
-      {/* 3. METRICS / STATS BANNER ROW */}
-      <section className="landing-stats-container">
-        <div className="stats-banner-card">
-          <div className="stat-item-block">
-            <div className="stat-icon-circle circle-green">
-              <Users size={22} />
-            </div>
-            <div>
-              <div className="stat-num-text">12K+</div>
-              <div className="stat-label-text">Active Users</div>
+
+      {/* ─── Scroll Storytelling ─── */}
+      <section id="story" className="story-section">
+        <div className="story-intro">
+          <p className="story-intro-text">Here's how it actually works.</p>
+        </div>
+
+        {/* Scene 1: The Promise */}
+        <div className="story-scene" ref={el => storyRefs.current[0] = el}>
+          <div className="scene-illustration">
+            <Crewmate color="#22d3ee" visorColor="#67e8f9" size={140} className="scene-character" />
+            <div className="thought-bubble">
+              <span>"I'll exercise every day this week."</span>
             </div>
           </div>
-
-          <div className="stat-item-block">
-            <div className="stat-icon-circle circle-purple">
-              <Zap size={22} />
-            </div>
-            <div>
-              <div className="stat-num-text">3.6K+</div>
-              <div className="stat-label-text">Challenges Created</div>
-            </div>
-          </div>
-
-          <div className="stat-item-block">
-            <div className="stat-icon-circle circle-green">
-              <Coins size={22} />
-            </div>
-            <div>
-              <div className="stat-num-text">256 ETH</div>
-              <div className="stat-label-text">Total Staked</div>
-            </div>
-          </div>
-
-          <div className="stat-item-block">
-            <div className="stat-icon-circle circle-gold">
-              <Trophy size={22} />
-            </div>
-            <div>
-              <div className="stat-num-text">89%</div>
-              <div className="stat-label-text">Success Rate</div>
-            </div>
+          <div className="scene-text">
+            <div className="scene-step">Step 1</div>
+            <h2>You make a promise to yourself.</h2>
+            <p>
+              We all do it. "I'll study harder." "I'll ship that feature."
+              "I'll run every morning." But without consequences,
+              most promises quietly die by Wednesday.
+            </p>
           </div>
         </div>
+
+        {/* Scene 2: Put skin in the game */}
+        <div className="story-scene scene-reverse" ref={el => storyRefs.current[1] = el}>
+          <div className="scene-illustration">
+            <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={150} className="scene-character" />
+            <div className="coin-trail">
+              <div className="floating-coin">Ξ</div>
+              <div className="floating-coin delay-1">Ξ</div>
+              <div className="floating-coin delay-2">Ξ</div>
+            </div>
+          </div>
+          <div className="scene-text">
+            <div className="scene-step">Step 2</div>
+            <h2>Put something real on the line.</h2>
+            <p>
+              You stake a small amount of ETH on your commitment.
+              Not a lot — just enough that breaking your promise
+              actually stings. Now it's not just words. It's a contract
+              with yourself.
+            </p>
+          </div>
+        </div>
+
+        {/* Scene 3: Do the work */}
+        <div className="story-scene" ref={el => storyRefs.current[2] = el}>
+          <div className="scene-illustration">
+            <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={160} className="scene-character" />
+          </div>
+          <div className="scene-text">
+            <div className="scene-step">Step 3</div>
+            <h2>Actually do the work.</h2>
+            <p>
+              You have a deadline. You have skin in the game.
+              Now the only thing left is to show up and do what
+              you said you'd do. When you're done, submit your proof —
+              a screenshot, a photo, a commit log, whatever fits.
+            </p>
+          </div>
+        </div>
+
+        {/* Scene 4: The Outcome */}
+        <div className="story-scene scene-reverse" ref={el => storyRefs.current[3] = el}>
+          <div className="scene-illustration scene-outcome">
+            <div className="outcome-winner">
+              <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={120} className="scene-character" />
+              <span className="outcome-label win">Completed ✓</span>
+            </div>
+            <div className="outcome-loser">
+              <CrewmateDead color="#64748b" size={80} className="scene-character dead-mate" />
+              <span className="outcome-label lose">Gave up ✕</span>
+            </div>
+          </div>
+          <div className="scene-text">
+            <div className="scene-step">Step 4</div>
+            <h2>Winners take the pool.</h2>
+            <p>
+              If you complete the challenge, you get your stake back —
+              plus a share of the stakes from everyone who didn't finish.
+              If nobody finishes, the pool goes to charity.
+              Simple. Fair. Motivating.
+            </p>
+          </div>
+        </div>
+
+        {/* Connection line between scenes */}
+        <div className="story-line" aria-hidden="true" />
       </section>
 
-      {/* 4. "WHY CREDSTREAK?" SECTION */}
-      <section id="why-credstreak" className="landing-why-section">
-        <div className="why-header-block">
-          <h2 className="why-title">Why <span style={{ color: '#10b981' }}>CredStreak</span>?</h2>
-          <p className="why-subtitle">Built for doers. Backed by Web3. Verified by AI.</p>
-        </div>
 
-        <div className="why-grid-4">
-          <div className="why-feature-card card-green">
-            <div className="why-icon-box icon-box-green">
-              <Target size={26} />
-            </div>
-            <h3 className="why-card-title">Set a Goal</h3>
-            <p className="why-card-desc">Create a commitment for yourself and set the terms.</p>
-          </div>
-
-          <div className="why-feature-card card-purple">
-            <div className="why-icon-box icon-box-purple">
-              <Coins size={26} />
-            </div>
-            <h3 className="why-card-title">Stake ETH</h3>
-            <p className="why-card-desc">Put your stake where your commitment is.</p>
-          </div>
-
-          <div className="why-feature-card card-teal">
-            <div className="why-icon-box icon-box-teal">
-              <Sparkles size={26} />
-            </div>
-            <h3 className="why-card-title">Prove & Verify</h3>
-            <p className="why-card-desc">Submit proof. Our AI verifies your progress.</p>
-          </div>
-
-          <div className="why-feature-card card-gold">
-            <div className="why-icon-box icon-box-gold">
-              <Trophy size={26} />
-            </div>
-            <h3 className="why-card-title">Earn & Grow</h3>
-            <p className="why-card-desc">Complete to earn rewards from the pool.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. COMMUNITY CHALLENGES SECTION */}
-      <section id="challenges" className="landing-challenges-section">
-        <div className="section-title-block">
-          <h2 className="section-heading">Take on a Challenge</h2>
-          <p className="section-description">
-            Join challenges created by the community and put your commitment to the test.
+      {/* ─── The Point ─── */}
+      <section className="the-point" ref={el => storyRefs.current[4] = el}>
+        <div className="the-point-inner">
+          <h2>It's not about the money.</h2>
+          <p>
+            It's about the person you become when you actually
+            follow through. The ETH is just the nudge. The real reward
+            is proving to yourself that you can keep a promise.
           </p>
         </div>
-
-        <div className="challenges-grid-3">
-          {displayChallenges.map(challenge => (
-            <ChallengeCard key={challenge._id} challenge={challenge} />
-          ))}
-        </div>
-
-        <div className="explore-more-bar">
-          <Link to="/discover" className="explore-more-link">
-            Explore All Challenges <ArrowRight size={16} />
-          </Link>
-        </div>
       </section>
 
-      {/* 6. FINAL CTA */}
-      <section className="landing-section">
-        <div className="final-cta-box">
-          <h2 className="final-cta-heading">Ready to put your commitment on the line?</h2>
-          <p className="final-cta-subtitle">
-            Create your first challenge or join one from the community.
+
+      {/* ─── Live Challenges ─── */}
+      <section id="challenges-section" className="challenges-section" ref={el => storyRefs.current[5] = el}>
+        <div className="challenges-inner">
+          <h2>Jump into a challenge.</h2>
+          <p className="challenges-sub">
+            These are real commitments from real people. Pick one, stake your ETH, and prove yourself.
           </p>
-          <div className="final-cta-buttons">
-            <Link to="/challenges/new" className="btn-hero-primary">
-              Create Challenge
-            </Link>
-            <Link to="/discover" className="btn-hero-secondary">
-              Explore Challenges
+          <div className="challenges-grid">
+            {displayChallenges.map(challenge => (
+              <ChallengeCard key={challenge._id} challenge={challenge} />
+            ))}
+          </div>
+          <div className="challenges-cta">
+            <Link to="/discover" className="btn-primary-landing">
+              See all challenges <ArrowRight size={16} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 7. FOOTER */}
-      <footer id="about" className="landing-footer">
-        <div className="landing-footer-container">
-          <div className="footer-brand">
-            <Zap className="landing-logo-icon" size={18} />
-            <span>CredStreak</span>
-          </div>
 
-          <div className="footer-links">
-            <a href="#how-it-works" className="footer-link">How It Works</a>
-            <a href="#why-credstreak" className="footer-link">Features</a>
-            <a href="#challenges" className="footer-link">Challenges</a>
-            <a href="#about" className="footer-link">About</a>
-          </div>
-
-          <div className="footer-tagline">
-            Built for accountability.
-          </div>
+      {/* ─── Final CTA ─── */}
+      <section className="final-cta" ref={el => storyRefs.current[6] = el}>
+        <h2>Ready to stop making excuses?</h2>
+        <p>Your next commitment starts now.</p>
+        <div className="final-cta-actions">
+          {walletAddress ? (
+            <Link to="/challenges/new" className="btn-primary-landing">Create a Challenge</Link>
+          ) : (
+            <button onClick={handleConnectWallet} className="btn-primary-landing">
+              Connect Wallet & Start
+            </button>
+          )}
         </div>
+        <div className="final-characters">
+          <Crewmate color="#22d3ee" visorColor="#67e8f9" size={60} />
+          <CrewmateStaking color="#f87171" visorColor="#fca5a5" size={60} />
+          <CrewmateWorking color="#fbbf24" visorColor="#fde68a" size={65} />
+          <CrewmateCelebrating color="#a855f7" visorColor="#c084fc" size={55} />
+        </div>
+      </section>
+
+
+      {/* ─── Footer ─── */}
+      <footer className="landing-footer">
+        <span>© {new Date().getFullYear()} CredStreak</span>
+        <span className="footer-sep">·</span>
+        <span>Built for people who keep their word.</span>
       </footer>
     </div>
   );

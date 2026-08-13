@@ -90,39 +90,6 @@ const MainLayout = () => {
             <Zap className="brand-icon" size={22} />
             <span className="brand-text">CredStreak</span>
           </Link>
-          
-          <nav className="main-nav">
-            <Link 
-              to="/dashboard" 
-              className={`nav-link ${location.pathname === '/dashboard' || location.pathname === '/' ? 'active' : ''}`}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              to="/discover" 
-              className={`nav-link ${location.pathname === '/discover' ? 'active' : ''}`}
-            >
-              Discover
-            </Link>
-            {walletAddress?.toLowerCase() === CHARITY_WALLET_ADDRESS.toLowerCase() && (
-              <Link 
-                to="/charity" 
-                className={`nav-link ${location.pathname === '/charity' ? 'active' : ''}`}
-                style={{ color: 'var(--accent)', fontWeight: 'bold' }}
-              >
-                Charity
-              </Link>
-            )}
-          </nav>
-          
-          <div className="header-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {walletAddress ? (
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'monospace', color: 'var(--accent)', background: 'var(--bg-secondary)', padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-md)' }}>
-                  {walletAddress.substring(0,6)}...{walletAddress.substring(walletAddress.length - 4)}
-                </span>
-                <button onClick={handleLogout} className="btn" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-primary)' }}>
-                  Logout
         </div>
 
         <nav className="sidebar-nav">
@@ -166,7 +133,7 @@ const MainLayout = () => {
 
           <div className="sidebar-section-header mt-4">COMMUNITY</div>
           <Link 
-            to="/challenges" 
+            to="/discover" 
             className="sidebar-link"
             onClick={() => setMobileNavOpen(false)}
           >
@@ -204,7 +171,6 @@ const MainLayout = () => {
                 <span className="wallet-address-text">{formattedAddress}</span>
                 <button onClick={handleLogout} className="wallet-disconnect-btn" title="Logout">
                   <LogOut size={14} />
->>>>>>> origin/drashti-ui
                 </button>
               </div>
             </div>
