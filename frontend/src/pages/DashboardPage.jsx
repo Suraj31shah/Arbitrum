@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { 
-  Activity, 
+  History, 
   ArrowRight, 
   Clock, 
   Coins, 
@@ -216,7 +216,7 @@ const DashboardPage = () => {
       {/* 4. Recent Activity Section */}
       <section className="compact-activity-card">
         <div className="compact-activity-header">
-          <Activity size={16} style={{ color: 'var(--text-muted)' }} />
+          <History size={16} style={{ color: 'var(--text-muted)' }} />
           <h3>Recent Activity</h3>
         </div>
 

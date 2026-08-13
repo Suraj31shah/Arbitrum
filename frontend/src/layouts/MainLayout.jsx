@@ -11,8 +11,11 @@ import {
   Wallet, 
   LogOut, 
   Menu,
-  Plus
+  Plus,
+  Target,
+  Heart
 } from 'lucide-react';
+import Logo from '../components/Logo';
 import { getApiUrl } from '../services/api';
 import './MainLayout.css';
 
@@ -87,8 +90,8 @@ const MainLayout = () => {
       <aside className={`app-sidebar ${mobileNavOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <Link to="/" className="brand-logo">
-            <Zap className="brand-icon" size={22} />
-            <span className="brand-text">CredStreak</span>
+            <Logo width={40} height={40} className="brand-icon-svg" />
+            <span className="brand-text" style={{ marginLeft: '4px' }}>Commit<span style={{ color: 'var(--accent)' }}>X</span></span>
           </Link>
         </div>
 
@@ -108,7 +111,7 @@ const MainLayout = () => {
             className={`sidebar-link ${location.pathname === '/challenges' ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
-            <Flag className="nav-icon" size={18} />
+            <Target className="nav-icon" size={18} />
             <span className="nav-label">My Challenges</span>
           </Link>
 
@@ -147,7 +150,7 @@ const MainLayout = () => {
               className={`sidebar-link ${location.pathname === '/charity' ? 'active' : ''}`}
               onClick={() => setMobileNavOpen(false)}
             >
-              <Zap className="nav-icon" size={18} />
+              <Heart className="nav-icon" size={18} />
               <span className="nav-label">Charity</span>
             </Link>
           )}
@@ -182,7 +185,7 @@ const MainLayout = () => {
           )}
 
           <div className="sidebar-copyright">
-            &copy; {new Date().getFullYear()} CredStreak<br/>Built for accountability.
+            &copy; {new Date().getFullYear()} CommitX<br/>Built for accountability.
           </div>
         </div>
       </aside>
@@ -195,8 +198,9 @@ const MainLayout = () => {
             <button className="mobile-menu-toggle" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
               <Menu size={20} />
             </button>
-            <Link to="/" className="mobile-brand">
-              CredStreak
+            <Link to="/" className="mobile-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Logo width={20} height={20} />
+              CommitX
             </Link>
           </div>
 

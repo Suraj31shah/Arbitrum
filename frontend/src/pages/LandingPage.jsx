@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import Logo from '../components/Logo';
 import { api, getApiUrl } from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
 import './LandingPage.css';
@@ -226,7 +227,10 @@ const LandingPage = () => {
       {/* ─── Navbar ─── */}
       <header className="landing-nav">
         <div className="landing-nav-inner">
-          <Link to="/" className="nav-brand">CredStreak</Link>
+          <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Logo width={36} height={36} />
+            <span>Commit<span style={{ color: 'var(--accent)' }}>X</span></span>
+          </Link>
           <nav className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
             <a href="#story" onClick={() => setMobileMenuOpen(false)}>How it works</a>
             <a href="#challenges-section" onClick={() => setMobileMenuOpen(false)}>Challenges</a>
@@ -254,7 +258,7 @@ const LandingPage = () => {
           </h1>
           <p className="hero-sub">
             What if breaking a promise to yourself actually cost you something?
-            CredStreak turns your goals into commitments backed by real stakes.
+            CommitX turns your goals into commitments backed by real stakes.
             Complete what you promised — or lose what you put up.
           </p>
           <div className="hero-actions">
@@ -432,7 +436,7 @@ const LandingPage = () => {
 
       {/* ─── Footer ─── */}
       <footer className="landing-footer">
-        <span>© {new Date().getFullYear()} CredStreak</span>
+        <span>© {new Date().getFullYear()} CommitX</span>
         <span className="footer-sep">·</span>
         <span>Built for people who keep their word.</span>
       </footer>

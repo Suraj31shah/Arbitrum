@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, GitPullRequest, FileText, CheckSquare, Users, Calendar, CircleDot } from 'lucide-react';
+import { Target, GitPullRequest, FileText, CheckSquare, Users, Calendar, CircleDot } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import CountdownTimer from './CountdownTimer';
 import './ChallengeCard.css';
@@ -12,7 +12,7 @@ const ChallengeCard = ({ challenge = {} }) => {
   const participantsCount = Array.isArray(challenge?.participants) ? challenge.participants.length : 1;
 
   // Visual icon & category tags based on title/description
-  let categoryIcon = <Activity size={18} />;
+  let categoryIcon = <Target size={18} />;
   let iconBgClass = 'icon-green';
   let integrationTag = 'Google Fit';
   let categoryTag = 'Health & Fitness';
@@ -23,17 +23,14 @@ const ChallengeCard = ({ challenge = {} }) => {
 
   if (titleLower.includes('code') || titleLower.includes('github') || titleLower.includes('pr') || titleLower.includes('git')) {
     categoryIcon = <GitPullRequest size={18} />;
-    iconBgClass = 'icon-blue';
     integrationTag = 'GitHub';
     categoryTag = 'Developer';
   } else if (titleLower.includes('notion') || titleLower.includes('write') || titleLower.includes('read') || titleLower.includes('study')) {
     categoryIcon = <FileText size={18} />;
-    iconBgClass = 'icon-purple';
     integrationTag = 'Notion';
     categoryTag = 'Productivity';
   } else if (titleLower.includes('task') || titleLower.includes('todo')) {
     categoryIcon = <CheckSquare size={18} />;
-    iconBgClass = 'icon-red';
     integrationTag = 'Todoist';
     categoryTag = 'Tasks';
   }
@@ -48,7 +45,9 @@ const ChallengeCard = ({ challenge = {} }) => {
     <Link to={`/challenges/${challengeId}`} className="challenge-card">
       <div className="card-top-row">
         <div className="card-title-group">
-          <div className={`card-icon-circle ${iconBgClass}`}>{categoryIcon}</div>
+          <div className="card-icon-circle">
+            {categoryIcon}
+          </div>
           <div>
             <div className="title-status-inline">
               <h3 className="challenge-title">{challenge.title}</h3>

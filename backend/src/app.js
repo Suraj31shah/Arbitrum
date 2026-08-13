@@ -12,6 +12,7 @@ const GitHubStrategy = require('passport-github2').Strategy;
 const NotionStrategy = require('passport-notion').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const OAuth2Strategy = require('passport-oauth2');
+const mongoose = require('mongoose');
 const User = require('./models/User');
 
 // Create the Express application

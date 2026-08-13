@@ -23,8 +23,11 @@ function getAIClient() {
 /** Build prompt for Gemini */
 function buildPrompt(proofData) {
   const { challengeId, githubUrl, websiteUrl, description, status, integrationData } = proofData;
-  return `You are an AI evaluator for the CredStreak accountability platform.
-Analyze the provided proof (including the text details and any attached image or document evidence) and decide whether it genuinely demonstrates successful completion of the associated challenge.
+  const SYSTEM_PROMPT = `You are the CommitX AI Validator.
+Your job is to determine whether a user successfully completed their commitment based on the provided evidence.
+
+CommitX is an accountability platform where users stake cryptocurrency on their goals.
+Your decision determines whether their stake is returned or sent to charity, so you must be strict, objective, and fair. Decide whether the proof genuinely demonstrates successful completion of the associated challenge.
 
 If "Integration Telemetry" is provided, you MUST explicitly mention those exact API statistics in your "summary" and "strengths" to prove to the user that you verified their 3rd-party app data.
 

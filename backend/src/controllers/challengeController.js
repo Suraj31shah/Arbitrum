@@ -70,16 +70,22 @@ function transitionStatus(challenge) {
 
 const getChallenges = async (req, res) => {
   try {
-    // If no wallet is connected, do not return private user commitments
-    if (!req.isAuthenticated() || !req.user || !req.user.walletAddress) {
-      return res.json([]);
-    }
+    const { filter, wallet } = req.query;
 
-    const userId = req.user._id || req.user.id;
-    const userWallet = req.user.walletAddress ? req.user.walletAddress.toLowerCase() : null;
+    let userId = null;
+    let userWallet = null;
+
+    if (req.isAuthenticated() && req.user && req.user.walletAddress) {
+      userId = req.user._id || req.user.id;
+      userWallet = req.user.walletAddress.toLowerCase();
+    }
 
     if (mongoose.connection.readyState !== 1) {
       const localChallenges = readChallenges();
+      if (!userId) {
+         // Return all joinable public challenges if unauthenticated
+         return res.json(localChallenges.filter(c => ['upcoming', 'active', 'joinable'].includes(c.status)));
+      }
       const userChallenges = localChallenges.filter(c => {
         if (!c) return false;
         const creatorId = c.creator?._id?.toString() || c.creator?.toString();
@@ -99,16 +105,29 @@ const getChallenges = async (req, res) => {
       return res.json(userChallenges);
     }
 
-    const orConditions = [
-      { creator: userId },
-      { 'participants.user': userId }
-    ];
+    let orConditions = [];
+    if (userId) {
+      orConditions.push({ creator: userId });
+      orConditions.push({ 'participants.user': userId });
+    }
     if (userWallet) {
       orConditions.push({ 'participants.walletAddress': userWallet });
       orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
     }
 
-    let challenges = await Challenge.find()
+    let query = {};
+    if (orConditions.length > 0) {
+      // If we are looking for 'mine', use the conditions
+      if (filter === 'mine') {
+         query = { $or: orConditions };
+      }
+      // If no filter, we can just fetch everything (public)
+    } else if (filter === 'mine') {
+      // Unauthenticated user requesting 'mine' gets nothing
+      return res.json([]);
+    }
+
+    let challenges = await Challenge.find(query)
       .populate('creator', 'username profileUrl walletAddress')
       .populate('participants.user', 'username profileUrl walletAddress')
       .sort({ createdAt: -1 });
@@ -123,13 +142,30 @@ const getChallenges = async (req, res) => {
       }
       return c;
     }));
-    if (savePromises.length > 0) await Promise.all(savePromises);
+
+    // If filter=mine, only return user's challenges
+    if (filter === 'mine' && userWallet) {
+      challenges = challenges.filter(c => {
+        const creatorId = c.creator?._id?.toString() || c.creator?.toString();
+        const currentUserId = userId?.toString();
+        if (creatorId && currentUserId && creatorId === currentUserId) return true;
+        if (Array.isArray(c.participants)) {
+          return c.participants.some(p => {
+            if (p.walletAddress && p.walletAddress.toLowerCase() === userWallet) return true;
+            const pUserId = p.user?._id?.toString() || p.user?.toString();
+            if (pUserId && currentUserId && pUserId === currentUserId) return true;
+            return false;
+          });
+        }
+        return false;
+      });
+    }
 
     // If filter=joinable and a wallet is provided, exclude challenges the wallet already joined
     if (filter === 'joinable' && wallet) {
       const lowerWallet = wallet.toLowerCase();
       challenges = challenges.filter(c =>
-        !c.participants.some(p => p.walletAddress.toLowerCase() === lowerWallet)
+        !c.participants.some(p => p.walletAddress && p.walletAddress.toLowerCase() === lowerWallet)
       );
     }
 

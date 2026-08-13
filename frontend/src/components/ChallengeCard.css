@@ -15,7 +15,8 @@
 .challenge-card:hover {
   background-color: var(--bg-card-hover);
   border-color: var(--border-hover);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  /* Subdued shadow for premium look */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .card-top-row {
@@ -33,34 +34,17 @@
 }
 
 .card-icon-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-full);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
-}
-
-.icon-green {
-  background-color: var(--accent-dim);
-  color: var(--accent);
-}
-
-.icon-purple {
-  background-color: var(--purple-dim);
-  color: var(--purple-accent);
-}
-
-.icon-blue {
-  background-color: var(--blue-dim);
-  color: var(--blue-accent);
-}
-
-.icon-red {
-  background-color: var(--error-bg);
-  color: var(--error);
+  color: var(--text-primary);
 }
 
 .title-status-inline {
@@ -110,20 +94,20 @@
 
 .tag-pill {
   font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
 }
 
 .integration-pill {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+  background-color: transparent;
 }
 
 .category-pill {
-  background-color: rgba(34, 197, 94, 0.08);
-  color: var(--accent);
+  background-color: transparent;
+  color: var(--text-secondary);
 }
 
 .card-metrics-grid {
@@ -156,21 +140,7 @@
   color: var(--text-primary);
 }
 
-.card-progress-track {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.card-progress-fill {
-  height: 100%;
-  background-color: var(--accent);
-  transition: width 0.3s ease;
-}
-
-.card-progress-fill.fill-failed {
-  background-color: var(--error);
+/* Remove bottom progress track */
+.card-progress-track, .card-progress-fill {
+  display: none;
 }
