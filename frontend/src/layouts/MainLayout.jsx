@@ -108,7 +108,7 @@ const MainLayout = () => {
 
           <Link 
             to="/challenges" 
-            className={`sidebar-link ${location.pathname === '/challenges' ? 'active' : ''}`}
+            className={`sidebar-link ${location.pathname.startsWith('/challenges') ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
             <Target className="nav-icon" size={18} />
@@ -126,18 +126,18 @@ const MainLayout = () => {
 
           <a href="#achievements" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
             <Trophy className="nav-icon" size={18} />
-            <span className="nav-label">Achievements</span>
+            <span className="nav-label">Achievements (Coming Soon)</span>
           </a>
 
           <a href="#analytics" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
             <BarChart3 className="nav-icon" size={18} />
-            <span className="nav-label">Analytics</span>
+            <span className="nav-label">Analytics (Coming Soon)</span>
           </a>
 
           <div className="sidebar-section-header mt-4">COMMUNITY</div>
           <Link 
             to="/discover" 
-            className="sidebar-link"
+            className={`sidebar-link ${location.pathname.startsWith('/discover') ? 'active' : ''}`}
             onClick={() => setMobileNavOpen(false)}
           >
             <Flag className="nav-icon" size={18} />
@@ -158,7 +158,7 @@ const MainLayout = () => {
           <div className="sidebar-section-header mt-4">SETTINGS</div>
           <a href="#settings" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
             <Settings className="nav-icon" size={18} />
-            <span className="nav-label">Settings</span>
+            <span className="nav-label">Settings (Coming Soon)</span>
           </a>
         </nav>
 
