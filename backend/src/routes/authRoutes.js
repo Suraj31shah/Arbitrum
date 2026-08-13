@@ -12,7 +12,7 @@ function getFrontendUrl(req) {
   return 'http://localhost:5173';
 }
 
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github', passport.authenticate('github', { scope: ['user:email'], prompt: 'consent' }));
 
 router.get('/github/callback', (req, res, next) => {
   passport.authenticate('github', (err, user) => {
@@ -93,7 +93,7 @@ router.get('/notion/disconnect', async (req, res) => {
 router.get('/google', passport.authenticate('google', { 
   scope: ['profile', 'email', 'https://www.googleapis.com/auth/fitness.activity.read'],
   accessType: 'offline',
-  prompt: 'consent'
+  prompt: 'select_account'
 }));
 
 router.get('/google/callback', (req, res, next) => {
