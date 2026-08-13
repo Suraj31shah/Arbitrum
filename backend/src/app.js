@@ -33,14 +33,17 @@ app.use(express.json());
 // Trust the Render proxy so secure cookies work properly
 app.set('trust proxy', 1);
 
+// Check if we are running in a production-like environment (e.g. Render)
+const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+
 // Session setup
 app.use(session({
   secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production' ? true : false,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
@@ -65,7 +68,7 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: `/api/auth/github/callback`,
+    callbackURL: `${backendUrl}/api/auth/github/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
@@ -153,7 +156,7 @@ class CustomTodoistStrategy extends OAuth2Strategy {
 passport.use(new CustomTodoistStrategy({
     clientID: process.env.TODOIST_CLIENT_ID,
     clientSecret: process.env.TODOIST_CLIENT_SECRET,
-    callbackURL: `/api/auth/todoist/callback`,
+    callbackURL: `${backendUrl}/api/auth/todoist/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
@@ -196,7 +199,7 @@ passport.use(new CustomTodoistStrategy({
 passport.use(new NotionStrategy({
     clientID: process.env.NOTION_CLIENT_ID,
     clientSecret: process.env.NOTION_CLIENT_SECRET,
-    callbackURL: `/api/auth/notion/callback`,
+    callbackURL: `${backendUrl}/api/auth/notion/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, params, profile, done) {
@@ -240,7 +243,7 @@ passport.use(new NotionStrategy({
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `/api/auth/google/callback`,
+    callbackURL: `${backendUrl}/api/auth/google/callback`,
     passReqToCallback: true
   },
   async function(req, accessToken, refreshToken, profile, done) {
