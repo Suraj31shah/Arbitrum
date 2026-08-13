@@ -96,7 +96,10 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
     }
   }
 
-  return `Google Health Telemetry: User logged ${totalSteps} steps, ${Math.round(totalCalories)} calories burned, and ${totalActiveMinutes} active minutes recently.`;
+  return {
+    text: `Google Health Telemetry: User logged ${totalSteps} steps, ${Math.round(totalCalories)} calories burned, and ${totalActiveMinutes} active minutes recently.`,
+    value: totalSteps
+  };
 }
 
 async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd) {
