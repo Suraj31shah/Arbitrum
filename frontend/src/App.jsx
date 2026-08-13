@@ -26,7 +26,7 @@ function App() {
         <Route path="/charity" element={<CharityDashboardPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
-    </Routes>
+      </Routes>
   );
 }
 

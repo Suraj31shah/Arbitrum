@@ -3,7 +3,7 @@
 /* ─── Reset & Base ─── */
 .landing-root {
   min-height: 100vh;
-  background: #000000;
+  background: transparent;
   color: #f4f4f5;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
@@ -90,18 +90,26 @@
 
 /* ─── Hero ─── */
 .hero {
+  position: relative;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 6rem 1.5rem 4rem;
+  padding: 6rem 1.5rem 8rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 3rem;
-  min-height: 70vh;
+  min-height: calc(100vh - 80px);
 }
 
 .hero-content {
-  flex: 1;
-  max-width: 620px;
+  flex: 0 1 45%;
+  text-align: left;
+}
+
+.hero-animation-wrapper {
+  flex: 0 1 55%;
+  display: flex;
+  justify-content: center;
 }
 
 .hero h1 {
@@ -115,45 +123,45 @@
 }
 
 .hero-highlight {
-  background: linear-gradient(135deg, #0ea5e9, #F1F0E4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #0ea5e9;
 }
 
 .hero-sub {
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
   line-height: 1.7;
   color: #94a3b8;
-  margin-bottom: 2.25rem;
-  max-width: 520px;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
 }
 
 .hero-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
 .btn-primary-landing {
+  background: #f4f4f5;
+  color: #09090b;
+  padding: 0.875rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f8fafc;
-  color: #0a0c10;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 10px;
   font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-primary-landing:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(248, 250, 252, 0.12);
+  background: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255,255,255,0.1);
 }
 
 .btn-ghost {
@@ -169,48 +177,37 @@
   color: #f8fafc;
 }
 
-/* Hero characters cluster */
-.hero-characters {
-  flex-shrink: 0;
-  position: relative;
-  width: 280px;
-  height: 280px;
-}
 
-.hero-crew {
+
+
+.scroll-indicator {
   position: absolute;
-  opacity: 0.85;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.hero-crew-1 {
-  top: 0;
-  left: 10px;
-  animation: float-slow 6s ease-in-out infinite;
+.scroll-arrow {
+  font-size: 1.25rem;
+  animation: bounce 2s infinite;
 }
 
-.hero-crew-2 {
-  top: 20px;
-  right: 0;
-  animation: float-slow 6s ease-in-out infinite 1.5s;
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
 }
-
-.hero-crew-3 {
-  bottom: 0;
-  left: 0;
-  animation: float-slow 6s ease-in-out infinite 3s;
-}
-
-.hero-crew-4 {
-  bottom: 30px;
-  right: 30px;
-  animation: float-slow 6s ease-in-out infinite 4.5s;
-}
-
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-
 
 /* ─── Story Section ─── */
 .story-section {
@@ -304,93 +301,9 @@
   max-width: 480px;
 }
 
-/* Thought bubble */
-.thought-bubble {
-  position: absolute;
-  top: -15px;
-  right: -30px;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  padding: 0.625rem 1rem;
-  font-size: 0.8125rem;
-  color: #cbd5e1;
-  font-style: italic;
-  max-width: 180px;
-  line-height: 1.4;
-}
 
-.thought-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 20px;
-  width: 16px;
-  height: 16px;
-  background: rgba(255,255,255,0.07);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  border-right: 1px solid rgba(255,255,255,0.1);
-  transform: rotate(45deg);
-}
 
-/* Coin trail animation */
-.coin-trail {
-  position: absolute;
-  top: 0;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.floating-coin {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  color: #78350f;
-  animation: coin-drop 2s ease-in-out infinite;
-}
-
-.floating-coin.delay-1 { animation-delay: 0.4s; }
-.floating-coin.delay-2 { animation-delay: 0.8s; }
-
-@keyframes coin-drop {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(10px); opacity: 1; }
-}
-
-/* Outcome illustration */
-.scene-outcome {
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.outcome-winner,
-.outcome-loser {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.outcome-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-}
-
-.outcome-label.win {
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.12);
-}
 
 .outcome-label.lose {
   color: #94a3b8;
@@ -548,11 +461,11 @@
 
   .hero-content {
     max-width: 100%;
+    text-align: center;
   }
 
-  .hero-sub {
-    margin-left: auto;
-    margin-right: auto;
+  .hero-animation-wrapper {
+    width: 100%;
   }
 
   .hero-actions {

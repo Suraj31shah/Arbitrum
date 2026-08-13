@@ -1,0 +1,182 @@
+.sr-container {
+  display: flex;
+  align-items: stretch;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  min-height: 400px;
+  width: 100%;
+}
+
+.sr-side {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: opacity 0.4s ease, background-color 0.4s ease;
+}
+
+.sr-dim {
+  opacity: 0.3;
+}
+
+.sr-active {
+  opacity: 1;
+}
+
+.sr-bg-error {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.sr-bg-success {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.sr-divider {
+  width: 1px;
+  background: #27272a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vs-badge {
+  position: absolute;
+  background: #18181b;
+  border: 1px solid #27272a;
+  color: #a1a1aa;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  z-index: 10;
+}
+
+.sr-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.accent-title {
+  color: #0ea5e9;
+}
+
+.sr-char-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  margin-top: 4rem;
+}
+
+/* ─── Comic Style Thought Bubbles ─── */
+.comic-bubble {
+  position: absolute;
+  top: -80px;
+  background: #ffffff;
+  color: #09090b;
+  border: 2px solid #18181b;
+  border-radius: 20px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  max-width: 200px;
+  line-height: 1.4;
+  z-index: 10;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.comic-left {
+  left: -20px;
+}
+
+.comic-right {
+  right: -20px;
+}
+
+.comic-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #ef4444;
+}
+
+.comic-success {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #22c55e;
+}
+
+/* The little circles leading to the bubble */
+.bubble-dots {
+  position: absolute;
+  bottom: -25px;
+}
+
+.comic-left .bubble-dots {
+  right: 40px;
+}
+
+.comic-right .bubble-dots {
+  left: 40px;
+}
+
+.dot {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #18181b;
+  border-radius: 50%;
+}
+
+.comic-error .dot { background: #fee2e2; border-color: #ef4444; }
+.comic-success .dot { background: #dcfce7; border-color: #22c55e; }
+
+.dot1 {
+  width: 12px;
+  height: 12px;
+  top: 0;
+  left: 0;
+}
+
+.dot2 {
+  width: 8px;
+  height: 8px;
+  top: 15px;
+  left: -10px;
+}
+
+.comic-right .dot1 { top: 0; right: 0; left: auto; }
+.comic-right .dot2 { top: 15px; right: -10px; left: auto; }
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 768px) {
+  .sr-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .sr-divider {
+    width: 100%;
+    height: 1px;
+  }
+}
