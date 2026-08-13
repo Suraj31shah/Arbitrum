@@ -94,13 +94,12 @@ const challengeSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
-    integrationMetric: {
-      type: String,
-      default: 'all'
-    },
-    metricValue: {
-      type: Number,
-      default: null
+    integrationMetrics: {
+      type: [{
+        id: String,
+        goal: Number
+      }],
+      default: []
     },
     completedAt: {
       type: Date,

@@ -159,7 +159,7 @@ const createChallenge = async (req, res) => {
   }
 
   const { title, description, goal, deadline, stakeAmount, startMode, startTime,
-          integrationId, integrationHandle, integrationMetric, metricValue } = req.body;
+          integrationId, integrationHandle, integrationMetrics } = req.body;
 
   // Validation
   if (!title || typeof title !== 'string' || title.trim() === '') {
@@ -230,8 +230,7 @@ const createChallenge = async (req, res) => {
     charityAddress: process.env.CHARITY_WALLET_ADDRESS || '0x000000000000000000000000000000000000dEaD',
     integrationId: integrationId || 'none',
     integrationHandle: integrationHandle || '',
-    integrationMetric: integrationMetric || 'all',
-    metricValue: metricValue || null
+    integrationMetrics: Array.isArray(integrationMetrics) ? integrationMetrics : []
   };
 
   try {

@@ -12,16 +12,14 @@ const INTEGRATIONS = [
   { id: 'github', label: 'GitHub', metrics: [
     { id: 'commits', label: 'Commits' },
     { id: 'prs', label: 'Pull Requests' },
-    { id: 'issues', label: 'Issues Solved' },
-    { id: 'all', label: 'All of the above (Combined)' }
+    { id: 'issues', label: 'Issues Solved' }
   ]},
   { id: 'todoist', label: 'Todoist', metrics: [{ id: 'tasks', label: 'Tasks completed' }] },
   { id: 'notion', label: 'Notion', metrics: [{ id: 'pages', label: 'Pages updated' }] },
   { id: 'google', label: 'Google Health / Fit', metrics: [
     { id: 'steps', label: 'Steps' },
     { id: 'calories', label: 'Calories Burned' },
-    { id: 'active_minutes', label: 'Active Minutes' },
-    { id: 'all', label: 'All of the above (Combined)' }
+    { id: 'active_minutes', label: 'Active Minutes' }
   ]}
 ];
 
@@ -44,8 +42,7 @@ const CreateChallengePage = () => {
     startTime: defaultStartTime,
     integrationId: 'none',
     integrationHandle: '',
-    integrationMetric: '',
-    metricValue: ''
+    integrationMetrics: [] // Array of { id, goal }
   });
 
   const getMinTime = (date) => {
@@ -121,12 +118,31 @@ const CreateChallengePage = () => {
     setFormData(prev => {
       const next = { ...prev, [name]: value };
       if (name === 'integrationId') {
-        const selected = INTEGRATIONS.find(i => i.id === value);
-        next.integrationMetric = selected?.metrics?.[0]?.id || '';
+        next.integrationMetrics = [];
         next.integrationHandle = '';
       }
       return next;
     });
+  };
+
+  const handleMetricToggle = (metricId) => {
+    setFormData(prev => {
+      const exists = prev.integrationMetrics.find(m => m.id === metricId);
+      if (exists) {
+        return { ...prev, integrationMetrics: prev.integrationMetrics.filter(m => m.id !== metricId) };
+      } else {
+        return { ...prev, integrationMetrics: [...prev.integrationMetrics, { id: metricId, goal: '' }] };
+      }
+    });
+  };
+
+  const handleMetricGoalChange = (metricId, goalValue) => {
+    setFormData(prev => ({
+      ...prev,
+      integrationMetrics: prev.integrationMetrics.map(m => 
+        m.id === metricId ? { ...m, goal: goalValue } : m
+      )
+    }));
   };
 
   const handleConnectApp = (e) => {
@@ -218,35 +234,58 @@ const CreateChallengePage = () => {
           <h3 className="mb-4">Verification Tracking</h3>
           <p className="text-muted mb-4">Connect a 3rd-party app to automatically verify completion based on real data.</p>
           
-          <div className="flex gap-4">
-            <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label" htmlFor="integrationId">App Integration</label>
-              <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
-                {INTEGRATIONS.map(integration => (
-                  <option key={integration.id} value={integration.id}>
-                    {integration.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {(() => {
-              const selectedIntegration = INTEGRATIONS.find(i => i.id === formData.integrationId);
-              if (selectedIntegration && selectedIntegration.metrics && selectedIntegration.metrics.length > 1) {
-                return (
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label" htmlFor="integrationMetric">Tracking Metric</label>
-                    <select id="integrationMetric" name="integrationMetric" className="form-input" value={formData.integrationMetric} onChange={handleChange}>
-                      {selectedIntegration.metrics.map(m => (
-                        <option key={m.id} value={m.id}>{m.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              }
-              return null;
-            })()}
+          <div className="form-group mb-4">
+            <label className="form-label" htmlFor="integrationId">App Integration</label>
+            <select id="integrationId" name="integrationId" className="form-input" value={formData.integrationId} onChange={handleChange}>
+              {INTEGRATIONS.map(integration => (
+                <option key={integration.id} value={integration.id}>
+                  {integration.label}
+                </option>
+              ))}
+            </select>
           </div>
+          
+          {(() => {
+            const selectedIntegration = INTEGRATIONS.find(i => i.id === formData.integrationId);
+            if (selectedIntegration && selectedIntegration.metrics && selectedIntegration.metrics.length > 0) {
+              return (
+                <div className="form-group mb-4">
+                  <label className="form-label">Select Tracking Metrics & Goals</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                    {selectedIntegration.metrics.map(m => {
+                      const isChecked = formData.integrationMetrics.some(im => im.id === m.id);
+                      const currentGoal = formData.integrationMetrics.find(im => im.id === m.id)?.goal || '';
+                      return (
+                        <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flex: 1 }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked}
+                              onChange={() => handleMetricToggle(m.id)}
+                            />
+                            {m.label}
+                          </label>
+                          {isChecked && (
+                            <input 
+                              type="number" 
+                              className="form-input" 
+                              style={{ width: '150px', padding: '0.25rem 0.5rem' }}
+                              placeholder="Target Goal"
+                              min="1"
+                              value={currentGoal}
+                              onChange={(e) => handleMetricGoalChange(m.id, e.target.value)}
+                              required
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {formData.integrationId !== 'none' && (
             <div className="mt-4">
@@ -273,10 +312,6 @@ const CreateChallengePage = () => {
                         Disconnect
                       </button>
                     </div>
-                  </div>
-                  <div className="form-group mb-0" style={{ flex: 1 }}>
-                    <label className="form-label" htmlFor="metricValue">Target Goal (Number)</label>
-                    <input type="number" id="metricValue" name="metricValue" className="form-input" value={formData.metricValue} onChange={handleChange} required min="1" placeholder="e.g., 10" />
                   </div>
                 </div>
               )}

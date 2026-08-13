@@ -72,17 +72,32 @@ const createProof = async (req, res) => {
         return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account.` });
       }
 
-      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end, challenge.integrationMetric);
+      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end);
       
-      // Deterministic check
-      if (integrationData && typeof integrationData.value === 'number') {
-        const target = challenge.metricValue || 0;
-        if (integrationData.value >= target) {
+      // Deterministic check against multiple metrics
+      if (integrationData && integrationData.values) {
+        let allGoalsMet = true;
+        if (challenge.integrationMetrics && challenge.integrationMetrics.length > 0) {
+          for (const metric of challenge.integrationMetrics) {
+            const actualValue = integrationData.values[metric.id] || 0;
+            if (actualValue < metric.goal) {
+              allGoalsMet = false;
+              break;
+            }
+          }
+        } else {
+          // Fallback if no goals were defined
+          allGoalsMet = false;
+        }
+
+        if (allGoalsMet) {
+          participant.status = 'completed';
+          participant.completedAt = new Date();
           isSuccess = true;
-          analysisNotes = `Integration verified: Achieved ${integrationData.value} / ${target}.`;
+          analysisNotes = "Integration goals met.";
         } else {
           isSuccess = false;
-          analysisNotes = `Integration failed: Achieved ${integrationData.value} / ${target}.`;
+          analysisNotes = "Integration goals not met.";
         }
       }
     } else {
@@ -229,7 +244,7 @@ const getIntegrationPreview = async (req, res) => {
 
     const end = new Date();
     const start = new Date(challenge.startTime);
-    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end, challenge.integrationMetric);
+    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end);
 
     return res.json(integrationData); // { text, value }
   } catch (error) {

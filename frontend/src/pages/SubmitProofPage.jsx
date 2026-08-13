@@ -117,10 +117,24 @@ const SubmitProofPage = () => {
           <h3 className="mb-4 text-info">App Verification</h3>
           <p className="mb-4">This challenge requires automatic verification via <strong>{challenge.integrationId}</strong> for the handle <code>{challenge.integrationHandle}</code>.</p>
           
-          <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
-            <div className="form-label">Target Goal</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{challenge.metricValue}</div>
-          </div>
+          {challenge.integrationMetrics && challenge.integrationMetrics.length > 0 ? (
+            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
+              <div className="form-label mb-2">Target Goals</div>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {challenge.integrationMetrics.map(m => (
+                  <li key={m.id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '0.5rem 0' }}>
+                    <span style={{ textTransform: 'capitalize' }}>{m.id.replace('_', ' ')}</span>
+                    <strong style={{ fontSize: '1.1rem' }}>{m.goal}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
+              <div className="form-label">Target Goal</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{challenge.metricValue}</div>
+            </div>
+          )}
 
           {!previewData ? (
             <button 
@@ -136,15 +150,41 @@ const SubmitProofPage = () => {
               <div style={{ background: 'var(--success-bg)', borderLeft: '4px solid var(--success)', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem' }}>
                 <div style={{ color: 'var(--success)', fontWeight: 'bold', marginBottom: '4px' }}>Fetched Data:</div>
                 <div style={{ color: 'var(--text-primary)' }}>{previewData.text}</div>
-                <div style={{ marginTop: '8px', fontSize: '0.875rem' }}>
-                  Value extracted: <strong>{previewData.value}</strong>
-                </div>
+                {previewData.values && challenge.integrationMetrics && challenge.integrationMetrics.length > 0 ? (
+                  <div style={{ marginTop: '12px' }}>
+                    {challenge.integrationMetrics.map(m => {
+                      const actual = previewData.values[m.id] || 0;
+                      const met = actual >= m.goal;
+                      return (
+                        <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', fontSize: '0.875rem' }}>
+                          <span style={{ textTransform: 'capitalize' }}>{m.id.replace('_', ' ')}</span>
+                          <span>
+                            <strong>{actual}</strong> / {m.goal} {met ? '✅' : '❌'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '8px', fontSize: '0.875rem' }}>
+                    Value extracted: <strong>{previewData.value || JSON.stringify(previewData.values)}</strong>
+                  </div>
+                )}
               </div>
 
               <div className="text-muted mb-4" style={{ fontSize: '0.875rem' }}>
-                {previewData.value >= challenge.metricValue 
-                  ? '✅ This meets or exceeds the target goal. You will succeed.' 
-                  : '⚠️ This is below the target goal. If you submit now, your status will be marked as failed.'}
+                {(() => {
+                  if (challenge.integrationMetrics && challenge.integrationMetrics.length > 0 && previewData.values) {
+                    const allMet = challenge.integrationMetrics.every(m => (previewData.values[m.id] || 0) >= m.goal);
+                    return allMet
+                      ? '✅ All goals met or exceeded. You will succeed.'
+                      : '⚠️ One or more goals are not met. If you submit now, your status will be marked as failed.';
+                  } else {
+                    return previewData.value >= challenge.metricValue 
+                      ? '✅ This meets or exceeds the target goal. You will succeed.' 
+                      : '⚠️ This is below the target goal. If you submit now, your status will be marked as failed.';
+                  }
+                })()}
               </div>
 
               <div className="flex gap-4">
