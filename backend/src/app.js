@@ -213,7 +213,7 @@ passport.use(new NotionStrategy({
             existing.notionId = undefined;
             await existing.save();
           }
-          user.notionId = profile.bot_id;
+          user.notionId = notionId;
         }
         user.notionAccessToken = accessToken;
         await user.save();
