@@ -209,22 +209,7 @@ const createChallenge = async (req, res) => {
     }
   }
 
-  // Enforce max active challenges per wallet
-  try {
-    if (mongoose.connection.readyState === 1) {
-      const activeCount = await Challenge.countDocuments({
-        creatorWallet: req.user.walletAddress.toLowerCase(),
-        status: { $in: ['joining', 'upcoming', 'active'] }
-      });
-      if (activeCount >= MAX_ACTIVE_PER_WALLET) {
-        return res.status(400).json({
-          error: `You can only have ${MAX_ACTIVE_PER_WALLET} active challenges at a time.`
-        });
-      }
-    }
-  } catch (e) {
-    console.warn('Could not check active challenge limit:', e.message);
-  }
+  // Removed max active challenges per wallet restriction per user request
 
   const challengeData = {
     title: title.trim(),
