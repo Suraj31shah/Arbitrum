@@ -118,8 +118,6 @@ async function fetchIntegrationData(integrationId, integrationHandle, dateStart,
       return await fetchLeetCodeData(integrationHandle);
     } else if (integrationId === 'wakatime') {
       return await fetchWakaTimeData(integrationHandle);
-    } else if (integrationId === 'todoist') {
-      return await fetchTodoistData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'notion') {
       return await fetchNotionData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'google') {
