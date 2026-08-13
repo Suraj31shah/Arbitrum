@@ -5,11 +5,13 @@ const mongoose = require('mongoose');
 const router = express.Router();
 
 function getFrontendUrl(req) {
-  // If the backend being hit is the production Render backend, return the production Vercel frontend
-  if (req.hostname && req.hostname.includes('onrender.com')) {
+  // If the backend is hit from production, use the production frontend URL
+  if (req.hostname && req.hostname !== 'localhost' && req.hostname !== '127.0.0.1') {
+    if (process.env.FRONTEND_URL) {
+      return process.env.FRONTEND_URL.split(',')[0];
+    }
     return 'https://commitx-three.vercel.app';
   }
-  // Otherwise, default to local development frontend
   return 'http://localhost:5173';
 }
 

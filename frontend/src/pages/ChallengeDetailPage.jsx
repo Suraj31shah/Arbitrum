@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useOutletContext, useNavigate, useLocation } from 'react-router-dom';
-import { api } from '../services/api';
+import { api, getApiUrl } from '../services/api';
 import { ethers } from 'ethers';
 import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
@@ -392,7 +392,7 @@ const ChallengeDetailPage = () => {
                   Using your connected account
                   <button onClick={() => {
                     localStorage.setItem('pendingJoinChallenge', challenge._id);
-                    window.location.href = `${api.getApiUrl ? api.getApiUrl() : 'http://localhost:5000'}/api/auth/${challenge.integrationId}`;
+                    window.location.href = `${getApiUrl()}/api/auth/${challenge.integrationId}`;
                   }} style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'var(--success)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.875rem' }}>
                     Change Account
                   </button>
