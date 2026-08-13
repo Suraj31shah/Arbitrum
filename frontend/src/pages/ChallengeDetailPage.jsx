@@ -18,6 +18,9 @@ const ChallengeDetailPage = () => {
   const [error, setError] = useState(null);
   const [claimableAmount, setClaimableAmount] = useState(0);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [isDisputing, setIsDisputing] = useState(false);
 
   const context = useOutletContext();
   const globalWalletAddress = context?.walletAddress?.toLowerCase();
@@ -150,6 +153,29 @@ const ChallengeDetailPage = () => {
     }
   };
 
+  const handleDisputeSubmit = async () => {
+    if (!disputeReason.trim()) {
+      alert("Please provide a reason for the dispute.");
+      return;
+    }
+    setIsDisputing(true);
+    try {
+      await api.disputeProof(latestProof._id, disputeReason);
+      alert("Your feedback has been submitted to the makers!");
+      setShowDisputeForm(false);
+      setDisputeReason('');
+      
+      if (latestProof) {
+        setProofs(prev => prev.map(p => p._id === latestProof._id ? { ...p, disputed: true, disputeReason } : p));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit feedback: " + err.message);
+    } finally {
+      setIsDisputing(false);
+    }
+  };
+
   if (loading) return <div className="container text-center mt-8">Loading challenge...</div>;
   if (error) return <div className="container mt-8 text-center" style={{ color: 'var(--error)' }}>{error}</div>;
   if (!challenge) return <div className="container mt-8 text-center">Challenge not found</div>;
@@ -263,9 +289,74 @@ const ChallengeDetailPage = () => {
              </div>
           )}
 
-          {latestProof && latestProof.aiAnalysis && (myParticipant.status === 'completed' || myParticipant.status === 'failed') && (
-            <div className="mt-4">
-              <VerificationDisplay analysis={latestProof.aiAnalysis} />
+          {latestProof && (myParticipant.status === 'completed' || myParticipant.status === 'failed' || latestProof.status === 'rejected') && (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+              {myParticipant.status === 'active' && latestProof.status === 'rejected' && (
+                <div style={{ padding: '1rem', background: 'var(--error-bg)', borderLeft: '4px solid var(--error)', borderRadius: '4px', marginBottom: '1.5rem' }}>
+                  <h4 style={{ color: 'var(--error)', margin: 0, marginBottom: '0.5rem' }}>Previous Proof Rejected</h4>
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                    Your last submission did not meet the requirements. Please review the feedback below and submit a new proof before the deadline.
+                  </p>
+                </div>
+              )}
+              {(latestProof.filePaths?.length > 0 || latestProof.filePath) && (
+                <div className="mb-4">
+                  <div className="form-label text-muted mb-2">Uploaded Evidence</div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {latestProof.filePaths?.length > 0 ? (
+                      latestProof.filePaths.map((fp, i) => (
+                        <a key={i} href={`${api.defaults.baseURL.replace('/api', '')}/${fp}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                          <img src={`${api.defaults.baseURL.replace('/api', '')}/${fp}`} alt={`Evidence ${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                        </a>
+                      ))
+                    ) : (
+                      latestProof.filePath && (
+                        <a href={`${api.defaults.baseURL.replace('/api', '')}/${latestProof.filePath}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                          <img src={`${api.defaults.baseURL.replace('/api', '')}/${latestProof.filePath}`} alt="Evidence" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                        </a>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+              {latestProof.aiAnalysis && <VerificationDisplay analysis={latestProof.aiAnalysis} />}
+              
+              {latestProof.status === 'rejected' && (
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  {!showDisputeForm && !latestProof.disputed ? (
+                    <div className="text-center">
+                      <p className="text-muted" style={{ fontSize: '0.875rem' }}>Think the AI made a mistake?</p>
+                      <button onClick={() => setShowDisputeForm(true)} className="btn btn-secondary btn-sm" style={{ padding: '0.5rem 1rem' }}>
+                        Report AI Mistake
+                      </button>
+                    </div>
+                  ) : showDisputeForm && !latestProof.disputed ? (
+                    <div>
+                      <h4 className="mb-2" style={{ fontSize: '1rem' }}>Report AI Mistake</h4>
+                      <textarea
+                        className="form-textarea mb-2"
+                        rows="3"
+                        placeholder="Explain why your proof should have been accepted..."
+                        value={disputeReason}
+                        onChange={(e) => setDisputeReason(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={handleDisputeSubmit} disabled={isDisputing} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                          {isDisputing ? 'Submitting...' : 'Submit Feedback'}
+                        </button>
+                        <button onClick={() => setShowDisputeForm(false)} className="btn btn-secondary btn-sm">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : latestProof.disputed && (
+                    <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '4px', borderLeft: '4px solid var(--accent)' }}>
+                      <h4 style={{ margin: 0, marginBottom: '4px', fontSize: '1rem', color: 'var(--accent)' }}>Feedback Submitted</h4>
+                      <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>"{latestProof.disputeReason}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

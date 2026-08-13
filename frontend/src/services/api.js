@@ -64,5 +64,11 @@ export const api = {
     credentials: 'include',
     body: formData // Note: no Content-Type header needed for FormData
   }).then(handleResponse),
+  disputeProof: (proofId, reason) => fetch(`${API_BASE}/proofs/${proofId}/dispute`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason })
+  }).then(handleResponse),
   getIntegrationPreview: (challengeId) => fetch(`${API_BASE}/challenges/${challengeId}/integration-preview`, { credentials: 'include' }).then(handleResponse)
 };

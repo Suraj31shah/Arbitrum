@@ -8,12 +8,6 @@ const userSchema = new mongoose.Schema(
       sparse: true // sparse allows multiple nulls
     },
     githubUsername: String,
-    todoistId: {
-      type: String,
-      unique: true,
-      sparse: true
-    },
-    todoistAccessToken: String,
     notionId: {
       type: String,
       unique: true,

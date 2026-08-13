@@ -47,7 +47,8 @@ const createProof = async (req, res) => {
       websiteUrl: websiteUrl && typeof websiteUrl === 'string' ? websiteUrl.trim() : '',
       description: description.trim(),
       status: 'pending',
-      filePath: req.file ? req.file.path.replace(/\\/g, '/') : ''
+      filePaths: req.files ? req.files.map(f => f.path.replace(/\\/g, '/')) : [],
+      filePath: req.files && req.files.length > 0 ? req.files[0].path.replace(/\\/g, '/') : ''
     };
 
     // First update status to show we're verifying
@@ -72,17 +73,32 @@ const createProof = async (req, res) => {
         return res.status(400).json({ error: `Cannot verify proof: You have not linked your ${challenge.integrationId} account.` });
       }
 
-      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end, challenge.integrationMetric);
+      integrationData = await fetchIntegrationData(challenge.integrationId, participantHandle, start, end);
       
-      // Deterministic check
-      if (integrationData && typeof integrationData.value === 'number') {
-        const target = challenge.metricValue || 0;
-        if (integrationData.value >= target) {
+      // Deterministic check against multiple metrics
+      if (integrationData && integrationData.values) {
+        let allGoalsMet = true;
+        if (challenge.integrationMetrics && challenge.integrationMetrics.length > 0) {
+          for (const metric of challenge.integrationMetrics) {
+            const actualValue = integrationData.values[metric.id] || 0;
+            if (actualValue < metric.goal) {
+              allGoalsMet = false;
+              break;
+            }
+          }
+        } else {
+          // Fallback if no goals were defined
+          allGoalsMet = false;
+        }
+
+        if (allGoalsMet) {
+          participant.status = 'completed';
+          participant.completedAt = new Date();
           isSuccess = true;
-          analysisNotes = `Integration verified: Achieved ${integrationData.value} / ${target}.`;
+          analysisNotes = "Integration goals met.";
         } else {
           isSuccess = false;
-          analysisNotes = `Integration failed: Achieved ${integrationData.value} / ${target}.`;
+          analysisNotes = "Integration goals not met.";
         }
       }
     } else {
@@ -92,13 +108,34 @@ const createProof = async (req, res) => {
       analysisNotes = "Manual proof accepted.";
     }
 
-    // AI is sidelined per user request. We construct a fake aiAnalysis object to satisfy the schema/UI
-    const aiAnalysis = {
-      completed: isSuccess,
-      summary: analysisNotes,
-      strengths: integrationData ? [integrationData.text] : [],
-      weaknesses: []
-    };
+    let aiAnalysis;
+    try {
+      const analysisInput = {
+        ...proofData,
+        integrationData: integrationData ? integrationData.text : null,
+      };
+      
+      aiAnalysis = await analyzeProof(analysisInput);
+      
+      // Override AI success logic with hard deterministic data if available
+      if (challenge.integrationId !== 'none') {
+        aiAnalysis.completed = isSuccess; 
+        aiAnalysis.confidence = 100;
+      } else {
+        isSuccess = aiAnalysis.completed;
+      }
+    } catch (aiErr) {
+      console.error('AI analysis failed:', aiErr.message);
+      aiAnalysis = {
+        completed: isSuccess,
+        confidence: challenge.integrationId !== 'none' ? 100 : 0,
+        summary: analysisNotes || "Verification completed.",
+        strengths: integrationData ? [integrationData.text] : [],
+        missingEvidence: []
+      };
+    }
+
+    proofData.status = isSuccess ? 'approved' : 'rejected';
 
     // Save proof with analysis
     const proof = await Proof.create({
@@ -229,7 +266,7 @@ const getIntegrationPreview = async (req, res) => {
 
     const end = new Date();
     const start = new Date(challenge.startTime);
-    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end, challenge.integrationMetric);
+    const integrationData = await fetchIntegrationData(challenge.integrationId, challenge.integrationHandle, start, end);
 
     return res.json(integrationData); // { text, value }
   } catch (error) {
@@ -238,9 +275,39 @@ const getIntegrationPreview = async (req, res) => {
   }
 };
 
+const disputeProof = async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  try {
+    const proof = await Proof.findById(id);
+    if (!proof) {
+      return res.status(404).json({ error: 'Proof not found.' });
+    }
+
+    if (proof.walletAddress.toLowerCase() !== req.user.walletAddress.toLowerCase()) {
+      return res.status(403).json({ error: 'Not authorized to dispute this proof.' });
+    }
+
+    proof.disputed = true;
+    proof.disputeReason = reason || '';
+    await proof.save();
+
+    return res.json({ success: true, proof });
+  } catch (error) {
+    console.error('Failed to dispute proof:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   createProof,
   getProofsByChallenge,
   getProofById,
-  getIntegrationPreview
+  getIntegrationPreview,
+  disputeProof
 };

@@ -37,7 +37,7 @@ async function fetchNotionData(userId, dateStart, dateEnd) {
   return `Notion Telemetry: User updated ${count} pages recently.`;
 }
 
-async function fetchGoogleFitData(userId, dateStart, dateEnd, integrationMetric) {
+async function fetchGoogleFitData(userId, dateStart, dateEnd) {
   const user = await User.findOne({ googleId: userId });
   if (!user || !user.googleAccessToken) {
     throw new Error('Google user not found or access token missing.');
@@ -96,39 +96,37 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd, integrationMetric)
     }
   }
 
-  let finalValue = totalSteps;
-  if (integrationMetric === 'calories') finalValue = Math.round(totalCalories);
-  else if (integrationMetric === 'active_minutes') finalValue = totalActiveMinutes;
-
   return {
     text: `Google Health Telemetry: User logged ${totalSteps} steps, ${Math.round(totalCalories)} calories burned, and ${totalActiveMinutes} active minutes recently.`,
-    value: finalValue
+    values: {
+      steps: totalSteps,
+      calories: Math.round(totalCalories),
+      active_minutes: totalActiveMinutes
+    }
   };
 }
 
-async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd, integrationMetric = 'all') {
+async function fetchIntegrationData(integrationId, integrationHandle, dateStart, dateEnd) {
   if (!integrationHandle) {
     return { text: `Error: No username or API key provided for ${integrationId}.`, value: 0 };
   }
 
   try {
     if (integrationId === 'github') {
-      return await fetchGitHubData(integrationHandle, dateStart, dateEnd, integrationMetric);
+      return await fetchGitHubData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'leetcode') {
       return await fetchLeetCodeData(integrationHandle);
     } else if (integrationId === 'wakatime') {
       return await fetchWakaTimeData(integrationHandle);
-    } else if (integrationId === 'todoist') {
-      return await fetchTodoistData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'notion') {
       return await fetchNotionData(integrationHandle, dateStart, dateEnd);
     } else if (integrationId === 'google') {
-      return await fetchGoogleFitData(integrationHandle, dateStart, dateEnd, integrationMetric);
+      return await fetchGoogleFitData(integrationHandle, dateStart, dateEnd);
     }
-    return { text: `Telemetry data for ${integrationId} (user: ${integrationHandle})`, value: 0 };
+    return { text: `Telemetry data for ${integrationId} (user: ${integrationHandle})`, values: {} };
   } catch (error) {
     console.error(`Error fetching ${integrationId} data:`, error.message);
-    return { text: `Error fetching telemetry: ${error.message}`, value: 0 };
+    return { text: `Error fetching telemetry: ${error.message}`, values: {} };
   }
 }
 
@@ -164,7 +162,7 @@ async function fetchTodoistData(todoistId, dateStart, dateEnd) {
   return `Todoist Telemetry: User currently has ${tasksCount} active tasks.`;
 }
 
-async function fetchGitHubData(username, dateStart, dateEnd, integrationMetric) {
+async function fetchGitHubData(username, dateStart, dateEnd) {
   // We use the public events API for the user provided
   const response = await fetch(`https://api.github.com/users/${username}/events/public?per_page=50`, {
     headers: {
@@ -207,16 +205,13 @@ async function fetchGitHubData(username, dateStart, dateEnd, integrationMetric) 
   const issueEvents = validEvents.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'closed');
   const totalIssues = issueEvents.length;
 
-  const total = totalCommits + totalPRs + totalIssues;
-  
-  let finalValue = total;
-  if (integrationMetric === 'commits') finalValue = totalCommits;
-  else if (integrationMetric === 'prs') finalValue = totalPRs;
-  else if (integrationMetric === 'issues') finalValue = totalIssues;
-
   return {
     text: `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests, and ${totalIssues} issues solved recently.`,
-    value: finalValue
+    values: {
+      commits: totalCommits,
+      prs: totalPRs,
+      issues: totalIssues
+    }
   };
 }
 

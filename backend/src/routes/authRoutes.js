@@ -13,7 +13,7 @@ function getFrontendUrl(req) {
   return 'http://localhost:5173';
 }
 
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github', passport.authenticate('github', { scope: ['user:email'], prompt: 'consent' }));
 
 router.get('/github/callback', (req, res, next) => {
   passport.authenticate('github', (err, user) => {
@@ -39,31 +39,7 @@ router.get('/github/disconnect', async (req, res) => {
   res.redirect(`${getFrontendUrl(req)}/challenges/new`);
 });
 
-router.get('/todoist', passport.authenticate('todoist', { scope: ['data:read'] }));
 
-router.get('/todoist/callback', (req, res, next) => {
-  passport.authenticate('todoist', (err, user) => {
-    if (err) {
-      console.error('Todoist OAuth Error:', err);
-      return res.status(500).json({ error: err.message || 'Todoist Auth Failed' });
-    }
-    if (!user) {
-      return res.redirect(`${getFrontendUrl(req)}/challenges/new?error=auth_failed`);
-    }
-    req.logIn(user, (logInErr) => {
-      if (logInErr) return next(logInErr);
-      return res.redirect(`${getFrontendUrl(req)}/challenges/new`);
-    });
-  })(req, res, next);
-});
-
-router.get('/todoist/disconnect', async (req, res) => {
-  if (req.user) {
-    const User = require('../models/User');
-    await User.findByIdAndUpdate(req.user.id, { $unset: { todoistId: "", todoistAccessToken: "" } });
-  }
-  res.redirect(`${getFrontendUrl(req)}/challenges/new`);
-});
 
 router.get('/notion', passport.authenticate('notion'));
 
@@ -94,7 +70,7 @@ router.get('/notion/disconnect', async (req, res) => {
 router.get('/google', passport.authenticate('google', { 
   scope: ['profile', 'email', 'https://www.googleapis.com/auth/fitness.activity.read'],
   accessType: 'offline',
-  prompt: 'consent'
+  prompt: 'select_account'
 }));
 
 router.get('/google/callback', (req, res, next) => {
