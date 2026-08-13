@@ -139,23 +139,29 @@ async function analyzeProof(proofData) {
     let responseText = '';
     let lastError = null;
 
-    // Try models in order of availability (using active Gemini model aliases)
-    const modelsToTry = ['gemini-flash-latest', 'gemini-2.0-flash', 'gemini-pro-latest', 'gemini-2.0-flash-lite'];
+    // Use a single model and apply a strict timeout to prevent hanging on automatic 429 retries
+    const modelName = 'gemini-1.5-flash';
+    
+    try {
+      const apiCall = ai.models.generateContent({
+        model: modelName,
+        contents: contents
+      });
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Gemini API timeout (10s). Possible quota/429 issue.')), 10000)
+      );
 
-    for (const modelName of modelsToTry) {
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: contents
-        });
-        if (response && response.text) {
-          responseText = response.text;
-          break;
-        }
-      } catch (err) {
-        console.warn(`Model ${modelName} failed:`, err.message);
-        lastError = err;
+      const response = await Promise.race([apiCall, timeoutPromise]);
+      
+      if (response && response.text) {
+        responseText = response.text;
+      } else {
+        throw new Error('No text in Gemini response');
       }
+    } catch (err) {
+      console.warn(`Model ${modelName} failed:`, err.message);
+      lastError = err;
     }
 
     if (!responseText && lastError) {
