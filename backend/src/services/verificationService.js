@@ -172,8 +172,17 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
     throw new Error(events.message || 'Invalid response from GitHub API');
   }
   
+  // Filter events to only include those within the challenge's time period
+  const validEvents = events.filter(e => {
+    if (!e.created_at) return false;
+    const eventDate = new Date(e.created_at);
+    // Use dateStart and dateEnd to constrain the events
+    return (!dateStart || eventDate >= new Date(dateStart)) && 
+           (!dateEnd || eventDate <= new Date(dateEnd));
+  });
+  
   // Basic filtering for Push events (commits)
-  const pushEvents = events.filter(e => e.type === 'PushEvent');
+  const pushEvents = validEvents.filter(e => e.type === 'PushEvent');
   const totalCommits = pushEvents.reduce((acc, event) => {
     const commitsArray = event.payload && event.payload.commits;
     if (commitsArray && commitsArray.length > 0) {
@@ -184,11 +193,11 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
   }, 0);
 
   // Filter for Pull Requests opened
-  const prEvents = events.filter(e => e.type === 'PullRequestEvent' && e.payload && e.payload.action === 'opened');
+  const prEvents = validEvents.filter(e => e.type === 'PullRequestEvent' && e.payload && e.payload.action === 'opened');
   const totalPRs = prEvents.length;
 
   // Filter for Issues solved (closed)
-  const issueEvents = events.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'closed');
+  const issueEvents = validEvents.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'closed');
   const totalIssues = issueEvents.length;
 
   const total = totalCommits + totalPRs + totalIssues;
