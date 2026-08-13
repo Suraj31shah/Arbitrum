@@ -225,7 +225,11 @@ const SubmitProofPage = () => {
               style={{ padding: '8px' }}
               accept="image/*,application/pdf"
               multiple
-              onChange={(e) => setFiles(Array.from(e.target.files).slice(0, 5))}
+              onChange={(e) => {
+                const newFiles = Array.from(e.target.files);
+                setFiles(prev => [...prev, ...newFiles].slice(0, 5));
+                e.target.value = null; // reset input
+              }}
             />
             <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>Accepted formats: JPG, PNG, WEBP, PDF (Max 10MB per file)</div>
             
@@ -233,6 +237,13 @@ const SubmitProofPage = () => {
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                 {files.map((f, i) => (
                   <div key={i} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
+                      style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    >
+                      ✕
+                    </button>
                     {f.type.startsWith('image/') ? (
                       <img src={URL.createObjectURL(f)} alt={`preview-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
