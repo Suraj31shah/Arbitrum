@@ -10,6 +10,7 @@ const ConfirmChallengePage = () => {
   const navigate = useNavigate();
   const context = useOutletContext();
   const [loading, setLoading] = useState(false);
+  const [txStatus, setTxStatus] = useState('');
   const [error, setError] = useState(null);
   
   const walletAddress = context?.walletAddress || '';
@@ -28,6 +29,7 @@ const ConfirmChallengePage = () => {
     }
 
     setLoading(true);
+    setTxStatus('Creating challenge...');
     setError(null);
     let createdChallenge = null;
 
@@ -39,6 +41,7 @@ const ConfirmChallengePage = () => {
       // STEP 2: Send on-chain transaction using the real _id as challengeId
       if (stakeAmount > 0) {
         try {
+          setTxStatus('Checking network...');
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0x66eee' }],
@@ -62,8 +65,10 @@ const ConfirmChallengePage = () => {
           throw new Error(`Your website account is linked to ${walletAddress.substring(0,6)}..., but your active MetaMask account is ${signerAddress.substring(0,6)}.... Please switch to the correct account in MetaMask.`);
         }
 
+        setTxStatus('Fetching gas fees...');
         const feeData = await provider.getFeeData();
         
+        setTxStatus('Please confirm in MetaMask...');
         const tx = await signer.sendTransaction({
           to: CONTRACT_ADDRESS,
           data: data,
@@ -72,9 +77,11 @@ const ConfirmChallengePage = () => {
           maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ? (feeData.maxPriorityFeePerGas * 15n) / 10n : undefined
         });
         
+        setTxStatus('Waiting for confirmation...');
         await tx.wait();
       }
 
+      setTxStatus('Done!');
       navigate(`/challenges/${createdChallenge._id}`);
       
     } catch (err) {
@@ -89,6 +96,7 @@ const ConfirmChallengePage = () => {
         setTimeout(() => navigate(`/challenges/${createdChallenge._id}`), 3000);
       }
       setLoading(false);
+      setTxStatus('');
     }
   };
 
@@ -167,7 +175,7 @@ const ConfirmChallengePage = () => {
           Back to Edit
         </button>
         <button onClick={handleConfirm} className="btn btn-primary" style={{ flex: 2, padding: '1rem', fontSize: '1.1rem' }} disabled={loading || !walletAddress || stakeAmount === 0}>
-          {loading ? 'Processing Transaction...' : 'Confirm & Stake ETH'}
+          {loading ? txStatus || 'Processing...' : 'Confirm & Stake ETH'}
         </button>
       </div>
     </div>

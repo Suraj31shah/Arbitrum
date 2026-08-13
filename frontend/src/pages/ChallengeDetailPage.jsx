@@ -77,6 +77,7 @@ const ChallengeDetailPage = () => {
     }
 
     setLoading(true);
+    setError(null);
     try {
       try {
         await window.ethereum.request({
@@ -127,7 +128,11 @@ const ChallengeDetailPage = () => {
       setChallenge(response);
     } catch (err) {
       console.error(err);
-      alert("Failed to join challenge: " + err.message);
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setError('Transaction was rejected in MetaMask.');
+      } else {
+        setError("Failed to join challenge: " + err.message);
+      }
     } finally {
       setLoading(false);
     }
