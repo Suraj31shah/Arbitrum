@@ -102,21 +102,21 @@
 }
 
 .hero-content {
-  flex: 0 1 45%;
+  flex: 0 1 52%;
   text-align: left;
 }
 
 .hero-animation-wrapper {
-  flex: 0 1 55%;
+  flex: 0 1 48%;
   display: flex;
   justify-content: center;
 }
 
 .hero h1 {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
   font-weight: 800;
-  line-height: 1.12;
+  line-height: 1.15;
   letter-spacing: -0.03em;
   color: #f8fafc;
   margin-bottom: 1.5rem;
