@@ -51,6 +51,7 @@ ${integrationData || 'No telemetry provided for this challenge.'}
 
 Status: ${status}
 `;
+  return SYSTEM_PROMPT;
 }
 
 /** Safely parse Gemini JSON response */
