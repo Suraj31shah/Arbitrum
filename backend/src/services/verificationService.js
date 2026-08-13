@@ -43,7 +43,11 @@ async function fetchGoogleFitData(userId, dateStart, dateEnd) {
     throw new Error('Google user not found or access token missing.');
   }
 
-  const startTimeMillis = new Date(dateStart).getTime();
+  // Start of the day for dateStart
+  const startDate = new Date(dateStart);
+  startDate.setHours(0, 0, 0, 0);
+  const startTimeMillis = startDate.getTime();
+  
   const endTimeMillis = new Date(dateEnd).getTime();
 
   const response = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`, {
