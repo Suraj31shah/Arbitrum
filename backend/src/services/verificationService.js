@@ -187,13 +187,15 @@ async function fetchGitHubData(username, dateStart, dateEnd) {
   const prEvents = events.filter(e => e.type === 'PullRequestEvent' && e.payload && e.payload.action === 'opened');
   const totalPRs = prEvents.length;
 
-  // Filter for Issues opened
-  const issueEvents = events.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'opened');
+  // Filter for Issues solved (closed)
+  const issueEvents = events.filter(e => e.type === 'IssuesEvent' && e.payload && e.payload.action === 'closed');
   const totalIssues = issueEvents.length;
 
+  const total = totalCommits + totalPRs + totalIssues;
+
   return {
-    text: `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests, and ${totalIssues} issues recently.`,
-    value: totalCommits
+    text: `GitHub Telemetry for ${username}: Found ${totalCommits} commits, ${totalPRs} pull requests, and ${totalIssues} issues solved recently.`,
+    value: total
   };
 }
 
