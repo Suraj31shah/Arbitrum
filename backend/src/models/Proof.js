@@ -45,6 +45,14 @@ const proofSchema = new mongoose.Schema(
       missingEvidence: { type: [String], default: [] },
       summary: { type: String, default: '' },
       recommendation: { type: String, default: '' }
+    },
+    disputed: {
+      type: Boolean,
+      default: false
+    },
+    disputeReason: {
+      type: String,
+      default: ''
     }
   },
   {

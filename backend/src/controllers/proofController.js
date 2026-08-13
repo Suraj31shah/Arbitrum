@@ -275,9 +275,39 @@ const getIntegrationPreview = async (req, res) => {
   }
 };
 
+const disputeProof = async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  try {
+    const proof = await Proof.findById(id);
+    if (!proof) {
+      return res.status(404).json({ error: 'Proof not found.' });
+    }
+
+    if (proof.walletAddress.toLowerCase() !== req.user.walletAddress.toLowerCase()) {
+      return res.status(403).json({ error: 'Not authorized to dispute this proof.' });
+    }
+
+    proof.disputed = true;
+    proof.disputeReason = reason || '';
+    await proof.save();
+
+    return res.json({ success: true, proof });
+  } catch (error) {
+    console.error('Failed to dispute proof:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   createProof,
   getProofsByChallenge,
   getProofById,
-  getIntegrationPreview
+  getIntegrationPreview,
+  disputeProof
 };

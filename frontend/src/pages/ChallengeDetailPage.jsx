@@ -18,6 +18,9 @@ const ChallengeDetailPage = () => {
   const [error, setError] = useState(null);
   const [claimableAmount, setClaimableAmount] = useState(0);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [isDisputing, setIsDisputing] = useState(false);
 
   const context = useOutletContext();
   const globalWalletAddress = context?.walletAddress?.toLowerCase();
@@ -147,6 +150,29 @@ const ChallengeDetailPage = () => {
       alert("Failed to claim reward: " + err.message);
     } finally {
       setIsClaiming(false);
+    }
+  };
+
+  const handleDisputeSubmit = async () => {
+    if (!disputeReason.trim()) {
+      alert("Please provide a reason for the dispute.");
+      return;
+    }
+    setIsDisputing(true);
+    try {
+      await api.disputeProof(latestProof._id, disputeReason);
+      alert("Your feedback has been submitted to the makers!");
+      setShowDisputeForm(false);
+      setDisputeReason('');
+      
+      if (latestProof) {
+        setProofs(prev => prev.map(p => p._id === latestProof._id ? { ...p, disputed: true, disputeReason } : p));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit feedback: " + err.message);
+    } finally {
+      setIsDisputing(false);
     }
   };
 
@@ -294,6 +320,43 @@ const ChallengeDetailPage = () => {
                 </div>
               )}
               {latestProof.aiAnalysis && <VerificationDisplay analysis={latestProof.aiAnalysis} />}
+              
+              {latestProof.status === 'rejected' && (
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  {!showDisputeForm && !latestProof.disputed ? (
+                    <div className="text-center">
+                      <p className="text-muted" style={{ fontSize: '0.875rem' }}>Think the AI made a mistake?</p>
+                      <button onClick={() => setShowDisputeForm(true)} className="btn btn-secondary btn-sm" style={{ padding: '0.5rem 1rem' }}>
+                        Report AI Mistake
+                      </button>
+                    </div>
+                  ) : showDisputeForm && !latestProof.disputed ? (
+                    <div>
+                      <h4 className="mb-2" style={{ fontSize: '1rem' }}>Report AI Mistake</h4>
+                      <textarea
+                        className="form-textarea mb-2"
+                        rows="3"
+                        placeholder="Explain why your proof should have been accepted..."
+                        value={disputeReason}
+                        onChange={(e) => setDisputeReason(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={handleDisputeSubmit} disabled={isDisputing} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                          {isDisputing ? 'Submitting...' : 'Submit Feedback'}
+                        </button>
+                        <button onClick={() => setShowDisputeForm(false)} className="btn btn-secondary btn-sm">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : latestProof.disputed && (
+                    <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '4px', borderLeft: '4px solid var(--accent)' }}>
+                      <h4 style={{ margin: 0, marginBottom: '4px', fontSize: '1rem', color: 'var(--accent)' }}>Feedback Submitted</h4>
+                      <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>"{latestProof.disputeReason}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
