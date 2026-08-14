@@ -87,20 +87,25 @@ const DashboardPage = () => {
   }
 
   // Find most important ongoing challenge for "Current Focus" section
-  const mostImportantOngoing = challenges.find(c => 
-    ['active', 'proof_submitted', 'verifying', 'ai_verified'].includes(c?.status)
-  );
+  const now = new Date();
+  const mostImportantOngoing = challenges.find(c => {
+    const isPastDeadline = new Date(c.deadline) < now;
+    return !isPastDeadline && ['active', 'proof_submitted', 'verifying', 'ai_verified'].includes(c?.status);
+  });
 
   // Filter challenges based on category tab
   const filteredChallenges = challenges.filter(c => {
+    const isPastDeadline = new Date(c.deadline) < now;
+    
     if (activeTab === 'ongoing') {
-      return ['active', 'proof_submitted', 'verifying', 'ai_verified'].includes(c?.status);
+      return !isPastDeadline && ['active', 'proof_submitted', 'verifying', 'ai_verified', 'joining', 'upcoming'].includes(c?.status);
     }
     if (activeTab === 'completed') {
       return c?.status === 'completed';
     }
     if (activeTab === 'expired') {
-      return c?.status === 'expired' || c?.status === 'failed';
+      // If it's explicitly failed/expired OR it missed the deadline without completing
+      return c?.status === 'expired' || c?.status === 'failed' || (isPastDeadline && c?.status !== 'completed');
     }
     return true;
   });
@@ -214,17 +219,11 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="dashboard-challenges-grid">
-            {filteredChallenges.slice(0, 3).map(challenge => (
+            {filteredChallenges.map(challenge => (
               <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} />
             ))}
           </div>
         )}
-
-        <div className="view-all-bar">
-          <Link to="/discover" className="view-all-link">
-            View all my challenges <ArrowRight size={14} />
-          </Link>
-        </div>
       </section>
 
       {/* 4. Recent Activity Section */}
