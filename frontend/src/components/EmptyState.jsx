@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const EmptyState = ({ title, message, actionText, actionLink }) => {
+const EmptyState = ({ title, message, actionText, actionLink, onAction }) => {
   const containerStyle = {
     display: 'flex',
     flexDirection: 'column',
@@ -35,6 +35,11 @@ const EmptyState = ({ title, message, actionText, actionLink }) => {
         <Link to={actionLink} className="btn btn-primary">
           {actionText}
         </Link>
+      )}
+      {onAction && actionText && (
+        <button type="button" onClick={onAction} className="btn btn-primary">
+          {actionText}
+        </button>
       )}
     </div>
   );
