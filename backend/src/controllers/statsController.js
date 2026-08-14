@@ -44,7 +44,6 @@ const getDashboardStats = async (req, res) => {
       ];
       if (userWallet) {
         orConditions.push({ 'participants.walletAddress': userWallet });
-        orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
       }
       challenges = await Challenge.find({ $or: orConditions });
     }
@@ -59,7 +58,8 @@ const getDashboardStats = async (req, res) => {
         c.participants && c.participants.some(p => p.walletAddress.toLowerCase() === lowerWallet)
       );
 
-      let totalStaked = 0;
+      const { parseEther, formatEther } = require('ethers');
+      let totalWei = 0n;
       let activeChallenges = 0;
       let completedChallenges = 0;
       let failedChallenges = 0;
@@ -68,7 +68,9 @@ const getDashboardStats = async (req, res) => {
         const p = c.participants.find(p => p.walletAddress.toLowerCase() === lowerWallet);
         if (!p) return;
 
-        totalStaked += (c.stakeAmount || 0);
+        try {
+          totalWei += parseEther((c.stakeAmount || 0).toString());
+        } catch (e) {}
 
         if (p.status === 'completed') {
           completedChallenges++;
@@ -83,6 +85,8 @@ const getDashboardStats = async (req, res) => {
       const successRate = totalChallenges > 0
         ? Math.round((completedChallenges / totalChallenges) * 100)
         : 0;
+        
+      const totalStaked = parseFloat(formatEther(totalWei));
 
       return res.json({
         totalChallenges,
@@ -99,7 +103,17 @@ const getDashboardStats = async (req, res) => {
     const activeChallenges = challenges.filter(c => ['joining', 'upcoming', 'active', 'submission'].includes(c.status)).length;
     const completedChallenges = challenges.filter(c => c.status === 'completed').length;
     const failedChallenges = challenges.filter(c => c.status === 'failed').length;
-    const totalStaked = challenges.reduce((sum, c) => sum + ((c.stakeAmount || 0) * (c.participants?.length || 1)), 0);
+    const { parseEther, formatEther } = require('ethers');
+    const totalWei = challenges.reduce((sum, c) => {
+      try {
+        const stakeWei = parseEther((c.stakeAmount || 0).toString());
+        const count = BigInt(c.participants?.length || 1);
+        return sum + (stakeWei * count);
+      } catch (e) {
+        return sum;
+      }
+    }, 0n);
+    const totalStaked = parseFloat(formatEther(totalWei));
     const successRate = totalChallenges > 0
       ? Math.round((completedChallenges / totalChallenges) * 100)
       : 0;

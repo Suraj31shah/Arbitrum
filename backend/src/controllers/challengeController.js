@@ -112,7 +112,6 @@ const getChallenges = async (req, res) => {
     }
     if (userWallet) {
       orConditions.push({ 'participants.walletAddress': userWallet });
-      orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
     }
 
     let query = {};
@@ -390,6 +389,11 @@ const updateParticipantStatus = async (req, res) => {
     return res.status(400).json({ error: 'walletAddress and valid status are required.' });
   }
 
+  // Security Fix: Only the owner of the wallet can update their own status
+  if (walletAddress.toLowerCase() !== req.user.walletAddress.toLowerCase()) {
+    return res.status(403).json({ error: 'You can only update your own status.' });
+  }
+
   try {
     const challenge = await Challenge.findById(req.params.id);
     if (!challenge) return res.status(404).json({ error: 'Challenge not found.' });
@@ -450,31 +454,33 @@ const updateChallengeStatus = async (req, res) => {
     return res.status(401).json({ error: 'Authentication required.' });
   }
 
-  const { status } = req.body;
-  const validStatuses = ['joining', 'upcoming', 'active', 'submission', 'completed', 'failed'];
-
-  if (!status || !validStatuses.includes(status)) {
-    return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
-  }
-
   try {
-    const update = { status };
-    if (status === 'completed') {
-      update.completedAt = new Date();
-    }
-
-    const challenge = await Challenge.findByIdAndUpdate(
-      req.params.id,
-      update,
-      { new: true }
-    );
-
+    const challenge = await Challenge.findById(req.params.id);
     if (!challenge) {
       return res.status(404).json({ error: 'Challenge not found.' });
     }
 
+    // Security Fix: Only the creator can update the global status
+    if (challenge.creator.toString() !== (req.user._id || req.user.id).toString()) {
+      return res.status(403).json({ error: 'Only the challenge creator can update its status.' });
+    }
+
+    const { status } = req.body;
+    const validStatuses = ['joining', 'upcoming', 'active', 'submission', 'completed', 'failed'];
+
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    if (status === 'completed') {
+      challenge.completedAt = new Date();
+    }
+    challenge.status = status;
+    await challenge.save();
+
     res.json(challenge);
   } catch (error) {
+    console.error('Failed to update challenge status:', error.message);
     res.status(500).json({ error: 'Failed to update challenge.' });
   }
 };

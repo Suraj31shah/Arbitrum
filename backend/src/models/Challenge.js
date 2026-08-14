@@ -114,7 +114,14 @@ const challengeSchema = new mongoose.Schema(
 
 // Virtual: computed pool size
 challengeSchema.virtual('poolSize').get(function () {
-  return this.stakeAmount * this.participants.length;
+  try {
+    const { parseEther, formatEther } = require('ethers');
+    const stake = parseEther((this.stakeAmount || 0).toString());
+    const participants = BigInt(this.participants.length);
+    return parseFloat(formatEther(stake * participants));
+  } catch (e) {
+    return this.stakeAmount * this.participants.length;
+  }
 });
 
 // Virtual: number of successful participants

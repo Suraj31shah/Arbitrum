@@ -210,7 +210,7 @@ const createProof = async (req, res) => {
       // Ignore
     }
 
-    return res.status(500).json({ error: 'Failed to process proof: ' + error.message });
+    return res.status(500).json({ error: 'Failed to process proof. Please try again later.' });
   }
 };
 
@@ -303,7 +303,7 @@ const getIntegrationPreview = async (req, res) => {
     return res.json(integrationData); // { text, value }
   } catch (error) {
     console.error('Integration preview failed:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch integration data.' });
+    return res.status(500).json({ error: 'Failed to fetch integration data. Please try again later.' });
   }
 };
 

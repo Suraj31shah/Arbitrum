@@ -110,6 +110,12 @@ contract CommitX {
         // This is a safety valve for edge cases where funds remain after resolution
         // In normal operation, claimable amounts cover the full pool
         // This only recovers truly stuck/unclaimed funds
+        
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+        
+        (bool success, ) = payable(owner).call{value: balance}("");
+        require(success, "Withdrawal failed");
     }
 
     // View function to fetch all participants for a challenge

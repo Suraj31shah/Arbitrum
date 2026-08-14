@@ -28,6 +28,17 @@ If you achieve your goal before the deadline, you get your stake back—plus an 
 
 ---
 
+## 🔒 Security & Production Readiness
+
+CommitX has been audited and hardened for production handling of digital assets:
+- **Sign-In With Ethereum (SIWE)**: Implemented a cryptographic nonce-challenge flow via MetaMask `personal_sign` to guarantee wallet ownership and prevent spoofing.
+- **Encrypted Integrations**: All third-party OAuth access tokens (GitHub, Notion, Google) are encrypted at rest using AES-256-CBC in MongoDB.
+- **Precision Mathematics**: All stake and pool calculations use `ethers.js` `BigInt` (Wei) conversions to eliminate JavaScript floating-point rounding exploits.
+- **Strict Authorization**: Multi-layered ownership checks prevent unauthorized users from tampering with challenge statuses or participant states.
+- **API Hardening**: Secured with `helmet` for HTTP security headers and `express-rate-limit` to prevent brute-force and DoS attacks.
+- **Smart Contract Safety**: Built with a strict pull-payment pattern to prevent reentrancy attacks, including safe emergency withdrawal mechanisms for stuck funds.
+---
+
 ## 🏗️ Technology Stack
 
 ### **Frontend**
