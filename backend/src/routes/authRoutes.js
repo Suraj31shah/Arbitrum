@@ -1,6 +1,8 @@
 const express = require('express');
 const passport = require('passport');
 const mongoose = require('mongoose');
+const { verifyMessage } = require('ethers');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -101,19 +103,44 @@ router.get('/google/disconnect', async (req, res) => {
 
 const User = require('../models/User');
 
+router.get('/nonce', (req, res) => {
+  const nonce = crypto.randomBytes(16).toString('hex');
+  req.session.nonce = nonce;
+  res.json({ nonce });
+});
+
 router.post('/wallet', async (req, res, next) => {
   try {
-    const { walletAddress } = req.body;
-    if (!walletAddress) {
-      return res.status(400).json({ error: 'Wallet address is required' });
-    }
-
     const lowerAddress = walletAddress.toLowerCase();
     
     // Strict format validation to prevent injection or invalid DB queries
     if (!/^0x[a-f0-9]{40}$/.test(lowerAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address format' });
     }
+
+    // SIWE Verification
+    const { signature } = req.body;
+    if (!signature) {
+      return res.status(400).json({ error: 'Signature is required for secure login.' });
+    }
+    
+    const nonce = req.session.nonce;
+    if (!nonce) {
+      return res.status(400).json({ error: 'Session expired or nonce missing. Please try again.' });
+    }
+
+    try {
+      const message = `Sign this message to authenticate with CommitX.\nNonce: ${nonce}`;
+      const recoveredAddress = verifyMessage(message, signature);
+      if (recoveredAddress.toLowerCase() !== lowerAddress) {
+        return res.status(401).json({ error: 'Signature verification failed.' });
+      }
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid signature.' });
+    }
+    
+    // Clear nonce after successful use
+    req.session.nonce = null;
 
     // If MongoDB is offline, use local user fallback session
     if (mongoose.connection.readyState !== 1) {
@@ -146,19 +173,8 @@ router.post('/wallet', async (req, res, next) => {
       }
       return res.json({ message: 'Logged in successfully', user });
     });
-  } catch (err) {
-    console.error('Wallet login error, attempting local fallback:', err.message);
-    const lowerAddress = req.body && req.body.walletAddress ? req.body.walletAddress.toLowerCase() : '0x0000000000000000000000000000000000000000';
-    const mockUser = {
-      _id: `local-user-${lowerAddress}`,
-      id: `local-user-${lowerAddress}`,
-      walletAddress: lowerAddress,
-      username: lowerAddress.substring(0, 6) + '...' + lowerAddress.substring(lowerAddress.length - 4)
-    };
-    return req.logIn(mockUser, (loginErr) => {
-      if (loginErr) return res.status(500).json({ error: 'Internal server error during wallet login' });
-      return res.json({ message: 'Logged in successfully (fallback)', user: mockUser });
-    });
+    console.error('Wallet login error:', err.message);
+    return res.status(500).json({ error: 'Internal server error during wallet login' });
   }
 });
 

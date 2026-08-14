@@ -107,20 +107,41 @@ const LandingPage = () => {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const address = accounts[0];
+      
+      // 1. Fetch nonce
+      const nonceRes = await fetch(`${getApiUrl()}/api/auth/nonce`, { credentials: 'include' });
+      if (!nonceRes.ok) throw new Error("Failed to get nonce");
+      const { nonce } = await nonceRes.json();
+      
+      // 2. Request signature
+      const message = `Sign this message to authenticate with CommitX.\nNonce: ${nonce}`;
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [message, address],
+      });
+
+      // 3. Authenticate
       const response = await fetch(`${getApiUrl()}/api/auth/wallet`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ walletAddress: address })
+        body: JSON.stringify({ walletAddress: address, signature })
       });
+      
       if (response.ok) {
         setWalletAddress(address);
         navigate('/dashboard');
       } else {
-        alert("Failed to login with wallet");
+        const errData = await response.json();
+        alert(errData.error || "Failed to login with wallet");
       }
     } catch (err) {
       console.error(err);
+      if (err.code === 4001) {
+        alert("Signature rejected. Login cancelled.");
+      } else {
+        alert("An error occurred during login.");
+      }
     }
   };
 
