@@ -111,6 +111,10 @@ router.get('/nonce', (req, res) => {
 
 router.post('/wallet', async (req, res, next) => {
   try {
+    const { walletAddress } = req.body;
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
+    }
     const lowerAddress = walletAddress.toLowerCase();
     
     // Strict format validation to prevent injection or invalid DB queries
