@@ -11,19 +11,25 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 const NotionStrategy = require('passport-notion').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const OAuth2Strategy = require('passport-oauth2');
 const mongoose = require('mongoose');
 const User = require('./models/User');
+const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 // Create the Express application
 const app = express();
 
+const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+
 // Enable Cross-Origin Resource Sharing
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://commitx-three.vercel.app',
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [])
 ];
+if (!isProd) {
+  allowedOrigins.push('http://localhost:5173');
+}
+allowedOrigins.push('https://commitx-three.vercel.app');
 
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 app.use(cors({ origin: allowedOrigins, credentials: true }));
@@ -31,17 +37,35 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 // Enable JSON request body parsing
 app.use(express.json());
 
+// Add Security Headers
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } // Needed for serving images
+}));
+
+// Setup Rate Limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many auth requests from this IP, please try again after 15 minutes'
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500,
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+
 // Trust the Render proxy so secure cookies work properly
 app.set('trust proxy', 1);
 
 const { MongoStore } = require('connect-mongo');
 
 // Check if we are running in a production-like environment (e.g. Render)
-const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+// (Moved isProd definition up for CORS)
 
 // Session setup
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'secret',
+  secret: process.env.SESSION_SECRET && process.env.SESSION_SECRET !== 'secret' ? process.env.SESSION_SECRET : crypto.randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ 
@@ -244,11 +268,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Mount route modules
-app.use('/api/auth', authRoutes);
-app.use('/', homeRoutes);
-app.use('/', challengeRoutes);
-app.use('/', proofRoutes);
-app.use('/', statsRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/', apiLimiter, homeRoutes);
+app.use('/', apiLimiter, challengeRoutes);
+app.use('/', apiLimiter, proofRoutes);
+app.use('/', apiLimiter, statsRoutes);
 
 // Centralized error handling
 app.use((err, req, res, next) => {

@@ -44,7 +44,6 @@ const getDashboardStats = async (req, res) => {
       ];
       if (userWallet) {
         orConditions.push({ 'participants.walletAddress': userWallet });
-        orConditions.push({ 'participants.walletAddress': new RegExp(`^${userWallet}$`, 'i') });
       }
       challenges = await Challenge.find({ $or: orConditions });
     }

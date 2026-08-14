@@ -109,6 +109,11 @@ router.post('/wallet', async (req, res, next) => {
     }
 
     const lowerAddress = walletAddress.toLowerCase();
+    
+    // Strict format validation to prevent injection or invalid DB queries
+    if (!/^0x[a-f0-9]{40}$/.test(lowerAddress)) {
+      return res.status(400).json({ error: 'Invalid wallet address format' });
+    }
 
     // If MongoDB is offline, use local user fallback session
     if (mongoose.connection.readyState !== 1) {
