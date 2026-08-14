@@ -4,6 +4,8 @@
   <p><strong>Decentralized Accountability Protocol Powered by AI & Arbitrum</strong></p>
 </div>
 
+![CommitX Landing Page](./assets/landing-page.png)
+
 ---
 
 ## 🚀 What is CommitX?
@@ -21,6 +23,22 @@ If you achieve your goal before the deadline, you get your stake back—plus an 
 - 🔌 **Automated Integrations**: Sync your commitments directly with 3rd-party platforms. CommitX pulls real-time telemetry from **GitHub**, **Todoist**, **Google Fit**, and **Notion** to deterministically verify your success without manual proof submission.
 - 🎁 **Charity Fallback**: If a challenge concludes and *zero* participants succeed, the locked ETH isn't lost—it is programmatically transferred to a verified Charity wallet address.
 - 🌙 **Modern UI**: A sleek, fully responsive, dark-mode-first React frontend designed for a seamless user experience.
+
+![CommitX Dashboard](./assets/dashboard.png)
+
+---
+
+## 🔒 Security & Production Readiness
+
+CommitX has been audited and hardened for production handling of digital assets:
+- **Sign-In With Ethereum (SIWE)**: Implemented a cryptographic nonce-challenge flow via MetaMask `personal_sign` to guarantee wallet ownership and prevent spoofing.
+- **Encrypted Integrations**: All third-party OAuth access tokens (GitHub, Notion, Google) are encrypted at rest using AES-256-CBC in MongoDB.
+- **Precision Mathematics**: All stake and pool calculations use `ethers.js` `BigInt` (Wei) conversions to eliminate JavaScript floating-point rounding exploits.
+- **Strict Authorization**: Multi-layered ownership checks prevent unauthorized users from tampering with challenge statuses or participant states.
+- **API Hardening**: Secured with `helmet` for HTTP security headers and `express-rate-limit` to prevent brute-force and DoS attacks.
+- **Smart Contract Safety**: Built with a strict pull-payment pattern to prevent reentrancy attacks, including safe emergency withdrawal mechanisms for stuck funds.
+
+![Discover Challenges](./assets/discover-challenges.png)
 
 ---
 
@@ -64,6 +82,8 @@ When a user submits manual proof (like a screenshot or a document), it is proces
 - We utilize **Gemini 2.5 Flash**, passing the challenge parameters, the user's proof description, and base64-encoded files.
 - The AI acts as a strict judge, analyzing the evidence against the original goal.
 - It returns a deterministic JSON response containing a confidence score, a definitive pass/fail boolean, and constructive feedback on the provided evidence.
+
+![AI Verification Process](./assets/ai-verification.png)
 
 ---
 
