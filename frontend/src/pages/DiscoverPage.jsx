@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { api } from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
 import EmptyState from '../components/EmptyState';
+import { Crewmate } from '../components/Crewmates';
 import './DiscoverPage.css';
 
 const STATUS_FILTERS = [
@@ -108,12 +109,17 @@ const DiscoverPage = () => {
   return (
     <div className="discover-page">
       <div className="discover-intro">
-        <p className="text-muted">Join public challenges, put ETH on the line, and earn your share of the pool.</p>
-        {challenges.length > 0 && (
-          <p className="discover-community-summary">
-            {activeChallengesCount} active {activeChallengesCount === 1 ? 'challenge' : 'challenges'} · {participantCount} {participantCount === 1 ? 'participant' : 'participants'}
-          </p>
-        )}
+        <div className="discover-intro-text">
+          <p className="text-muted">Join public challenges, put ETH on the line, and earn your share of the pool.</p>
+          {challenges.length > 0 && (
+            <p className="discover-community-summary">
+              {activeChallengesCount} active {activeChallengesCount === 1 ? 'challenge' : 'challenges'} · {participantCount} {participantCount === 1 ? 'participant' : 'participants'}
+            </p>
+          )}
+        </div>
+        <div className="discover-companion-wrapper" title="CommitX Explorer Companion">
+          <Crewmate color="#0ea5e9" size={52} className="discover-companion-astronaut" />
+        </div>
       </div>
 
       <div className="discover-controls">
@@ -149,11 +155,18 @@ const DiscoverPage = () => {
           actionText={selectedStatus === 'all' ? 'Create Challenge' : 'View All Challenges'}
           actionLink={selectedStatus === 'all' ? '/challenges/new' : undefined}
           onAction={selectedStatus === 'all' ? undefined : () => { setSelectedStatus('all'); setSearchQuery(''); }}
+          illustration={<Crewmate color="#0ea5e9" size={56} className="empty-state-astronaut" />}
         />
       ) : (
         <div className="discover-challenges-grid" key={selectedStatus}>
-          {visibleChallenges.map(challenge => (
-            <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} variant="discover" />
+          {visibleChallenges.map((challenge, idx) => (
+            <div 
+              key={challenge._id || challenge.id} 
+              className="discover-card-wrapper" 
+              style={{ '--card-index': idx }}
+            >
+              <ChallengeCard challenge={challenge} variant="discover" />
+            </div>
           ))}
         </div>
       )}

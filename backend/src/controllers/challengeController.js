@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Challenge = require('../models/Challenge');
+const User = require('../models/User');
+const emailService = require('../services/emailService');
 const { MIN_STAKE, MAX_STAKE } = require('../models/Challenge');
 const { readChallenges, saveChallengeLocally } = require('../utils/localChallengeStore');
 const { resolveOnChain } = require('../services/resolveService');
@@ -367,6 +369,20 @@ const joinChallenge = async (req, res) => {
     });
 
     await challenge.save();
+
+    // Trigger email notification to challenge creator asynchronously (non-blocking)
+    if (challenge.creator) {
+      User.findById(challenge.creator)
+        .then(creator => {
+          if (creator) {
+            emailService.sendParticipantJoinedEmail(creator, challenge, req.user).catch(err => {
+              console.error('Participant joined email error:', err.message);
+            });
+          }
+        })
+        .catch(err => console.error('Creator lookup error for email:', err.message));
+    }
+
     res.json(challenge);
   } catch (error) {
     console.error('Failed to join challenge:', error.message);

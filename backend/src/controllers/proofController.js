@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Proof = require('../models/Proof');
 const Challenge = require('../models/Challenge');
+const emailService = require('../services/emailService');
 const { analyzeProof } = require('../services/aiService');
 const { saveProofLocally, readProofs } = require('../utils/localProofStore');
 const { fetchIntegrationData } = require('../services/verificationService');
@@ -191,6 +192,25 @@ const createProof = async (req, res) => {
     }
 
     await challenge.save();
+
+    // Trigger email notifications asynchronously (non-blocking)
+    if (req.user) {
+      emailService.sendProofResultEmail(req.user, challenge, isSuccess, aiAnalysis?.summary || analysisNotes).catch(err => {
+        console.error('Proof result email error:', err.message);
+      });
+
+      if (['completed', 'failed'].includes(challenge.status)) {
+        emailService.sendChallengeCompletedEmail(req.user, challenge, isSuccess).catch(err => {
+          console.error('Challenge completed email error:', err.message);
+        });
+      }
+
+      if (isSuccess && challenge.stakeAmount > 0) {
+        emailService.sendRewardReceivedEmail(req.user, challenge, challenge.stakeAmount, challenge.resolveTxHash || '').catch(err => {
+          console.error('Reward email error:', err.message);
+        });
+      }
+    }
 
     return res.status(201).json(proof);
   } catch (error) {

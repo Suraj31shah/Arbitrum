@@ -27,6 +27,11 @@ const MainLayout = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('commitx-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, [location.pathname]);
+
+  useEffect(() => {
     // Check if already logged in
     fetch(`${getApiUrl()}/api/auth/current-user`, { credentials: 'include' })
       .then(res => res.json())
@@ -83,6 +88,9 @@ const MainLayout = () => {
     ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
     : null;
   const isDiscoverPage = location.pathname.startsWith('/discover');
+  const isSettingsPage = location.pathname.startsWith('/settings');
+  const isAchievementsPage = location.pathname.startsWith('/achievements');
+  const isAnalyticsPage = location.pathname.startsWith('/analytics');
 
   return (
     <div className="app-shell">
@@ -134,15 +142,23 @@ const MainLayout = () => {
             <span className="nav-label">Recent Activity</span>
           </Link>
 
-          <a href="#achievements" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
+          <Link 
+            to="/achievements" 
+            className={`sidebar-link ${isAchievementsPage ? 'active' : ''}`}
+            onClick={() => setMobileNavOpen(false)}
+          >
             <Trophy className="nav-icon" size={18} />
-            <span className="nav-label">Achievements (Coming Soon)</span>
-          </a>
+            <span className="nav-label">Achievements</span>
+          </Link>
 
-          <a href="#analytics" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
+          <Link 
+            to="/analytics" 
+            className={`sidebar-link ${isAnalyticsPage ? 'active' : ''}`}
+            onClick={() => setMobileNavOpen(false)}
+          >
             <BarChart3 className="nav-icon" size={18} />
-            <span className="nav-label">Analytics (Coming Soon)</span>
-          </a>
+            <span className="nav-label">Analytics</span>
+          </Link>
 
           <div className="sidebar-section-header mt-4">COMMUNITY</div>
           <Link 
@@ -166,10 +182,14 @@ const MainLayout = () => {
           )}
 
           <div className="sidebar-section-header mt-4">SETTINGS</div>
-          <a href="#settings" className="sidebar-link disabled-link" onClick={e => e.preventDefault()}>
+          <Link 
+            to="/settings" 
+            className={`sidebar-link ${location.pathname.startsWith('/settings') ? 'active' : ''}`}
+            onClick={() => setMobileNavOpen(false)}
+          >
             <Settings className="nav-icon" size={18} />
-            <span className="nav-label">Settings (Coming Soon)</span>
-          </a>
+            <span className="nav-label">Settings</span>
+          </Link>
         </nav>
 
         {/* Sidebar Footer & Connected Wallet Widget */}
@@ -215,9 +235,27 @@ const MainLayout = () => {
           </div>
 
           <div className="top-header-title-block desktop-only">
-            <h1 className="top-page-title">{isDiscoverPage ? 'Discover Challenges' : 'Dashboard'}</h1>
+            <h1 className="top-page-title">
+              {isSettingsPage
+                ? 'Settings'
+                : isDiscoverPage
+                ? 'Discover Challenges'
+                : isAchievementsPage
+                ? 'Achievements'
+                : isAnalyticsPage
+                ? 'Analytics'
+                : 'Dashboard'}
+            </h1>
             <p className="top-page-subtitle">
-              {isDiscoverPage ? 'Find a challenge. Put something on the line.' : 'Your accountability at a glance.'}
+              {isSettingsPage
+                ? 'Manage your CommitX preferences.'
+                : isDiscoverPage
+                ? 'Find a challenge. Put something on the line.'
+                : isAchievementsPage
+                ? 'Earn badges for consistency, streaks, and proof verification.'
+                : isAnalyticsPage
+                ? 'Your performance and staking metrics at a glance.'
+                : 'Your accountability at a glance.'}
             </p>
           </div>
 
@@ -241,7 +279,7 @@ const MainLayout = () => {
 
         {/* Outlet Content */}
         <main className="main-content-body">
-          <Outlet context={{ walletAddress, currentUser }} />
+          <Outlet context={{ walletAddress, currentUser, handleLogout }} />
         </main>
       </div>
     </div>

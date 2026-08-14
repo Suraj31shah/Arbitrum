@@ -58,6 +58,15 @@ const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const storyRefs = useRef([]);
 
+  /* Force dark theme on landing page */
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    return () => {
+      const savedTheme = localStorage.getItem('commitx-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    };
+  }, []);
+
   /* Scroll-triggered reveal */
   useEffect(() => {
     const observer = new IntersectionObserver(

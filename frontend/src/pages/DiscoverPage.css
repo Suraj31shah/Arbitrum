@@ -1,5 +1,30 @@
+.discover-page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 1. Page Header & Companion Astronaut */
 .discover-intro {
-  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  animation: discoverIntroIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes discoverIntroIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.discover-intro-text {
+  flex: 1;
 }
 
 .discover-community-summary {
@@ -8,12 +33,61 @@
   margin-top: 0.35rem;
 }
 
+.discover-companion-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+
+.discover-companion-astronaut {
+  animation: companionSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             companionIdle 3.6s ease-in-out 0.8s infinite;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 4px 10px rgba(14, 165, 233, 0.22));
+}
+
+@keyframes companionSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(18px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes companionIdle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1.5deg);
+  }
+}
+
+/* 2. Controls & Search/Filter Entrance */
 .discover-controls {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
-  margin: 1.25rem 0 1.5rem;
+  gap: 1rem 1.25rem;
+  margin: 1rem 0 1.75rem;
+  animation: discoverControlsIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s forwards;
+  opacity: 0;
+}
+
+@keyframes discoverControlsIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .discover-search {
@@ -24,13 +98,26 @@
   color: var(--text-muted);
   display: flex;
   gap: 0.5rem;
-  min-width: min(100%, 250px);
-  padding: 0 0.75rem;
+  min-width: min(100%, 280px);
+  padding: 0 0.85rem;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease;
+}
+
+.discover-search svg {
+  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .discover-search:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-dim);
+  background-color: var(--bg-card-hover);
+}
+
+.discover-search:focus-within svg {
+  color: var(--accent);
+  transform: scale(1.08);
 }
 
 .discover-search input {
@@ -49,6 +136,7 @@
   color: var(--text-muted);
 }
 
+/* 3. Status Filters */
 .status-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -66,46 +154,89 @@
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1;
-  padding: 0.625rem 0.875rem;
-  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  padding: 0.625rem 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .status-filter-button:hover {
   border-color: var(--border-hover);
   background: var(--bg-card-hover);
   color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.status-filter-button:active {
+  transform: scale(0.97);
 }
 
 .status-filter-button.active {
   border-color: var(--accent);
   background: var(--accent);
-  box-shadow: 0 0 14px rgba(14, 165, 233, 0.24);
-  color: #fff;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.28);
+  color: #041208;
+  font-weight: 700;
 }
 
 .status-filter-count {
-  opacity: 0.8;
+  opacity: 0.85;
+  font-size: 0.8125rem;
 }
 
+/* 4. Grid & Staggered Card Entrance */
 .discover-challenges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-4);
-  animation: challenge-grid-in 220ms ease-out;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-6);
 }
 
-@keyframes challenge-grid-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
+.discover-card-wrapper {
+  animation: cardCascadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--card-index, 0) * 50ms);
+  opacity: 0;
+}
 
-  to {
+@keyframes cardCascadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
+/* 5. Empty State Character Styling */
+.empty-state-card {
+  transition: border-color 0.25s ease;
+}
+
+.empty-state-card:hover {
+  border-color: rgba(14, 165, 233, 0.3);
+}
+
+.empty-state-illustration-box {
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state-astronaut {
+  animation: emptyStateIdle 3.5s ease-in-out infinite;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes emptyStateIdle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* RESPONSIVE STYLES */
 @media (max-width: 860px) {
   .discover-challenges-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -113,25 +244,54 @@
 }
 
 @media (max-width: 560px) {
+  .discover-intro {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .discover-companion-wrapper {
+    margin-left: 0;
+    align-self: flex-end;
+  }
   .discover-controls {
     align-items: stretch;
   }
-
   .discover-search {
     width: 100%;
   }
-
   .status-filter-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
-
   .status-filter-button {
     flex: 0 0 auto;
   }
-
   .discover-challenges-grid {
     grid-template-columns: 1fr;
   }
 }
+
+/* ACCESSIBILITY: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .discover-intro,
+  .discover-controls,
+  .discover-card-wrapper,
+  .discover-companion-astronaut,
+  .empty-state-astronaut {
+    animation: simpleFadeIn 0.3s ease forwards !important;
+    transform: none !important;
+  }
+
+  .discover-search,
+  .status-filter-button,
+  .discover-search svg {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
+
+  @keyframes simpleFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+

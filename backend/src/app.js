@@ -6,6 +6,7 @@ const challengeRoutes = require('./routes/challengeRoutes');
 const proofRoutes = require('./routes/proofRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const session = require('express-session');
 const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
@@ -245,6 +246,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Mount route modules
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/', homeRoutes);
 app.use('/', challengeRoutes);
 app.use('/', proofRoutes);

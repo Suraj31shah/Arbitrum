@@ -33,6 +33,31 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
       lowercase: true
+    },
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: ''
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false
+    },
+    emailVerificationToken: {
+      type: String,
+      default: null
+    },
+    emailVerificationExpires: {
+      type: Date,
+      default: null
+    },
+    notificationPreferences: {
+      deadlineReminders: { type: Boolean, default: true },
+      participantJoined: { type: Boolean, default: true },
+      proofResults: { type: Boolean, default: true },
+      challengeCompleted: { type: Boolean, default: true },
+      rewardReceived: { type: Boolean, default: true }
     }
   },
   {

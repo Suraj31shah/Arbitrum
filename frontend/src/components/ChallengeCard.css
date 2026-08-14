@@ -5,7 +5,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   height: 100%;
   position: relative;
   overflow: hidden;
@@ -15,8 +18,8 @@
 .challenge-card:hover {
   background-color: var(--bg-card-hover);
   border-color: var(--border-hover);
-  /* Subdued shadow for premium look */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 16px rgba(14, 165, 233, 0.06);
 }
 
 .discover-challenge-card {

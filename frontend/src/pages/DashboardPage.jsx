@@ -17,6 +17,7 @@ import ChallengeCard from '../components/ChallengeCard';
 import StatusBadge from '../components/StatusBadge';
 import CountdownTimer from '../components/CountdownTimer';
 import EmptyState from '../components/EmptyState';
+import { Crewmate, CrewmateWorking } from '../components/Crewmates';
 import './DashboardPage.css';
 
 const CHARITY_WALLET_ADDRESS = '0x0302CDEF4ab13Ec1b17110110d1A4592B8866b72'.toLowerCase();
@@ -156,15 +157,24 @@ const DashboardPage = () => {
               </div>
             </div>
 
+            <div className="focus-character-container" title="Active Focus Character">
+              <CrewmateWorking color="#0ea5e9" size={72} className="dash-character-active" />
+            </div>
+
             <Link to={`/challenges/${mostImportantOngoing._id || mostImportantOngoing.id}`} className="focus-continue-btn">
               Continue <ArrowRight size={14} />
             </Link>
           </div>
         ) : (
           <div className="focus-empty-panel">
-            <div>
-              <div className="focus-empty-title">No active challenges</div>
-              <div className="focus-empty-desc">Ready to put your commitment on the line?</div>
+            <div className="focus-empty-left">
+              <div className="focus-character-container" title="Idle Character">
+                <Crewmate color="#0ea5e9" size={64} className="dash-character-idle-state" />
+              </div>
+              <div>
+                <div className="focus-empty-title">No active challenges</div>
+                <div className="focus-empty-desc">Ready to put your commitment on the line?</div>
+              </div>
             </div>
             <div className="focus-empty-actions">
               <Link to="/discover" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>

@@ -12,6 +12,9 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   connectDB().then((dbConnected) => {
     if (!dbConnected) {
       console.log('MongoDB is not available right now. Backend running with fallbacks until MongoDB is started.');
+    } else {
+      const { startDeadlineScheduler } = require('./src/services/reminderScheduler');
+      startDeadlineScheduler();
     }
   });
 });
