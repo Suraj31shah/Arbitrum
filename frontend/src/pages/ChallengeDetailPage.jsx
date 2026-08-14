@@ -16,7 +16,7 @@ const ChallengeDetailPage = () => {
   const [proofs, setProofs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [claimableAmount, setClaimableAmount] = useState(0);
+  const [claimableAmount, setClaimableAmount] = useState(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
@@ -39,6 +39,11 @@ const ChallengeDetailPage = () => {
           if (data.resolvedOnChain) {
             try {
               const provider = new ethers.BrowserProvider(window.ethereum);
+              // Ensure we are connected to the correct network before reading
+              const network = await provider.getNetwork();
+              if (network.chainId !== 421614n) { // Arbitrum Sepolia
+                console.warn("Not on Arbitrum Sepolia, claimable amount fetch might fail.");
+              }
               const contract = new ethers.Contract(CONTRACT_ADDRESS, [
                 "function getClaimable(string challengeId, address participant) external view returns (uint256)"
               ], provider);
@@ -46,6 +51,7 @@ const ChallengeDetailPage = () => {
               setClaimableAmount(ethers.formatEther(amount));
             } catch (e) {
               console.error("Failed to fetch claimable amount:", e);
+              setClaimableAmount('error');
             }
           }
         }
@@ -372,7 +378,7 @@ const ChallengeDetailPage = () => {
             </div>
           )}
 
-          {myParticipant.status === 'completed' && challenge.resolvedOnChain && Number(claimableAmount) > 0 && (
+          {myParticipant.status === 'completed' && challenge.resolvedOnChain && claimableAmount !== null && claimableAmount !== 'error' && Number(claimableAmount) > 0 && (
              <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                <h4 className="text-success mb-2">You Won!</h4>
                <p className="text-muted mb-4">You have {claimableAmount} ETH available to claim.</p>
@@ -382,9 +388,14 @@ const ChallengeDetailPage = () => {
              </div>
           )}
 
-          {myParticipant.status === 'completed' && challenge.resolvedOnChain && Number(claimableAmount) === 0 && (
+          {myParticipant.status === 'completed' && challenge.resolvedOnChain && claimableAmount !== null && claimableAmount !== 'error' && Number(claimableAmount) === 0 && (
              <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
                <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>✅ Stake & Winnings Claimed</span>
+             </div>
+          )}
+          {myParticipant.status === 'completed' && challenge.resolvedOnChain && claimableAmount === 'error' && (
+             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+               <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Please switch your MetaMask network to Arbitrum Sepolia to view and claim your winnings.</span>
              </div>
           )}
         </div>
