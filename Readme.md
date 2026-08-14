@@ -107,7 +107,7 @@ npm install
 Create a `.env` file in the `backend` directory:
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/commitx
+MONGODB_URI=...
 SESSION_SECRET=your_super_secret_session_key
 FRONTEND_URL=http://localhost:5173
 
@@ -115,7 +115,7 @@ FRONTEND_URL=http://localhost:5173
 GEMINI_API_KEY=your_gemini_api_key
 PRIVATE_KEY=your_admin_wallet_private_key
 RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
-CHARITY_WALLET_ADDRESS=0x0302CDEF4ab13Ec1b17110110d1A4592B8866b72
+CHARITY_WALLET_ADDRESS=...
 
 # Integrations (OAuth Client IDs & Secrets)
 GITHUB_CLIENT_ID=...
