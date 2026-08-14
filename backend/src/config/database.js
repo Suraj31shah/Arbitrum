@@ -20,6 +20,12 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 10000
     });
     console.log('MongoDB connected successfully');
+    
+    // Add global error listener to prevent unhandled 'error' events from crashing the process
+    mongoose.connection.on('error', err => {
+      console.error('MongoDB connection error after initial connection:', err.message);
+    });
+    
     return true;
   } catch (error) {
     console.error('MongoDB connection failed:', error.message);
