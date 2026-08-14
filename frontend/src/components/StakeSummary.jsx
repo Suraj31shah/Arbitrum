@@ -9,12 +9,10 @@ const StakeSummary = ({ stats }) => {
   const completedCount = typeof stats.completedChallenges === 'number' ? stats.completedChallenges : 0;
   const successRate = typeof stats.successRate === 'number' ? stats.successRate : 0;
 
-  let formattedEth = '0.00';
-  if (totalStakedEth > 0 && totalStakedEth < 0.01) {
-    formattedEth = '< 0.01';
-  } else if (totalStakedEth >= 0.01) {
-    formattedEth = totalStakedEth.toFixed(2);
-  }
+  const formattedEth = totalStakedEth.toLocaleString('en-US', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 6 
+  });
 
   return (
     <div className="stake-summary-grid">
