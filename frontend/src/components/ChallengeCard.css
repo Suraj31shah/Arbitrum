@@ -19,6 +19,42 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+.discover-challenge-card {
+  min-height: 255px;
+}
+
+.discover-challenge-card.is-ongoing {
+  border-color: rgba(14, 165, 233, 0.32);
+}
+
+.discover-challenge-card.is-failed {
+  opacity: 0.72;
+}
+
+.discover-challenge-card:hover {
+  border-color: rgba(14, 165, 233, 0.68);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12);
+  transform: translateY(-4px);
+}
+
+.discover-card-action {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 700;
+  gap: 0.25rem;
+  margin-top: var(--space-4);
+}
+
+.discover-card-action span {
+  transition: transform 200ms ease;
+}
+
+.discover-challenge-card:hover .discover-card-action span {
+  transform: translateX(4px);
+}
+
 .card-top-row {
   display: flex;
   justify-content: space-between;

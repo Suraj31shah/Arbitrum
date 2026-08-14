@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { 
-  Zap, 
   Home, 
   Flag, 
   FileCheck, 
@@ -83,6 +82,7 @@ const MainLayout = () => {
   const formattedAddress = walletAddress 
     ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
     : null;
+  const isDiscoverPage = location.pathname.startsWith('/discover');
 
   return (
     <div className="app-shell">
@@ -215,9 +215,9 @@ const MainLayout = () => {
           </div>
 
           <div className="top-header-title-block desktop-only">
-            <h1 className="top-page-title">Dashboard</h1>
+            <h1 className="top-page-title">{isDiscoverPage ? 'Discover Challenges' : 'Dashboard'}</h1>
             <p className="top-page-subtitle">
-              Your accountability at a glance.
+              {isDiscoverPage ? 'Find a challenge. Put something on the line.' : 'Your accountability at a glance.'}
             </p>
           </div>
 

@@ -1,8 +1,58 @@
+.discover-intro {
+  margin-bottom: 1rem;
+}
+
+.discover-community-summary {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  margin-top: 0.35rem;
+}
+
+.discover-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.discover-search {
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.5rem;
+  min-width: min(100%, 250px);
+  padding: 0 0.75rem;
+}
+
+.discover-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.discover-search input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  min-width: 0;
+  outline: none;
+  padding: 0.65rem 0;
+  width: 100%;
+}
+
+.discover-search input::placeholder {
+  color: var(--text-muted);
+}
+
 .status-filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 1.25rem 0 1.5rem;
 }
 
 .status-filter-button {
@@ -41,7 +91,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-4);
-  animation: challenge-grid-in 180ms ease-out;
+  animation: challenge-grid-in 220ms ease-out;
 }
 
 @keyframes challenge-grid-in {
@@ -56,7 +106,21 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 860px) {
+  .discover-challenges-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .discover-controls {
+    align-items: stretch;
+  }
+
+  .discover-search {
+    width: 100%;
+  }
+
   .status-filter-bar {
     flex-wrap: nowrap;
     overflow-x: auto;

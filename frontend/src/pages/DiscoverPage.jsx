@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { api } from '../services/api';
 import ChallengeCard from '../components/ChallengeCard';
 import EmptyState from '../components/EmptyState';
 import './DiscoverPage.css';
 
 const STATUS_FILTERS = [
-  { id: 'all', label: 'All' },
   { id: 'ongoing', label: 'Ongoing' },
-  { id: 'finished', label: 'Finished' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'all', label: 'All' },
   { id: 'failed', label: 'Failed' }
 ];
 
@@ -16,7 +17,7 @@ const matchesStatusFilter = (challenge, filter) => {
   const status = String(challenge?.status || '').toLowerCase();
 
   if (filter === 'ongoing') return status === 'active';
-  if (filter === 'finished') return status === 'completed';
+  if (filter === 'completed') return status === 'completed';
   if (filter === 'failed') return status === 'failed' || status === 'expired';
   return true;
 };
@@ -30,8 +31,8 @@ const emptyStateCopy = {
     title: 'No ongoing challenges',
     message: "There aren't any active community challenges right now."
   },
-  finished: {
-    title: 'No finished challenges',
+  completed: {
+    title: 'No completed challenges',
     message: 'No community challenges have been completed yet.'
   },
   failed: {
@@ -46,6 +47,7 @@ const DiscoverPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState('ongoing');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -67,8 +69,30 @@ const DiscoverPage = () => {
   }, {}), [challenges]);
 
   const visibleChallenges = useMemo(
-    () => challenges.filter(challenge => matchesStatusFilter(challenge, selectedStatus)),
-    [challenges, selectedStatus]
+    () => challenges.filter(challenge => {
+      if (!matchesStatusFilter(challenge, selectedStatus)) return false;
+
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+
+      const creator = challenge.creator;
+      const creatorText = typeof creator === 'object'
+        ? [creator?.username, creator?.walletAddress, creator?.profileUrl].filter(Boolean).join(' ')
+        : creator;
+      const searchableText = [challenge.title, challenge.description, challenge.category, creatorText]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    }),
+    [challenges, selectedStatus, searchQuery]
+  );
+
+  const activeChallengesCount = statusCounts.ongoing || 0;
+  const participantCount = challenges.reduce(
+    (total, challenge) => total + (Array.isArray(challenge.participants) ? challenge.participants.length : 0),
+    0
   );
 
   if (loading) return <div className="container text-center mt-8">Loading challenges...</div>;
@@ -83,40 +107,53 @@ const DiscoverPage = () => {
 
   return (
     <div className="discover-page">
-      <div className="flex justify-between items-center mb-8">
-        <h2>Discover Challenges</h2>
-      </div>
-
-      <div className="mb-4">
+      <div className="discover-intro">
         <p className="text-muted">Join public challenges, put ETH on the line, and earn your share of the pool.</p>
+        {challenges.length > 0 && (
+          <p className="discover-community-summary">
+            {activeChallengesCount} active {activeChallengesCount === 1 ? 'challenge' : 'challenges'} · {participantCount} {participantCount === 1 ? 'participant' : 'participants'}
+          </p>
+        )}
       </div>
 
-      <div className="status-filter-bar" aria-label="Filter challenges by status">
-        {STATUS_FILTERS.map(filter => (
-          <button
-            key={filter.id}
-            type="button"
-            className={`status-filter-button ${selectedStatus === filter.id ? 'active' : ''}`}
-            onClick={() => setSelectedStatus(filter.id)}
-            aria-pressed={selectedStatus === filter.id}
-          >
-            {filter.label} <span className="status-filter-count">({statusCounts[filter.id] || 0})</span>
-          </button>
-        ))}
+      <div className="discover-controls">
+        <label className="discover-search" aria-label="Search challenges">
+          <Search size={16} aria-hidden="true" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={event => setSearchQuery(event.target.value)}
+            placeholder="Search challenges..."
+          />
+        </label>
+
+        <div className="status-filter-bar" aria-label="Filter challenges by status">
+          {STATUS_FILTERS.map(filter => (
+            <button
+              key={filter.id}
+              type="button"
+              className={`status-filter-button ${selectedStatus === filter.id ? 'active' : ''}`}
+              onClick={() => setSelectedStatus(filter.id)}
+              aria-pressed={selectedStatus === filter.id}
+            >
+              {filter.label} <span className="status-filter-count">({statusCounts[filter.id] || 0})</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {visibleChallenges.length === 0 ? (
         <EmptyState 
           title={emptyStateCopy[selectedStatus].title}
-          message={emptyStateCopy[selectedStatus].message}
+          message={searchQuery ? 'Try a different search or explore all challenges.' : emptyStateCopy[selectedStatus].message}
           actionText={selectedStatus === 'all' ? 'Create Challenge' : 'View All Challenges'}
           actionLink={selectedStatus === 'all' ? '/challenges/new' : undefined}
-          onAction={selectedStatus === 'all' ? undefined : () => setSelectedStatus('all')}
+          onAction={selectedStatus === 'all' ? undefined : () => { setSelectedStatus('all'); setSearchQuery(''); }}
         />
       ) : (
         <div className="discover-challenges-grid" key={selectedStatus}>
           {visibleChallenges.map(challenge => (
-            <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} />
+            <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} variant="discover" />
           ))}
         </div>
       )}
