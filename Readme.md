@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://i.imgur.com/G40zR3V.png" alt="CommitX Logo" width="120" />
+  <img src="./frontend/public/commitx_logo.png" alt="CommitX Logo" width="120" />
   <h1>CommitX</h1>
   <p><strong>Decentralized Accountability Protocol Powered by AI & Arbitrum</strong></p>
 </div>
