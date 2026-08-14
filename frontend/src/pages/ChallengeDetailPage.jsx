@@ -398,6 +398,12 @@ const ChallengeDetailPage = () => {
                <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Please switch your MetaMask network to Arbitrum Sepolia to view and claim your winnings.</span>
              </div>
           )}
+          {myParticipant.status === 'completed' && !challenge.resolvedOnChain && (
+             <div className="mt-4 pt-4 text-center" style={{ borderTop: '1px solid var(--border)' }}>
+               <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>⏳ Waiting for on-chain resolution...</span>
+               <p className="text-muted mt-2" style={{ fontSize: '0.875rem' }}>The protocol is currently confirming the challenge results on the blockchain. Your claim button will appear shortly.</p>
+             </div>
+          )}
         </div>
       )}
 
