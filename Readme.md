@@ -4,6 +4,8 @@
   <p><strong>Decentralized Accountability Protocol Powered by AI & Arbitrum</strong></p>
 </div>
 
+![CommitX Landing Page](./frontend/public/landing-page.png)
+
 ---
 
 ## 🚀 What is CommitX?
@@ -21,6 +23,8 @@ If you achieve your goal before the deadline, you get your stake back—plus an 
 - 🔌 **Automated Integrations**: Sync your commitments directly with 3rd-party platforms. CommitX pulls real-time telemetry from **GitHub**, **Todoist**, **Google Fit**, and **Notion** to deterministically verify your success without manual proof submission.
 - 🎁 **Charity Fallback**: If a challenge concludes and *zero* participants succeed, the locked ETH isn't lost—it is programmatically transferred to a verified Charity wallet address.
 - 🌙 **Modern UI**: A sleek, fully responsive, dark-mode-first React frontend designed for a seamless user experience.
+
+![CommitX Dashboard](./frontend/public/dashboard.png)
 
 ---
 
@@ -56,6 +60,8 @@ CommitX allows users to link their favorite productivity and health apps to auto
 
 *Note: All integrations are securely authorized via OAuth2, and access tokens are encrypted and stored in MongoDB.*
 
+![Discover Challenges](./frontend/public/discover-challenges.png)
+
 ---
 
 ## 🧠 The AI Verification Engine
@@ -64,6 +70,8 @@ When a user submits manual proof (like a screenshot or a document), it is proces
 - We utilize **Gemini 2.5 Flash**, passing the challenge parameters, the user's proof description, and base64-encoded files.
 - The AI acts as a strict judge, analyzing the evidence against the original goal.
 - It returns a deterministic JSON response containing a confidence score, a definitive pass/fail boolean, and constructive feedback on the provided evidence.
+
+![AI Verification Process](./frontend/public/ai-verification.png)
 
 ---
 
