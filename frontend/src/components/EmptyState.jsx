@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const EmptyState = ({ title, message, actionText, actionLink }) => {
+const EmptyState = ({ title, message, actionText, actionLink, onAction, illustration }) => {
   const containerStyle = {
     display: 'flex',
     flexDirection: 'column',
@@ -28,13 +28,19 @@ const EmptyState = ({ title, message, actionText, actionLink }) => {
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} className="empty-state-card">
+      {illustration && <div className="empty-state-illustration-box">{illustration}</div>}
       <h3 style={titleStyle}>{title}</h3>
       <p style={messageStyle}>{message}</p>
       {actionLink && actionText && (
         <Link to={actionLink} className="btn btn-primary">
           {actionText}
         </Link>
+      )}
+      {onAction && actionText && (
+        <button type="button" onClick={onAction} className="btn btn-primary">
+          {actionText}
+        </button>
       )}
     </div>
   );

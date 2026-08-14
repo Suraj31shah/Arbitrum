@@ -70,5 +70,26 @@ export const api = {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason })
   }).then(handleResponse),
-  getIntegrationPreview: (challengeId) => fetch(`${API_BASE}/challenges/${challengeId}/integration-preview`, { credentials: 'include' }).then(handleResponse)
+  getIntegrationPreview: (challengeId) => fetch(`${API_BASE}/challenges/${challengeId}/integration-preview`, { credentials: 'include' }).then(handleResponse),
+
+  // Email & Notifications
+  getNotificationPreferences: () => fetch(`${API_BASE}/users/notification-preferences`, { credentials: 'include' }).then(handleResponse),
+  updateNotificationPreferences: (notificationPreferences) => fetch(`${API_BASE}/users/notification-preferences`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ notificationPreferences })
+  }).then(handleResponse),
+  saveEmail: (email) => fetch(`${API_BASE}/users/email`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email })
+  }).then(handleResponse),
+  verifyEmail: (token) => fetch(`${API_BASE}/users/email/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ token })
+  }).then(handleResponse)
 };

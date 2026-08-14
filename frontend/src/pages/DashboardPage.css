@@ -14,11 +14,13 @@
   padding: var(--space-6);
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Subtle blue glow on focus section hover */
 .focus-section:hover {
-  border-color: var(--border-hover);
+  border-color: rgba(14, 165, 233, 0.35);
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.08);
 }
 
 .focus-header-row {
@@ -50,6 +52,12 @@
   justify-content: space-between;
   gap: var(--space-6);
   flex-wrap: wrap;
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.focus-panel:hover {
+  border-color: rgba(14, 165, 233, 0.25);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .focus-panel-info {
@@ -89,6 +97,75 @@
   gap: 0.4rem;
 }
 
+/* Character Placement & Animations */
+.focus-character-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Smooth 1s Entrance + Subtle Idle Floating/Breathing */
+.dash-character-active {
+  animation: characterWalkIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             characterActiveIdle 3.2s ease-in-out 1s infinite;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 6px 12px rgba(14, 165, 233, 0.2));
+}
+
+.dash-character-idle-state {
+  animation: characterSlideIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+             characterWaitingIdle 4s ease-in-out 1s infinite;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes characterWalkIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-35px) scale(0.85);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(4px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes characterSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-25px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Subtle, premium idle animations */
+@keyframes characterActiveIdle {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.01);
+  }
+}
+
+@keyframes characterWaitingIdle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(1deg);
+  }
+}
+
 .focus-continue-btn {
   display: inline-flex;
   align-items: center;
@@ -101,13 +178,18 @@
   font-weight: 700;
   font-size: 0.875rem;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
 .focus-continue-btn:hover {
   background-color: var(--accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+
+.focus-continue-btn:active {
+  transform: scale(0.98);
 }
 
 .focus-empty-panel {
@@ -120,6 +202,18 @@
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.focus-empty-panel:hover {
+  border-color: rgba(14, 165, 233, 0.25);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.focus-empty-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .focus-empty-title {
@@ -176,12 +270,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
 }
 
 .header-explore-link:hover {
   color: var(--accent-hover);
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
 /* Category Filter Tabs */
@@ -204,17 +298,23 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tab-btn:hover {
   color: var(--text-primary);
   background-color: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+}
+
+.tab-btn:active {
+  transform: scale(0.98);
 }
 
 .tab-btn.active {
   color: var(--accent);
   background-color: var(--accent-dim);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.1);
 }
 
 /* Challenges Grid Limit */
@@ -251,6 +351,11 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
+  transition: border-color 0.25s ease;
+}
+
+.compact-activity-card:hover {
+  border-color: var(--border-hover);
 }
 
 .compact-activity-header {
@@ -271,14 +376,21 @@
 .compact-activity-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .compact-activity-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.35rem 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.compact-activity-item:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+  transform: translateX(2px);
 }
 
 .activity-left-info {
@@ -296,6 +408,11 @@
   justify-content: center;
   font-size: 0.85rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.compact-activity-item:hover .activity-icon-badge {
+  transform: scale(1.05);
 }
 
 .badge-green {
@@ -340,8 +457,40 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  .focus-empty-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .dash-character-active, .dash-character-idle-state {
+    transform: scale(0.85);
+  }
   .focus-continue-btn {
     width: 100%;
     justify-content: center;
   }
 }
+
+/* ACCESSIBILITY: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .dash-character-active,
+  .dash-character-idle-state {
+    animation: simpleFadeIn 0.3s ease forwards !important;
+  }
+  
+  @keyframes simpleFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .focus-section,
+  .focus-panel,
+  .focus-empty-panel,
+  .tab-btn,
+  .compact-activity-item,
+  .focus-continue-btn {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
+}
+

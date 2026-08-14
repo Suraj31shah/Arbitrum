@@ -1,5 +1,3 @@
-import React from 'react';
-
 const StatusBadge = ({ status }) => {
   let config = {
     label: status,
@@ -45,8 +43,9 @@ const StatusBadge = ({ status }) => {
       };
       break;
     case 'failed':
+    case 'expired':
       config = {
-        label: 'Failed',
+        label: status === 'expired' ? 'Expired' : 'Failed',
         bg: 'var(--error-bg)',
         color: 'var(--error)',
         border: 'rgba(239, 68, 68, 0.2)'
