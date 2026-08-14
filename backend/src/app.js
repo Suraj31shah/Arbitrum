@@ -1,4 +1,11 @@
 const express = require('express');
+const dns = require('dns');
+// Fix Windows default DNS SRV query refusal for MongoDB Atlas mongodb+srv URIs
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('Could not set custom DNS servers:', dnsErr.message);
+}
 const cors = require('cors');
 const path = require('path');
 const homeRoutes = require('./routes/homeRoutes');
@@ -64,14 +71,21 @@ const { MongoStore } = require('connect-mongo');
 // (Moved isProd definition up for CORS)
 
 // Session setup
+const sessionStore = MongoStore.create({ 
+  mongoUrl: process.env.MONGODB_URI,
+  collectionName: 'sessions',
+  mongoOptions: { serverSelectionTimeoutMS: 2000 }
+});
+
+sessionStore.on('error', function(error) {
+  console.warn('MongoStore connection error. Sessions will fallback to memory or fail:', error.message);
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET && process.env.SESSION_SECRET !== 'secret' ? process.env.SESSION_SECRET : crypto.randomBytes(64).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ 
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions'
-  }),
+  store: sessionStore,
   cookie: {
     secure: isProd,
     sameSite: isProd ? 'none' : 'lax',

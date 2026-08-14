@@ -466,13 +466,12 @@ const updateChallengeStatus = async (req, res) => {
     }
 
     const { status } = req.body;
-  const validStatuses = ['joining', 'upcoming', 'active', 'submission', 'completed', 'failed'];
+    const validStatuses = ['joining', 'upcoming', 'active', 'submission', 'completed', 'failed'];
 
-  if (!status || !validStatuses.includes(status)) {
-    return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
-  }
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
+    }
 
-  try {
     if (status === 'completed') {
       challenge.completedAt = new Date();
     }
@@ -481,6 +480,7 @@ const updateChallengeStatus = async (req, res) => {
 
     res.json(challenge);
   } catch (error) {
+    console.error('Failed to update challenge status:', error.message);
     res.status(500).json({ error: 'Failed to update challenge.' });
   }
 };

@@ -173,6 +173,7 @@ router.post('/wallet', async (req, res, next) => {
       }
       return res.json({ message: 'Logged in successfully', user });
     });
+  } catch (err) {
     console.error('Wallet login error:', err.message);
     return res.status(500).json({ error: 'Internal server error during wallet login' });
   }
